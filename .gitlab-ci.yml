@@ -1,0 +1,148 @@
+#image: python:3.6.3
+
+#before_script:
+#  - bundle install
+
+#after_script:
+#  - rm secrets
+
+stages:
+#  - test
+  - build
+  - deploy
+
+#test_job:
+#  stage: test
+#  script:
+#    - echo "####### TODO Running tests"
+##    - pip install /builds/orc/orc/requirements.txt
+#  only:
+#    - dev
+#  tags:
+#    - orc
+#  when: on_success
+#  allow_failure: false
+#  dependencies: []
+#  retry: 1
+
+# https://kubernetes.io/docs/concepts/configuration/overview/#container-images
+# Note: You should avoid using :latest tag when deploying containers in production,
+# because this makes it hard to track which version of the image is running and hard to roll back.
+build_job:
+  stage: build
+  script:
+    - |
+      echo "####### Running build"
+      echo "####### Building docker images on master node"
+      CI_COMMIT_SHA_8=${CI_COMMIT_SHA:0:8}
+      echo $CI_COMMIT_SHA_8
+      if git diff HEAD~ --name-only | egrep 'jupyterhub/docker/k8s_hub/Dockerfile|jupyterhub/docker/k8s_hub/templates/'; then
+        echo "####### gesiscss/k8s-hub-orc:$CI_COMMIT_SHA_8"
+        docker login -u=$DOCKER_USERNAME -p=$DOCKER_PASSWORD
+        docker build -t gesiscss/k8s-hub-orc:$CI_COMMIT_SHA_8 jupyterhub/docker/k8s_hub/.
+        docker push gesiscss/k8s-hub-orc:$CI_COMMIT_SHA_8
+      fi;
+      if git diff HEAD~ --name-only | egrep 'nginx_shibboleth/docker/Dockerfile'; then
+        echo "####### gesiscss/nginx-shibboleth-orc:$CI_COMMIT_SHA_8"
+        docker login -u=$DOCKER_USERNAME -p=$DOCKER_PASSWORD
+        docker build -t gesiscss/nginx-shibboleth-orc:$CI_COMMIT_SHA_8 nginx_shibboleth/docker/.
+        docker push gesiscss/nginx-shibboleth-orc:$CI_COMMIT_SHA_8
+      fi;
+      if git diff HEAD~ --name-only | egrep 'orc_site/'; then
+        if git diff HEAD~ --name-only | egrep --invert-match 'orc_site/deploy/|orc_site/README.md|orc_site/.dockerignore' | grep 'orc_site/'; then
+          echo "####### gesiscss/orc-site:$CI_COMMIT_SHA_8"
+          docker login -u=$DOCKER_USERNAME -p=$DOCKER_PASSWORD
+          docker build -t gesiscss/orc-site:$CI_COMMIT_SHA_8 orc_site/.
+          docker push gesiscss/orc-site:$CI_COMMIT_SHA_8
+        fi;
+      fi;
+      if git diff HEAD~ --name-only | egrep 'nfs_provisioner/backup/docker/'; then
+        echo "####### gesiscss/nfs-backup-orc:$CI_COMMIT_SHA_8"
+        docker login -u=$DOCKER_USERNAME -p=$DOCKER_PASSWORD
+        docker build -t gesiscss/nfs-backup-orc:$CI_COMMIT_SHA_8 nfs_provisioner/backup/docker/.
+        docker push gesiscss/nfs-backup-orc:$CI_COMMIT_SHA_8
+      fi;
+  only:
+#    - master
+    - staging
+  tags:
+    - orc
+  when: on_success
+  allow_failure: false
+  dependencies: []
+  retry: 1
+
+deploy_staging:
+  stage: deploy
+  script:
+    - |
+      echo "####### Running staging deploy"
+      mode="fetch_co"
+      #pip3 install fabric==2.4.*
+      if git diff HEAD~ --name-only | egrep 'nginx_shibboleth/nginx-shibboleth-app-test.yaml'; then
+        mode+="-nginxshibbolethtestapp"
+      fi;
+      if git diff HEAD~ --name-only | egrep 'nginx_shibboleth/shibboleth/conf/staging/|nginx_shibboleth/shibboleth/conf/attribute-map.xml|nginx_shibboleth/nginx/k8s_test.conf'; then
+        mode+="-nginxshibbolethtestconf"
+      fi;
+      if git diff HEAD~ --name-only | egrep 'orc_site/deploy/orc-site-app-test.yaml'; then
+        mode+="-orctestsite"
+      fi;
+      if git diff HEAD~ --name-only | egrep 'jupyterhub/config_test.yaml|jupyterhub/_secret_test.yaml'; then
+        mode+="-jhubtestns"
+      fi;
+      if git diff HEAD~ --name-only | egrep 'binderhub/config_test.yaml|binderhub/_secret_test.yaml'; then
+        mode+="-bhubtestns"
+      fi;
+      echo "####### mode: $mode"
+      fab -H $K8S_MASTER_NODE_IP deploy -p $K8S_MASTER_NODE_PASSWORD -r $CI_COMMIT_SHA -m $mode -s
+  only:
+    - staging
+  tags:
+    - orc
+  when: on_success
+  environment:
+    name: staging
+    url: https://notebooks-test.gesis.org/
+  allow_failure: false
+  dependencies: []
+  retry: 1
+
+deploy_prod:
+  stage: deploy
+#  cache:
+#    untracked: true
+  script:
+    - |
+      echo "####### Running deploy"
+      mode="fetch_co"
+      #pip3 install fabric==2.4.*
+      if git diff HEAD~ --name-only | egrep 'nginx_shibboleth/nginx-shibboleth-app.yaml'; then
+        mode+="-nginxshibbolethapp"
+      fi;
+      if git diff HEAD~ --name-only | egrep 'nginx_shibboleth/shibboleth/conf/production/|nginx_shibboleth/shibboleth/conf/attribute-map.xml|nginx_shibboleth/nginx/k8s.conf'; then
+        mode+="-nginxshibbolethconf"
+      fi;
+      if git diff HEAD~ --name-only | egrep 'orc_site/deploy/orc-site-app.yaml'; then
+        mode+="-orcsite"
+      fi;
+      if git diff HEAD~ --name-only | egrep 'jupyterhub/config.yaml|jupyterhub/_secret.yaml'; then
+        mode+="-jhubns"
+      fi;
+      if git diff HEAD~ --name-only | egrep 'binderhub/config.yaml|binderhub/_secret.yaml'; then
+        mode+="-bhubns"
+      fi;
+      echo "####### mode: $mode"
+      fab -H $K8S_MASTER_NODE_IP deploy -p $K8S_MASTER_NODE_PASSWORD -r $CI_COMMIT_SHA -m $mode
+  only:
+    - master
+#    - tags
+  tags:
+    - orc
+  when: manual
+  environment:
+    name: production
+    url: https://notebooks.gesis.org/
+  allow_failure: false
+  dependencies: []
+  retry: 1

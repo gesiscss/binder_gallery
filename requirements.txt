@@ -1,0 +1,6 @@
+Flask==1.0.*
+requests==2.20.*
+flask-script==2.0.*
+flask-SQLAlchemy==2.3.*
+flask-migrate==2.3.*
+psycopg2-binary==2.7.6.1
