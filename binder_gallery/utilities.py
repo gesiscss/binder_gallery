@@ -1,5 +1,7 @@
 import csv
 import os
+import requests
+from bs4 import BeautifulSoup
 
 
 def get_created_by_gesis():
@@ -10,4 +12,10 @@ def get_created_by_gesis():
     return created_by_gesis
 
 
+def get_repo_description(repo_link):
 
+    page = requests.get(repo_link)
+
+    soup = BeautifulSoup(page.content, 'html.parser')
+
+    return soup.find('article').find('h1').find(text=True)
