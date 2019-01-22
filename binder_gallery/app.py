@@ -3,6 +3,7 @@ from flask import Flask, render_template, abort
 from .popular_repos import get_launch_data, process_launch_data, get_popular_repos
 from .utilities import get_created_by_gesis
 from copy import deepcopy
+from .models import db
 
 # app = Flask(__name__, template_folder='../templates/orc_site')
 app = Flask(__name__)
@@ -10,6 +11,17 @@ staging = os.environ.get('DEPLOYMENT_ENV') == 'staging'
 production = os.environ.get('DEPLOYMENT_ENV') == 'production'
 site_url = 'https://notebooks{}.gesis.org'.format('-test' if staging else '')
 
+
+POSTGRES = {
+    'user': '',
+    'pw': '',
+    'db': '',
+    'host': 'localhost',
+    'port': '5432',
+}
+
+app.config['SQLALCHEMY_DATABASE_URI'] = 'postgresql://%(user)s:\ %(pw)s@%(host)s:%(port)s/%(db)s' % POSTGRES
+db.init_app(app)
 
 context = {
     'staging': staging,
