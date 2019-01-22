@@ -1,3 +1,3 @@
 if __name__ == '__main__':
-    from orc_site.app import main
+    from binder_gallery.app import main
     main()
