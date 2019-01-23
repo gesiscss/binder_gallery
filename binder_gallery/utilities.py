@@ -13,9 +13,12 @@ def get_created_by_gesis():
 
 
 def get_repo_description(repo_link):
-
     page = requests.get(repo_link)
-
     soup = BeautifulSoup(page.content, 'html.parser')
-
-    return soup.find('article').find('h1').find(text=True)
+    about = soup.find('span', itemprop='about')
+    url = soup.find('span', itemprop='url')
+    if about or url:
+        text = about.text.strip() if about else ''
+        url = ' ' + url.find('a').text.strip() if url else ''
+        return text, url
+    return '', ''
