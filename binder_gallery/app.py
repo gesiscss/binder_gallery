@@ -12,15 +12,7 @@ production = os.environ.get('DEPLOYMENT_ENV') == 'production'
 site_url = 'https://notebooks{}.gesis.org'.format('-test' if staging else '')
 
 
-POSTGRES = {
-    'user': '',
-    'pw': '',
-    'db': '',
-    'host': 'localhost',
-    'port': '5432',
-}
-
-app.config['SQLALCHEMY_DATABASE_URI'] = 'postgresql://%(user)s:\ %(pw)s@%(host)s:%(port)s/%(db)s' % POSTGRES
+app.config['SQLALCHEMY_DATABASE_URI'] = os.environ['BG_DATABASE_URL']
 db.init_app(app)
 
 context = {
