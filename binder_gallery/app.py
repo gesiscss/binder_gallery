@@ -4,6 +4,9 @@ from .popular_repos import get_launch_data, process_launch_data, get_popular_rep
 from .utilities import get_created_by_gesis
 from copy import deepcopy
 from .models import db
+from flask_admin import Admin
+from flask_admin.contrib.sqla import ModelView
+from .models import CreatedByGesis
 
 # app = Flask(__name__, template_folder='../templates/orc_site')
 app = Flask(__name__)
@@ -14,6 +17,11 @@ site_url = 'https://notebooks{}.gesis.org'.format('-test' if staging else '')
 
 app.config['SQLALCHEMY_DATABASE_URI'] = os.environ['BG_DATABASE_URL']
 db.init_app(app)
+
+# set optional bootswatch theme
+app.config['FLASK_ADMIN_SWATCH'] = 'cerulean'
+admin = Admin(app, template_mode='bootstrap3')
+admin.add_view(ModelView(CreatedByGesis, db.session))
 
 context = {
     'staging': staging,

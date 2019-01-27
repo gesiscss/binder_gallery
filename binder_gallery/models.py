@@ -8,10 +8,10 @@ class CreatedByGesis(db.Model):
     __tablename__ = 'created_by_gesis'
 
     ID = db.Column(db.Integer, primary_key=True)
-    repo_name = db.Column(db.String())
+    # repo_name = db.Column(db.String())
     repo_url = db.Column(db.String())
-    org_user = db.Column(db.String())
-    provider = db.Column(db.String())
+    # org_user = db.Column(db.String())
+    # provider = db.Column(db.String())
     # binder_url = db.Column(db.String())
     description = db.Column(db.String())
 
