@@ -1,12 +1,14 @@
 import os
-from flask import Flask, render_template, abort
+from flask import Flask, render_template, abort, request, url_for
 from .popular_repos import get_launch_data, process_launch_data, get_popular_repos
 from .utilities import get_created_by_gesis
 from copy import deepcopy
 from .models import db
 from flask_admin import Admin
 from flask_admin.contrib.sqla import ModelView
-from .models import CreatedByGesis
+from .models import CreatedByGesis, User
+from flask_login import LoginManager, login_required, login_user
+from .forms import LoginForm
 
 # app = Flask(__name__, template_folder='../templates/orc_site')
 app = Flask(__name__)
@@ -17,11 +19,45 @@ site_url = 'https://notebooks{}.gesis.org'.format('-test' if staging else '')
 # set optional bootswatch theme
 app.config['FLASK_ADMIN_SWATCH'] = 'cerulean'
 admin = Admin(app, name='binder_gallery', template_mode='bootstrap3')
-admin.add_view(ModelView(CreatedByGesis, db.session))
+
+
+@login_required
+def admin_view():
+    admin.add_view(ModelView(CreatedByGesis, db.session))
 
 
 app.config['SQLALCHEMY_DATABASE_URI'] = os.environ['BG_DATABASE_URL']
 db.init_app(app)
+login_manager = LoginManager()
+login_manager.init_app(app)
+
+
+@login_manager.user_loader
+def load_user(id):
+    return User.query.get(int(id))
+
+
+@app.route('/login', methods=['GET', 'POST'])
+def login():
+    # Here we use a class of some kind to represent and validate our
+    # client-side form data. For example, WTForms is a library that will
+    # handle this for us, and we use a custom LoginForm to validate.
+    form = LoginForm()
+    if form.validate_on_submit():
+        # Login and validate the user.
+        # user should be an instance of your `User` class
+        login_user(User)
+
+        Flask.flash('Logged in successfully.')
+
+        next = Flask.request.args.get('next')
+        # is_safe_url should check if the url is safe for redirects.
+        # See http://flask.pocoo.org/snippets/62/ for an example.
+        if not is_safe_url(next):
+            return Flask.abort(400)
+
+        return Flask.redirect(next or Flask.url_for('index'))
+    return Flask.render_template('login.html', form=form)
 
 # set optional bootswatch theme
 app.config['FLASK_ADMIN_SWATCH'] = 'cerulean'
