@@ -1,4 +1,5 @@
 from flask_sqlalchemy import SQLAlchemy
+from flask_login import UserMixin
 
 db = SQLAlchemy()
 
@@ -14,6 +15,7 @@ class CreatedByGesis(db.Model):
     # provider = db.Column(db.String())
     # binder_url = db.Column(db.String())
     description = db.Column(db.String())
+    # order =
 
     def __init__(self, repo_name, repo_url, org_user, provider, description):
         self.repo_name = repo_name
@@ -38,5 +40,9 @@ class CreatedByGesis(db.Model):
         }
 
 
+class User(db.Model, UserMixin):
+    id = db.Column(db.Integer,primary_key=True)
+    name = db.Column(db.String(20))
+    password = db.Column(db.String(20))
 
 

@@ -14,6 +14,11 @@ staging = os.environ.get('DEPLOYMENT_ENV') == 'staging'
 production = os.environ.get('DEPLOYMENT_ENV') == 'production'
 site_url = 'https://notebooks{}.gesis.org'.format('-test' if staging else '')
 
+# set optional bootswatch theme
+app.config['FLASK_ADMIN_SWATCH'] = 'cerulean'
+admin = Admin(app, name='binder_gallery', template_mode='bootstrap3')
+admin.add_view(ModelView(CreatedByGesis, db.session))
+
 
 app.config['SQLALCHEMY_DATABASE_URI'] = os.environ['BG_DATABASE_URL']
 db.init_app(app)
