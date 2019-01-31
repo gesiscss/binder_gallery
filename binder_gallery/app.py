@@ -1,20 +1,68 @@
+import base64
 import os
+from copy import deepcopy
 from flask import Flask, render_template, abort
+import flask_login as login
+from flask_admin import Admin
 from .popular_repos import get_launch_data, process_launch_data, get_popular_repos
 from .utilities import get_created_by_gesis
-from copy import deepcopy
-from .models import db
+from .models import db, CreatedByGesis, User
+from .admin import UserModelView, CreatedByGesisModelView, AdminIndexView
+
+
+# Initialize flask-login
+def init_login():
+    login_manager = login.LoginManager()
+    login_manager.init_app(app)
+
+    # Create user loader function
+    @login_manager.user_loader
+    def load_user(user_id):
+        print(2)
+        return db.session.query(User).get(user_id)
+
+    # @login_manager.request_loader
+    # def load_user_from_request(request):
+    #     # only to allow creating a binder launch
+    #     if request.path != '/admin/binderlaunches/new/':
+    #         return None
+    #
+    #     # try to login using Bearer token
+    #     token = request.headers.get('Authorization')
+    #     if token:
+    #         # token = token.replace('Basic ', '', 1)
+    #         token = token.replace('Bearer ', '', 1)
+    #         try:
+    #             token = base64.b64decode(token)
+    #         except TypeError:
+    #             pass
+    #         user = User.query.filter_by(token=token).first()
+    #         if user:
+    #             return user
+    #
+    #     return None
 
 # app = Flask(__name__, template_folder='../templates/orc_site')
 app = Flask(__name__)
+# BG_DATABASE_URL = 'postgresql://%(user)s:%(pw)s@%(host)s:%(port)s/%(db)s'
+app.config['SQLALCHEMY_DATABASE_URI'] = os.environ['BG_DATABASE_URL']
+# TODO secret key?
+# Create dummy secrey key so we can use sessions
+app.config['SECRET_KEY'] = '123456790'  # TODO os.environ['BG_SECRET_KEY']
+# default is bs2, we can also use bs3 -> template_mode='bootstrap3'
+admin = Admin(app, name='Binder Gallery', index_view=AdminIndexView(), base_template='admin/master.html')
+admin.add_view(UserModelView(User, db.session))
+admin.add_view(CreatedByGesisModelView(CreatedByGesis, db.session))
+
+# initialize db
+db.init_app(app)
+# Initialize flask-login
+init_login()
+
+# template context
 staging = os.environ.get('DEPLOYMENT_ENV') == 'staging'
 production = os.environ.get('DEPLOYMENT_ENV') == 'production'
 site_url = 'https://notebooks{}.gesis.org'.format('-test' if staging else '')
-
-
-app.config['SQLALCHEMY_DATABASE_URI'] = os.environ['BG_DATABASE_URL']
-db.init_app(app)
-
 context = {
     'staging': staging,
     'production': production,
@@ -37,21 +85,21 @@ context = {
 
 @app.route('/')
 def gallery():
-    # get all launch count data (in last 90 days)
-    launch_data = get_launch_data()
-    launch_data = process_launch_data(launch_data)
-
-    popular_repos_all = [
-        (1, 'Last 24 hours', get_popular_repos(deepcopy(launch_data), '24h'), '24h', ),
-        (2, 'Last week', get_popular_repos(deepcopy(launch_data), '7d'), '7d', ),
-        (3, 'Last 30 days', get_popular_repos(deepcopy(launch_data), '30d'), '30d', ),
-        (4, 'Last 60 days', get_popular_repos(deepcopy(launch_data), '60d'), '60d', ),
-    ]
+    # # get all launch count data (in last 90 days)
+    # launch_data = get_launch_data()
+    # launch_data = process_launch_data(launch_data)
+    #
+    # popular_repos_all = [
+    #     (1, 'Last 24 hours', get_popular_repos(deepcopy(launch_data), '24h'), '24h', ),
+    #     (2, 'Last week', get_popular_repos(deepcopy(launch_data), '7d'), '7d', ),
+    #     (3, 'Last 30 days', get_popular_repos(deepcopy(launch_data), '30d'), '30d', ),
+    #     (4, 'Last 60 days', get_popular_repos(deepcopy(launch_data), '60d'), '60d', ),
+    # ]
 
     created_by_gesis = get_created_by_gesis()
 
     context.update({'active': 'gallery',
-                    'popular_repos_all': popular_repos_all,
+                    # 'popular_repos_all': popular_repos_all,
                     'created_by_gesis': created_by_gesis,
                     })
     return render_template('gallery.html', **context)
@@ -91,4 +139,3 @@ main = run_app
 
 if __name__ == '__main__':
     main()
-

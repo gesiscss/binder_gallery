@@ -1,14 +1,24 @@
-import csv
-import os
 import requests
 from bs4 import BeautifulSoup
 
+from .models import CreatedByGesis
+
+
+def repo_url_parts(repo_url):
+    return repo_url.replace('https://', '').rstrip('.git').rsplit('/', 2)
+
 
 def get_created_by_gesis():
-    csv_file = os.path.join(os.path.dirname(os.path.realpath(__file__)), 'created_by_gesis.csv')
-    with open(csv_file, 'r') as f:
-        reader = csv.reader(f)
-        created_by_gesis = list(reader)
+    created_by_gesis = []
+    # created_by_gesis = db.session.query(CreatedByGesis).filter_by(active=True).all()
+    objects = CreatedByGesis.query.filter_by(active=True).order_by(CreatedByGesis.position).all()
+    for o in objects:
+        # repo_name, repo_url, org, provider, binder_url, description
+        repo_url = o.repo_url
+        binder_url = o.binder_url
+        description = o.description
+        provider, org, repo = repo_url_parts(repo_url)
+        created_by_gesis.append([repo, repo_url, provider, org, binder_url, description])
     return created_by_gesis
 
 

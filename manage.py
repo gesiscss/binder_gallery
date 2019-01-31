@@ -3,7 +3,7 @@ from flask_migrate import Migrate, MigrateCommand
 from binder_gallery.app import app, db
 
 
-migrate = Migrate(app, db)
+migrate = Migrate(app, db, compare_type=True)
 manager = Manager(app)
 
 manager.add_command('db', MigrateCommand)
