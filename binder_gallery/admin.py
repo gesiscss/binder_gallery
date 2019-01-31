@@ -1,4 +1,3 @@
-import base64
 import flask_login as login
 from flask import request, url_for, redirect, abort
 from flask_admin import AdminIndexView as BaseAdminIndexView, expose, helpers
@@ -6,11 +5,10 @@ from flask_admin.contrib.sqla import ModelView
 from flask_admin.helpers import is_safe_url
 from wtforms import validators
 from .forms import LoginForm
-from .models import User
 from .utilities import repo_url_parts
 
 
-class UserModelView(ModelView):
+class BaseModelView(ModelView):
 
     def is_accessible(self):
         # if request.path == '/admin/binderlaunches/new/' and request.method == "POST":
@@ -33,7 +31,11 @@ class UserModelView(ModelView):
         return redirect(url_for('admin.login_view', next=request.url))
 
 
-class CreatedByGesisModelView(UserModelView):
+class UserModelView(BaseModelView):
+    pass
+
+
+class CreatedByGesisModelView(BaseModelView):
     def on_model_change(self, form, model, is_created):
         if form.repo_url.data:
             provider_org_repo = repo_url_parts(form.repo_url.data)
@@ -46,6 +48,14 @@ class CreatedByGesisModelView(UserModelView):
     def create_view(self):
 
         return super(CreatedByGesisModelView, self).create_view()
+
+
+class RepoModelView(BaseModelView):
+    pass
+
+
+class BinderLaunchModelView(BaseModelView):
+    pass
 
 
 # Create customized index view class that handles login & registration

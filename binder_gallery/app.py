@@ -1,4 +1,3 @@
-import base64
 import os
 from copy import deepcopy
 from flask import Flask, render_template, abort
@@ -6,8 +5,8 @@ import flask_login as login
 from flask_admin import Admin
 from .popular_repos import get_launch_data, process_launch_data, get_popular_repos
 from .utilities import get_created_by_gesis
-from .models import db, CreatedByGesis, User
-from .admin import UserModelView, CreatedByGesisModelView, AdminIndexView
+from .models import db, CreatedByGesis, User, Repo, BinderLaunch
+from .admin import UserModelView, CreatedByGesisModelView, AdminIndexView, RepoModelView, BinderLaunchModelView
 
 
 # Initialize flask-login
@@ -18,7 +17,6 @@ def init_login():
     # Create user loader function
     @login_manager.user_loader
     def load_user(user_id):
-        print(2)
         return db.session.query(User).get(user_id)
 
     # @login_manager.request_loader
@@ -53,6 +51,8 @@ app.config['SECRET_KEY'] = '123456790'  # TODO os.environ['BG_SECRET_KEY']
 admin = Admin(app, name='Binder Gallery', index_view=AdminIndexView(), base_template='admin/master.html')
 admin.add_view(UserModelView(User, db.session))
 admin.add_view(CreatedByGesisModelView(CreatedByGesis, db.session))
+admin.add_view(RepoModelView(Repo, db.session))
+admin.add_view(BinderLaunchModelView(BinderLaunch, db.session))
 
 # initialize db
 db.init_app(app)
