@@ -4,6 +4,12 @@ from flask_sqlalchemy import SQLAlchemy
 from flask_login import UserMixin
 from werkzeug.security import generate_password_hash, check_password_hash
 
+PROVIDER_PREFIXES = {
+    'Git': 'git',
+    'GitHub': 'gh',
+    'GitLab': 'gl',
+    # 'gist.github.com': 'gist',
+}
 
 db = SQLAlchemy()
 
@@ -99,13 +105,21 @@ class Repo(db.Model):
     def __repr__(self):
         return f'{self.id}: {self.provider_spec}'
 
+    @property
+    def repo_url(self):
+        if self.provider_spec.startswith('gh/'):
+            # for now only for GitHub repos
+            provider_prefix, org, repo_name, ref = self.provider_spec.split('/', 3)
+            return f'https://www.github.com/{org}/{repo_name}/tree/{ref}'
+        return NotImplemented
+
 
 class BinderLaunch(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     schema = db.Column(db.String, nullable=False)
     version = db.Column(db.String, nullable=False)
     timestamp = db.Column(db.DateTime, nullable=False, index=True)
-    provider = db.Column(db.String, nullable=False)
+    provider = db.Column(db.String, nullable=False)  # provider_name
     spec = db.Column(db.String, nullable=False)
     # may be useful to index in the future
     repo_id = db.Column(db.Integer, db.ForeignKey('repo.id'), nullable=True)
@@ -116,4 +130,4 @@ class BinderLaunch(db.Model):
 
     @property
     def provider_spec(self):
-        return f'{self.provider}/{self.spec}'
+        return f'{PROVIDER_PREFIXES[self.provider]}/{self.spec}'

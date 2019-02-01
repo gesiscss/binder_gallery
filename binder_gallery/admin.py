@@ -37,6 +37,7 @@ class CreatedByGesisModelView(BaseModelView):
 
 
 class RepoModelView(BaseModelView):
+    column_list = ('provider_spec', 'repo_url', 'description')
     column_searchable_list = ['provider_spec']
     column_editable_list = ['description']
     form_widget_args = {

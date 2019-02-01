@@ -25,6 +25,10 @@ app.config['SQLALCHEMY_DATABASE_URI'] = os.environ['BG_DATABASE_URL']
 app.config['SECRET_KEY'] = os.environ['BG_SECRET_KEY']
 app.config['SESSION_COOKIE_NAME'] = 'bg_session'
 app.config['SESSION_COOKIE_PATH'] = '/admin/'
+# SQLALCHEMY_TRACK_MODIFICATIONS
+# If set to True (the default) Flask-SQLAlchemy will track modifications of objects and emit signals.
+# This requires extra memory and can be disabled if not needed.
+app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 admin = Admin(app, name='Binder Gallery', index_view=AdminIndexView(),
               base_template='admin/master.html', template_mode='bootstrap3')
 admin.add_view(UserModelView(User, db.session))
