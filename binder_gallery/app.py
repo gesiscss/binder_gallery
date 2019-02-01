@@ -1,9 +1,7 @@
 import os
-from copy import deepcopy
 from flask import Flask, render_template, abort
 import flask_login as login
 from flask_admin import Admin
-from .popular_repos import get_launch_data, process_launch_data, get_popular_repos
 from .utilities import get_created_by_gesis
 from .models import db, CreatedByGesis, User, Repo, BinderLaunch
 from .admin import UserModelView, CreatedByGesisModelView, AdminIndexView, RepoModelView, BinderLaunchModelView
@@ -19,34 +17,14 @@ def init_login():
     def load_user(user_id):
         return db.session.query(User).get(user_id)
 
-    # @login_manager.request_loader
-    # def load_user_from_request(request):
-    #     # only to allow creating a binder launch
-    #     if request.path != '/admin/binderlaunches/new/':
-    #         return None
-    #
-    #     # try to login using Bearer token
-    #     token = request.headers.get('Authorization')
-    #     if token:
-    #         # token = token.replace('Basic ', '', 1)
-    #         token = token.replace('Bearer ', '', 1)
-    #         try:
-    #             token = base64.b64decode(token)
-    #         except TypeError:
-    #             pass
-    #         user = User.query.filter_by(token=token).first()
-    #         if user:
-    #             return user
-    #
-    #     return None
 
 # app = Flask(__name__, template_folder='../templates/orc_site')
 app = Flask(__name__)
 # BG_DATABASE_URL = 'postgresql://%(user)s:%(pw)s@%(host)s:%(port)s/%(db)s'
 app.config['SQLALCHEMY_DATABASE_URI'] = os.environ['BG_DATABASE_URL']
-# TODO secret key?
-# Create dummy secrey key so we can use sessions
-app.config['SECRET_KEY'] = '123456790'  # TODO os.environ['BG_SECRET_KEY']
+app.config['SECRET_KEY'] = os.environ['BG_SECRET_KEY']
+app.config['SESSION_COOKIE_NAME'] = 'bg_session'
+app.config['SESSION_COOKIE_PATH'] = '/admin/'
 admin = Admin(app, name='Binder Gallery', index_view=AdminIndexView(),
               base_template='admin/master.html', template_mode='bootstrap3')
 admin.add_view(UserModelView(User, db.session))
@@ -69,33 +47,25 @@ context = {
     'version': 'beta',
     # 'shibboleth_entityID': f'{site_url}/shibboleth',
 
-    'gallery_url': '/',
+    'home_url': '/',
     'jhub_url': '/jupyter/',
     'gesis_login_url': f'{site_url}/Shibboleth.sso/Login?SAMLDS=1&'
                        f'target={site_url}/hub/login&'
                        f'entityID=https%3A%2F%2Fidp.gesis.org%2Fidp%2Fshibboleth',
+    'bhub_url': '/binder/',
     'about_url': '/about/',
     'tou_url': '/terms_of_use/',
     'imprint_url': 'https://www.gesis.org/en/institute/imprint/',
     'data_protection_url': 'https://www.gesis.org/en/institute/data-protection/',
     'gesis_url': 'https://www.gesis.org/en/home/',
+    'gallery_url': '/gallery/'
     # 'help_url': 'https://www.gesis.org/en/help/',
 }
 
 
 @app.route('/')
 def gallery():
-    # # get all launch count data (in last 90 days)
-    # launch_data = get_launch_data()
-    # launch_data = process_launch_data(launch_data)
-    #
-    # popular_repos_all = [
-    #     (1, 'Last 24 hours', get_popular_repos(deepcopy(launch_data), '24h'), '24h', ),
-    #     (2, 'Last week', get_popular_repos(deepcopy(launch_data), '7d'), '7d', ),
-    #     (3, 'Last 30 days', get_popular_repos(deepcopy(launch_data), '30d'), '30d', ),
-    #     (4, 'Last 60 days', get_popular_repos(deepcopy(launch_data), '60d'), '60d', ),
-    # ]
-
+    # TODO get_popular_repos_all
     created_by_gesis = get_created_by_gesis()
 
     context.update({'active': 'gallery',
@@ -113,12 +83,10 @@ def popular_repos(time_range):
               '60d': 'Popular repositories in last 60 days'}
     if time_range not in titles:
         abort(404)
-    # get all launch count data (in last 90 days)
-    launch_data = get_launch_data()
-    launch_data = process_launch_data(launch_data)
+    # TODO get_popular_repos(time_range)
     context.update({'active': 'gallery',
                     'title': titles[time_range],
-                    'popular_repos': get_popular_repos(launch_data, time_range)})
+                    'popular_repos': []})
     return render_template('popular_repos.html', **context)
 
 

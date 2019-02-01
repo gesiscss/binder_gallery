@@ -1,4 +1,6 @@
-from flask_sqlalchemy import SQLAlchemy, event
+import os
+import jwt
+from flask_sqlalchemy import SQLAlchemy
 from flask_login import UserMixin
 from werkzeug.security import generate_password_hash, check_password_hash
 
@@ -64,6 +66,23 @@ class User(db.Model, UserMixin):
     def set_password(self, password):
         self.password_hash = generate_password_hash(password)
 
+    @property
+    def encoded_token(self):
+        try:
+            token = jwt.encode({'id': self.id}, os.environ['BG_SECRET_KEY'], algorithm='HS256')
+            token = token.decode()
+            return token
+        except Exception as e:
+            return e
+
+    @staticmethod
+    def validate_token(encoded_token):
+        try:
+            payload = jwt.decode(encoded_token, os.environ['BG_SECRET_KEY'], algorithms='HS256')
+        except Exception as e:
+            return e
+        return 'id' in payload
+
     # @classmethod
     # def create_user(cls, name, password):
     #     u = cls(name, "", generate_password_hash(password), True)
@@ -89,7 +108,7 @@ class BinderLaunch(db.Model):
     provider = db.Column(db.String, nullable=False)
     spec = db.Column(db.String, nullable=False)
     # may be useful to index in the future
-    repo_id = db.Column(db.Integer, db.ForeignKey('repo.id'), nullable=False)
+    repo_id = db.Column(db.Integer, db.ForeignKey('repo.id'), nullable=True)
     status = db.Column(db.String, nullable=False)
 
     def __repr__(self):
@@ -98,16 +117,3 @@ class BinderLaunch(db.Model):
     @property
     def provider_spec(self):
         return f'{self.provider}/{self.spec}'
-
-
-@event.listens_for(BinderLaunch, 'before_insert')
-def generate_repo(mapper, connection, target):
-    # FIXME maybe we should create repo_id after inserting launch: after_insert
-    repo = Repo.query.filter_by(provider_spec=target.provider_spec).first()
-    print('##', repo)
-    if not repo:
-        repo = Repo(provider_spec=target.provider_spec, description='')
-        db.session.add(repo)
-        db.session.commit()
-        print('###', repo)
-    target.repo_id = repo.id
