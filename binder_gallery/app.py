@@ -47,8 +47,8 @@ app.config['SQLALCHEMY_DATABASE_URI'] = os.environ['BG_DATABASE_URL']
 # TODO secret key?
 # Create dummy secrey key so we can use sessions
 app.config['SECRET_KEY'] = '123456790'  # TODO os.environ['BG_SECRET_KEY']
-# default is bs2, we can also use bs3 -> template_mode='bootstrap3'
-admin = Admin(app, name='Binder Gallery', index_view=AdminIndexView(), base_template='admin/master.html')
+admin = Admin(app, name='Binder Gallery', index_view=AdminIndexView(),
+              base_template='admin/master.html', template_mode='bootstrap3')
 admin.add_view(UserModelView(User, db.session))
 admin.add_view(CreatedByGesisModelView(CreatedByGesis, db.session))
 admin.add_view(RepoModelView(Repo, db.session))
