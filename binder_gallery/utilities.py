@@ -1,6 +1,5 @@
 import requests
 from bs4 import BeautifulSoup
-from flask import request, url_for
 
 from .models import CreatedByGesis
 
@@ -33,10 +32,3 @@ def get_repo_description(repo_link):
         url = ' ' + url.find('a').text.strip() if url else ''
         return text, url
     return '', ''
-
-
-def is_safe_url(target):
-    ref_url = urlparse(request.host_url)
-    test_url = urlparse(urljoin(request.host_url, target))
-    return test_url.scheme in ('http', 'https') and \
-           ref_url.netloc == test_url.netloc
