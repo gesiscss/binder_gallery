@@ -7,3 +7,4 @@ psycopg2-binary==2.7.6.1
 bs4==0.0.*
 Flask-Admin>=1.5.3
 Flask-Login==0.4.*
+pyjwt==1.7.*

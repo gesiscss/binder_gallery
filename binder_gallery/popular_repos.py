@@ -1,5 +1,6 @@
 import requests
 from datetime import datetime, timedelta
+from .utilities import repo_url_parts
 
 REPOS_TO_FILTER = [
     # 'gesiscss/binder-stats'
@@ -45,7 +46,7 @@ def process_launch_data(data):
         # e.g row in data: provider="GitHub",repo="https://github.com/gesiscss/ptm" , status="success"}
         repo_url = container['metric']['repo']
         provider = container['metric']['provider']
-        provider_org_repo = repo_url.replace('https://', '').rstrip('.git').rsplit('/', 2)
+        provider_org_repo = repo_url_parts(repo_url)
         if len(provider_org_repo) == 2:
             # some repo urls (e.g. gist) don't contain org/user info
             provider, repo = provider_org_repo
