@@ -5,8 +5,9 @@ from flask_admin.contrib.sqla import ModelView
 from flask_admin.helpers import is_safe_url
 from wtforms import validators
 from .forms import LoginForm
-from .models import User
-from .utilities import repo_url_parts
+from .models import User, Repo
+from .utilities import repo_url_parts, get_repo_description
+from .app import db
 
 
 class BaseModelView(ModelView):
@@ -68,23 +69,15 @@ class BinderLaunchModelView(BaseModelView):
         return super(BinderLaunchModelView, self).is_accessible()
 
     def after_model_change(self, form, model, is_created):
-        """
-            Perform some actions after a model was created or updated and
-            committed to the database.
 
-            Called from create_model after successful database commit.
-
-            By default does nothing.
-
-            :param form:
-                Form used to create/update model
-            :param model:
-                Model that was created/updated
-            :param is_created:
-                True if model was created, False if model was updated
-        """
-        # TODO we can use this to set repo_id and description of the repo
-        pass
+        target = model.provider + "/" + model.spec
+        repo = Repo.query.filter_by(provider_spec=target).first()
+        if not repo:
+            provider_prefix, org, repo_name, ref = target.split('/')
+            description=get_repo_description(f'https://www.github.com/{org}/{repo_name}/tree/{ref}')
+            repo = Repo(provider_spec=target, description=description)
+            db.session.add(repo)
+            db.session.commit()
 
 
 # Create customized index view class that handles login & registration
