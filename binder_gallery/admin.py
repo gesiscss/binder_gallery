@@ -68,16 +68,46 @@ class BinderLaunchModelView(BaseModelView):
             abort(403)
         return super(BinderLaunchModelView, self).is_accessible()
 
-    def after_model_change(self, form, model, is_created):
+    def on_model_change(self, form, model, is_created):
+        """
+            Perform some actions before a model is created or updated.
 
-        target = model.provider + "/" + model.spec
-        repo = Repo.query.filter_by(provider_spec=target).first()
-        if not repo:
-            provider_prefix, org, repo_name, ref = target.split('/')
-            description=get_repo_description(f'https://www.github.com/{org}/{repo_name}/tree/{ref}')
-            repo = Repo(provider_spec=target, description=description)
-            db.session.add(repo)
-            db.session.commit()
+            Called from create_model and update_model in the same transaction
+            (if it has any meaning for a store backend).
+
+            By default does nothing.
+
+            :param form:
+                Form used to create/update model
+            :param model:
+                Model that will be created/updated
+            :param is_created:
+                Will be set to True if model was created and to False if edited
+        """
+        # TODO try to get desc before save
+        pass
+
+    def after_model_change(self, form, model, is_created):
+        if is_created is True:
+            provider_spec = model.provider_spec
+            if provider_spec.startswith('gh'):
+                org, repo_name, ref = model.spec.split('/', 2)
+                description = get_repo_description(f'https://www.github.com/{org}/{repo_name}/tree/{ref}')
+            else:
+                description = ''
+
+            repo = Repo.query.filter_by(provider_spec=provider_spec).first()
+            if not repo:
+                repo = Repo(provider_spec=provider_spec, description=description)
+                db.session.add(repo)
+                # FIXME setting repo id didnt worked
+                model.repo_id = repo.id
+                #db.session.add(model)
+                db.session.commit()
+            elif repo.description != description:
+                repo.description = description
+                model.repo_id = repo.id
+                db.session.commit()
 
 
 # Create customized index view class that handles login & registration

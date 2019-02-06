@@ -23,12 +23,16 @@ def get_created_by_gesis():
 
 
 def get_repo_description(repo_link):
+    if 'github.com' not in repo_link:
+        # only for GitHub repos
+        return NotImplemented
     page = requests.get(repo_link)
     soup = BeautifulSoup(page.content, 'html.parser')
     about = soup.find('span', itemprop='about')
     url = soup.find('span', itemprop='url')
     if about or url:
         text = about.text.strip() if about else ''
-        url = ' ' + url.find('a').text.strip() if url else ''
-        return text, url
-    return '', ''
+        # url = ' ' + url.find('a').text.strip() if url else ''
+        url = str(url.find('a')) if url else ''
+        return ' '.join([text, url]).strip()
+    return ''
