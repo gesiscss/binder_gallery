@@ -8,7 +8,6 @@ from wtforms import validators
 from .forms import LoginForm
 from .models import User, Repo
 from .utilities import repo_url_parts, get_repo_description
-from .app import db
 
 
 class BaseModelView(ModelView):
@@ -57,7 +56,7 @@ class BinderLaunchModelView(BaseModelView):
 
     def is_accessible(self):
         # require Bearer token authentication for creating new launch entry
-        if not os.get('FLASK_DEBUG', False) and request.path == '/admin/binderlaunch/new/' and request.method == "POST":
+        if not os.environ.get('FLASK_DEBUG', False) and request.path == '/admin/binderlaunch/new/' and request.method == "POST":
             token = request.headers.get('Authorization')
             if token:
                 if self.validate_form(self.create_form()):
@@ -72,21 +71,19 @@ class BinderLaunchModelView(BaseModelView):
 
     def on_model_change(self, form, model, is_created):
         if is_created is True:
+            # model was created in session before checking if repo exist, thats why we remove it first
+            self.session.expunge(model)
             provider_spec = model.provider_spec
             repo = Repo.query.filter_by(provider_spec=provider_spec).first()
             description = get_repo_description(model.repo_url)
             if repo:
-                # print(1)
-                model.repo_id = repo.id
-                if repo.description != description:
-                    # print(2)
-                    repo.description = description
+                repo.launches.append(model)
+                repo.description = description
             else:
-                # print(3)
-                repo = Repo(provider_spec=provider_spec, description=description)
-                db.session.add(repo)
-                db.session.commit()
-                model.repo_id = repo.id
+                repo = Repo(provider_spec=provider_spec, description=description, launches=[model])
+                self.session.add(repo)
+            #Now the model should be added
+            self.session.add(model)
 
 
 # Create customized index view class that handles login & registration

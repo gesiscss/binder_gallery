@@ -99,7 +99,7 @@ class User(db.Model, UserMixin):
 
 class Repo(db.Model):
     id = db.Column(db.Integer, primary_key=True)
-    launches = db.relationship('BinderLaunch', backref='detail', lazy=True)
+    launches = db.relationship('BinderLaunch', backref='detail', lazy='dynamic')
     provider_spec = db.Column(db.String, unique=True, index=True)
     description = db.Column(db.Text)
 
