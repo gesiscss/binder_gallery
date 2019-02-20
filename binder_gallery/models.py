@@ -3,6 +3,7 @@ import jwt
 from flask_sqlalchemy import SQLAlchemy
 from flask_login import UserMixin
 from werkzeug.security import generate_password_hash, check_password_hash
+from .utilities import provider_spec_to_url
 
 PROVIDER_PREFIXES = {
     'Git': 'git',
@@ -106,12 +107,8 @@ class Repo(db.Model):
         return f'{self.id}: {self.provider_spec}'
 
     @property
-    def repo_url(self):
-        if self.provider_spec.startswith('gh/'):
-            # for now only for GitHub repos
-            provider_prefix, org, repo_name, ref = self.provider_spec.split('/', 3)
-            return f'https://www.github.com/{org}/{repo_name}/tree/{ref}'
-        return NotImplemented
+    def url(self):
+        return provider_spec_to_url(self.provider_spec)
 
 
 class BinderLaunch(db.Model):
@@ -131,3 +128,11 @@ class BinderLaunch(db.Model):
     @property
     def provider_spec(self):
         return f'{PROVIDER_PREFIXES[self.provider]}/{self.spec}'
+
+    @property
+    def repo_url(self):
+        return provider_spec_to_url(self.provider_spec)
+
+    @property
+    def repo_description(self):
+        return self.detail.description if self.detail else ''

@@ -38,7 +38,7 @@ class CreatedByGesisModelView(BaseModelView):
 
 
 class RepoModelView(BaseModelView):
-    column_list = ('provider_spec', 'repo_url', 'description')
+    column_list = ('provider_spec', 'url', 'description')
     column_searchable_list = ['provider_spec']
     column_editable_list = ['description']
     form_widget_args = {
@@ -52,6 +52,7 @@ class BinderLaunchModelView(BaseModelView):
     can_delete = False
     can_edit = False
     column_default_sort = [('timestamp', True)]
+    # column_list = ('schema', 'version', 'timestamp', 'provider', 'status', 'repo_description')
 
     def is_accessible(self):
         # require Bearer token authentication for creating new launch entry
@@ -69,41 +70,15 @@ class BinderLaunchModelView(BaseModelView):
         return super(BinderLaunchModelView, self).is_accessible()
 
     def on_model_change(self, form, model, is_created):
-        """
-            Perform some actions before a model is created or updated.
-
-            Called from create_model and update_model in the same transaction
-            (if it has any meaning for a store backend).
-
-            By default does nothing.
-
-            :param form:
-                Form used to create/update model
-            :param model:
-                Model that will be created/updated
-            :param is_created:
-                Will be set to True if model was created and to False if edited
-        """
-        # TODO try to get desc before save
-        pass
-
-    def after_model_change(self, form, model, is_created):
         if is_created is True:
             provider_spec = model.provider_spec
-            if provider_spec.startswith('gh'):
-                org, repo_name, ref = model.spec.split('/', 2)
-                description = get_repo_description(f'https://www.github.com/{org}/{repo_name}/tree/{ref}')
-            else:
-                description = ''
-
             repo = Repo.query.filter_by(provider_spec=provider_spec).first()
+            description = get_repo_description(model.repo_url)
             if not repo:
                 repo = Repo(provider_spec=provider_spec, description=description)
                 db.session.add(repo)
-                # FIXME setting repo id didnt worked
-                model.repo_id = repo.id
-                #db.session.add(model)
                 db.session.commit()
+                model.repo_id = repo.id
             elif repo.description != description:
                 repo.description = description
                 model.repo_id = repo.id

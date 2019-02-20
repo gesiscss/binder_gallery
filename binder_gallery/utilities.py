@@ -1,32 +1,24 @@
 import requests
 from bs4 import BeautifulSoup
 
-from .models import CreatedByGesis
-
 
 def repo_url_parts(repo_url):
     return repo_url.replace('https://', '').rstrip('.git').rsplit('/', 2)
 
 
-def get_created_by_gesis():
-    created_by_gesis = []
-    # created_by_gesis = db.session.query(CreatedByGesis).filter_by(active=True).all()
-    objects = CreatedByGesis.query.filter_by(active=True).order_by(CreatedByGesis.position).all()
-    for o in objects:
-        # repo_name, repo_url, org, provider, binder_url, description
-        repo_url = o.repo_url
-        binder_url = o.binder_url
-        description = o.description
-        provider, org, repo = repo_url_parts(repo_url)
-        created_by_gesis.append([repo, repo_url, provider, org, binder_url, description])
-    return created_by_gesis
+def provider_spec_to_url(provider_spec):
+    if provider_spec.startswith('gh/'):
+        # for now only for GitHub repos
+        provider_prefix, org, repo_name, ref = provider_spec.split('/', 3)
+        return f'https://www.github.com/{org}/{repo_name}/tree/{ref}'
+    return ''
 
 
-def get_repo_description(repo_link):
-    if 'github.com' not in repo_link:
+def get_repo_description(repo_url):
+    if 'github.com' not in repo_url:
         # only for GitHub repos
-        return NotImplemented
-    page = requests.get(repo_link)
+        return ''
+    page = requests.get(repo_url, timeout=1)
     soup = BeautifulSoup(page.content, 'html.parser')
     about = soup.find('span', itemprop='about')
     url = soup.find('span', itemprop='url')
@@ -34,5 +26,5 @@ def get_repo_description(repo_link):
         text = about.text.strip() if about else ''
         # url = ' ' + url.find('a').text.strip() if url else ''
         url = str(url.find('a')) if url else ''
-        return ' '.join([text, url]).strip()
+        return f'{text} {url}'.strip()
     return ''

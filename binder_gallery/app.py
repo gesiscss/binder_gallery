@@ -2,7 +2,7 @@ import os
 from flask import Flask, render_template, abort
 import flask_login as login
 from flask_admin import Admin
-from .utilities import get_created_by_gesis
+from .utilities_db import get_created_by_gesis
 from .models import db, CreatedByGesis, User, Repo, BinderLaunch
 from .admin import UserModelView, CreatedByGesisModelView, AdminIndexView, RepoModelView, BinderLaunchModelView
 
