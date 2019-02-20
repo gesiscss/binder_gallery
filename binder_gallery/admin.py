@@ -1,3 +1,4 @@
+import os
 import flask_login as login
 from flask import request, url_for, redirect, abort
 from flask_admin import AdminIndexView as BaseAdminIndexView, expose, helpers
@@ -56,7 +57,7 @@ class BinderLaunchModelView(BaseModelView):
 
     def is_accessible(self):
         # require Bearer token authentication for creating new launch entry
-        if request.path == '/admin/binderlaunch/new/' and request.method == "POST":
+        if not os.get('FLASK_DEBUG', False) and request.path == '/admin/binderlaunch/new/' and request.method == "POST":
             token = request.headers.get('Authorization')
             if token:
                 if self.validate_form(self.create_form()):
@@ -74,15 +75,18 @@ class BinderLaunchModelView(BaseModelView):
             provider_spec = model.provider_spec
             repo = Repo.query.filter_by(provider_spec=provider_spec).first()
             description = get_repo_description(model.repo_url)
-            if not repo:
+            if repo:
+                # print(1)
+                model.repo_id = repo.id
+                if repo.description != description:
+                    # print(2)
+                    repo.description = description
+            else:
+                # print(3)
                 repo = Repo(provider_spec=provider_spec, description=description)
                 db.session.add(repo)
                 db.session.commit()
                 model.repo_id = repo.id
-            elif repo.description != description:
-                repo.description = description
-                model.repo_id = repo.id
-                db.session.commit()
 
 
 # Create customized index view class that handles login & registration

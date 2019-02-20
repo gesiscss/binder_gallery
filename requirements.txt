@@ -8,3 +8,4 @@ bs4==0.0.*
 Flask-Admin>=1.5.3
 Flask-Login==0.4.*
 pyjwt==1.7.*
+flask-debugtoolbar

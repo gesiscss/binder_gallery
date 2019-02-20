@@ -2,6 +2,7 @@ import os
 from flask import Flask, render_template, abort
 import flask_login as login
 from flask_admin import Admin
+from flask_debugtoolbar import DebugToolbarExtension
 from .utilities_db import get_created_by_gesis
 from .models import db, CreatedByGesis, User, Repo, BinderLaunch
 from .admin import UserModelView, CreatedByGesisModelView, AdminIndexView, RepoModelView, BinderLaunchModelView
@@ -25,6 +26,8 @@ app.config['SQLALCHEMY_DATABASE_URI'] = os.environ['BG_DATABASE_URL']
 app.config['SECRET_KEY'] = os.environ['BG_SECRET_KEY']
 app.config['SESSION_COOKIE_NAME'] = 'bg_session'
 app.config['SESSION_COOKIE_PATH'] = '/admin/'
+# debug toolbar
+toolbar = DebugToolbarExtension(app)
 # SQLALCHEMY_TRACK_MODIFICATIONS
 # If set to True (the default) Flask-SQLAlchemy will track modifications of objects and emit signals.
 # This requires extra memory and can be disabled if not needed.
@@ -104,7 +107,7 @@ def not_found(error):
 
 
 def run_app():
-    app.run(debug=False, host='0.0.0.0')
+    app.run(debug=os.getenv('FLASK_DEBUG', False), host='0.0.0.0')
 
 
 main = run_app
