@@ -1,4 +1,5 @@
-import requests
+from requests import get
+from requests.exceptions import Timeout
 from bs4 import BeautifulSoup
 
 
@@ -18,7 +19,10 @@ def get_repo_description(repo_url):
     if 'github.com' not in repo_url:
         # only for GitHub repos
         return ''
-    page = requests.get(repo_url, timeout=1)
+    try:
+        page = get(repo_url, timeout=1)
+    except Timeout as e:
+        return ''
     soup = BeautifulSoup(page.content, 'html.parser')
     about = soup.find('span', itemprop='about')
     url = soup.find('span', itemprop='url')
