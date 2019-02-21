@@ -52,7 +52,7 @@ class BinderLaunchModelView(BaseModelView):
     can_delete = False
     can_edit = False
     column_default_sort = [('timestamp', True)]
-    # column_list = ('schema', 'version', 'timestamp', 'provider', 'status', 'repo_description')
+    column_list = ('schema', 'version', 'timestamp', 'provider', 'status', 'repo_id', 'repo_description')
 
     def is_accessible(self):
         # require Bearer token authentication for creating new launch entry
@@ -70,8 +70,9 @@ class BinderLaunchModelView(BaseModelView):
         return super(BinderLaunchModelView, self).is_accessible()
 
     def on_model_change(self, form, model, is_created):
+        # https://docs.sqlalchemy.org/en/latest/orm/session_api.html
         if is_created is True:
-            # model was created in session before checking if repo exist, thats why we remove it first
+            # model was added into session before checking if repo exist, thats why we remove it first
             self.session.expunge(model)
             provider_spec = model.provider_spec
             repo = Repo.query.filter_by(provider_spec=provider_spec).first()
@@ -82,7 +83,8 @@ class BinderLaunchModelView(BaseModelView):
             else:
                 repo = Repo(provider_spec=provider_spec, description=description, launches=[model])
                 self.session.add(repo)
-            #Now the model should be added
+            # Now the model should be added
+            # into the Session after adding repo instance.
             self.session.add(model)
 
 
