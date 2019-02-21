@@ -99,7 +99,10 @@ class User(db.Model, UserMixin):
 
 class Repo(db.Model):
     id = db.Column(db.Integer, primary_key=True)
-    launches = db.relationship('BinderLaunch', backref='detail', lazy='dynamic')
+    # http://flask-sqlalchemy.pocoo.org/2.3/models/#one-to-many-relationships
+    launches = db.relationship('BinderLaunch',
+                               backref=db.backref('detail', lazy='joined'),
+                               lazy='dynamic')
     provider_spec = db.Column(db.String, unique=True, index=True)
     description = db.Column(db.Text)
 
