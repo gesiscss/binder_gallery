@@ -3,9 +3,9 @@ from flask import Flask, render_template, abort
 import flask_login as login
 from flask_admin import Admin
 from flask_debugtoolbar import DebugToolbarExtension
-from .utilities_db import get_created_by_gesis
-from .models import db, CreatedByGesis, User, Repo, BinderLaunch
-from .admin import UserModelView, CreatedByGesisModelView, AdminIndexView, RepoModelView, BinderLaunchModelView
+from .utilities_db import get_project_mixin
+from .models import db, CreatedByGesis, User, Repo, BinderLaunch, FeaturedProject
+from .admin import UserModelView, CreatedByGesisModelView, AdminIndexView, RepoModelView, BinderLaunchModelView, FeaturedProjectModelView
 
 
 # Initialize flask-login
@@ -36,6 +36,7 @@ admin = Admin(app, name='Binder Gallery', index_view=AdminIndexView(),
               base_template='admin/master.html', template_mode='bootstrap3')
 admin.add_view(UserModelView(User, db.session))
 admin.add_view(CreatedByGesisModelView(CreatedByGesis, db.session))
+admin.add_view(FeaturedProjectModelView(FeaturedProject, db.session))
 admin.add_view(RepoModelView(Repo, db.session))
 admin.add_view(BinderLaunchModelView(BinderLaunch, db.session))
 
@@ -73,11 +74,12 @@ context = {
 @app.route('/')
 def gallery():
     # TODO get_popular_repos_all
-    created_by_gesis = get_created_by_gesis()
-
+    created_by_gesis = get_project_mixin(CreatedByGesis)
+    featured_projcet = get_project_mixin(FeaturedProject)
+    project_mixin = [('Created By Gesis', created_by_gesis), ('Featured Projects', featured_projcet)]
     context.update({'active': 'gallery',
                     # 'popular_repos_all': popular_repos_all,
-                    'created_by_gesis': created_by_gesis,
+                    'project_mixin': project_mixin,
                     })
     return render_template('gallery.html', **context)
 

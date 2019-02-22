@@ -15,16 +15,13 @@ PROVIDER_PREFIXES = {
 db = SQLAlchemy()
 
 
-class CreatedByGesis(db.Model):
-    __tablename__ = 'created_by_gesis'
-
+class ProjectMixin(object):
     id = db.Column(db.Integer, primary_key=True)
     position = db.Column(db.Integer, unique=True)
     repo_url = db.Column(db.String(), nullable=False)
     binder_url = db.Column(db.String(), nullable=False)
     description = db.Column(db.Text())
     active = db.Column(db.Boolean(), default=True)
-
     # def __init__(self, position, repo_url, binder_url, description, active):
     #     self.position = position
     #     self.repo_url = repo_url
@@ -44,6 +41,14 @@ class CreatedByGesis(db.Model):
             'description': self.description,
             'active': self.active
         }
+
+
+class FeaturedProject(ProjectMixin, db.Model):
+    __tablename__ = 'featured_project'
+
+
+class CreatedByGesis(ProjectMixin, db.Model):
+    __tablename__ = 'created_by_gesis'
 
 
 class User(db.Model, UserMixin):

@@ -37,6 +37,10 @@ class CreatedByGesisModelView(BaseModelView):
                                              'It must in form "https://<provider>/<org_or_user/<repo_name>"')
 
 
+class FeaturedProjectModelView(CreatedByGesisModelView):
+    pass
+
+
 class RepoModelView(BaseModelView):
     column_list = ('provider_spec', 'url', 'description')
     column_searchable_list = ['provider_spec']
