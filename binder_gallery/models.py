@@ -1,5 +1,6 @@
 import os
 import jwt
+import architect
 from flask_sqlalchemy import SQLAlchemy
 from flask_login import UserMixin
 from werkzeug.security import generate_password_hash, check_password_hash
@@ -119,6 +120,7 @@ class Repo(db.Model):
         return provider_spec_to_url(self.provider_spec)
 
 
+@architect.install('partition', type='range', subtype='date', constraint='year', column='timestamp', orm='sqlalchemy', db=os.environ['BG_DATABASE_URL'])
 class BinderLaunch(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     schema = db.Column(db.String, nullable=False)
