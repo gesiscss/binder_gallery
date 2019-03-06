@@ -36,6 +36,7 @@
                         <th scope="col">Provider</th>
                         <th scope="col">Launches</th>
                         <th scope="col"></th>
+                        <th scope="col"></th>
                     </tr>
                     </thead>
                     <tbody>
@@ -46,14 +47,27 @@
                             <td>{{ repo_data[1] }}</td>
                             <td>{{ repo_data[2] }}</td>
                             <td>{{ repo_data[3] }}</td>
-                            <td>
+                            <td data-toggle="collapse" data-target="#mc-{{ repo_data[0] }}" aria-expanded="false"
+                                aria-controls="mc-{{ repo_data[0] }}">
                                 {% if repo_data[5] %}
-                                <a href="{{ repo_data[5] }}" target="_blank">
+                                    <button type="button" class="btn btn-default btn-sm"><span
+                                            class="glyphicon glyphicon-th-list"></span> Description
+                                    </button>
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if repo_data[6] %}
+                                <a href="{{ repo_data[6] }}" target="_blank">
                                 <img src="https://notebooks.gesis.org/binder/badge_logo.svg">
                                 </a>
                                 {% endif %}
                             </td>
                         </tr>
+                        {% if repo_data[5] %}
+                            <tr class="collapse multi-collapse" id="mc-{{ repo_data[0] }}">
+                                <td colspan="5">{{ repo_data[5] }}</td>
+                            </tr>
+                        {% endif %}
                     {% endfor %}
                     </tbody>
 

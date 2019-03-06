@@ -3,7 +3,7 @@ from flask import Flask, render_template, abort
 import flask_login as login
 from flask_admin import Admin
 from flask_debugtoolbar import DebugToolbarExtension
-from .utilities_db import get_projects, get_popular_repos
+from .utilities_db import get_projects, get_popular_repos, get_popular_repos_2
 from .models import db, CreatedByGesis, User, Repo, BinderLaunch, FeaturedProject
 from .admin import UserModelView, CreatedByGesisModelView, AdminIndexView, RepoModelView, BinderLaunchModelView, FeaturedProjectModelView
 
@@ -93,7 +93,7 @@ def gallery():
     return render_template('gallery.html', **context)
 
 
-@app.route('/popular_repos/<string:time_range>')
+@app.route('/<string:time_range>')
 def popular_repos(time_range):
     titles = {'24h': 'Popular repositories in last 24 hours',
               '7d': 'Popular repositories in last week',
@@ -101,12 +101,11 @@ def popular_repos(time_range):
               '60d': 'Popular repositories in last 60 days'}
     if time_range not in titles:
         abort(404)
-    # TODO get_popular_repos(time_range)
 
     context = get_default_template_context()
     context.update({'active': 'gallery',
                     'title': titles[time_range],
-                    'popular_repos': []})
+                    'popular_repos': get_popular_repos_2(time_range)})
     return render_template('popular_repos.html', **context)
 
 
