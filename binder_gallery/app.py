@@ -45,30 +45,32 @@ db.init_app(app)
 # Initialize flask-login
 init_login()
 
-# template context
-staging = os.environ.get('DEPLOYMENT_ENV') == 'staging'
-production = os.environ.get('DEPLOYMENT_ENV') == 'production'
-site_url = 'https://notebooks{}.gesis.org'.format('-test' if staging else '')
-context = {
-    'staging': staging,
-    'production': production,
-    'version': 'beta',
-    # 'shibboleth_entityID': f'{site_url}/shibboleth',
 
-    'home_url': '/',
-    'jhub_url': '/jupyter/',
-    'gesis_login_url': f'{site_url}/Shibboleth.sso/Login?SAMLDS=1&'
-                       f'target={site_url}/hub/login&'
-                       f'entityID=https%3A%2F%2Fidp.gesis.org%2Fidp%2Fshibboleth',
-    'bhub_url': '/binder/',
-    'about_url': '/about/',
-    'tou_url': '/terms_of_use/',
-    'imprint_url': 'https://www.gesis.org/en/institute/imprint/',
-    'data_protection_url': 'https://www.gesis.org/en/institute/data-protection/',
-    'gesis_url': 'https://www.gesis.org/en/home/',
-    'gallery_url': '/gallery/'
-    # 'help_url': 'https://www.gesis.org/en/help/',
-}
+def get_default_template_context():
+    staging = os.environ.get('DEPLOYMENT_ENV') == 'staging'
+    production = os.environ.get('DEPLOYMENT_ENV') == 'production'
+    site_url = 'https://notebooks{}.gesis.org'.format('-test' if staging else '')
+    context = {
+        'staging': staging,
+        'production': production,
+        'version': 'beta',
+        # 'shibboleth_entityID': f'{site_url}/shibboleth',
+
+        'home_url': '/',
+        'jhub_url': '/jupyter/',
+        'gesis_login_url': f'{site_url}/Shibboleth.sso/Login?SAMLDS=1&'
+                           f'target={site_url}/hub/login&'
+                           f'entityID=https%3A%2F%2Fidp.gesis.org%2Fidp%2Fshibboleth',
+        'bhub_url': '/binder/',
+        'about_url': '/about/',
+        'tou_url': '/terms_of_use/',
+        'imprint_url': 'https://www.gesis.org/en/institute/imprint/',
+        'data_protection_url': 'https://www.gesis.org/en/institute/data-protection/',
+        'gesis_url': 'https://www.gesis.org/en/home/',
+        'gallery_url': '/gallery/'
+        # 'help_url': 'https://www.gesis.org/en/help/',
+    }
+    return context
 
 
 @app.route('/')
@@ -82,6 +84,8 @@ def gallery():
     created_by_gesis = get_project_mixin(CreatedByGesis)
     featured_projcet = get_project_mixin(FeaturedProject)
     project_mixin = [('Created By Gesis', created_by_gesis), ('Featured Projects', featured_projcet)]
+
+    context = get_default_template_context()
     context.update({'active': 'gallery',
                     'popular_repos_all': popular_repos_all,
                     'project_mixin': project_mixin,
@@ -98,6 +102,8 @@ def popular_repos(time_range):
     if time_range not in titles:
         abort(404)
     # TODO get_popular_repos(time_range)
+
+    context = get_default_template_context()
     context.update({'active': 'gallery',
                     'title': titles[time_range],
                     'popular_repos': []})
@@ -106,6 +112,7 @@ def popular_repos(time_range):
 
 @app.errorhandler(404)
 def not_found(error):
+    context = get_default_template_context()
     context.update({'status_code': error.code,
                     'status_message': error.name,
                     'message': error.description,
