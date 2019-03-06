@@ -3,7 +3,7 @@ from flask import Flask, render_template, abort
 import flask_login as login
 from flask_admin import Admin
 from flask_debugtoolbar import DebugToolbarExtension
-from .utilities_db import get_project_mixin, get_popular_repos
+from .utilities_db import get_projects, get_popular_repos
 from .models import db, CreatedByGesis, User, Repo, BinderLaunch, FeaturedProject
 from .admin import UserModelView, CreatedByGesisModelView, AdminIndexView, RepoModelView, BinderLaunchModelView, FeaturedProjectModelView
 
@@ -81,14 +81,14 @@ def gallery():
         (3, 'Last 30 days', get_popular_repos('30d'), '30d',),
         (4, 'Last 60 days', get_popular_repos('60d'), '60d',),
     ]
-    created_by_gesis = get_project_mixin(CreatedByGesis)
-    featured_projcet = get_project_mixin(FeaturedProject)
-    project_mixin = [('Created By Gesis', created_by_gesis), ('Featured Projects', featured_projcet)]
+    created_by_gesis = get_projects(CreatedByGesis)
+    featured_projects = get_projects(FeaturedProject)
+    projects = [('Created By Gesis', created_by_gesis), ('Featured Projects', featured_projects)]
 
     context = get_default_template_context()
     context.update({'active': 'gallery',
                     'popular_repos_all': popular_repos_all,
-                    'project_mixin': project_mixin,
+                    'projects': projects,
                     })
     return render_template('gallery.html', **context)
 

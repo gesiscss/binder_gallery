@@ -3,20 +3,20 @@ from .models import Repo, BinderLaunch, db
 from datetime import datetime, timedelta
 from .utilities import provider_spec_to_url
 
-# for CreatedByGesis and FeaturePost
-def get_project_mixin(table):
+
+def get_projects(table):
+    # for CreatedByGesis and FeaturedProject
+
+    query = table.query.\
+        with_entities(table.repo_url, table.binder_url, table.description). \
+        filter_by(active=True).\
+        order_by(table.position)
+
     results = []
-
-    # created_by_gesis = db.session.query(CreatedByGesis).filter_by(active=True).all()
-    objects = table.query.filter_by(active=True).order_by(table.position).all()
-
-    for o in objects:
+    for r in query.all():
+        provider, org, repo = repo_url_parts(r[0])
         # repo_name, repo_url, org, provider, binder_url, description
-        repo_url = o.repo_url
-        binder_url = o.binder_url
-        description = o.description
-        provider, org, repo = repo_url_parts(repo_url)
-        results.append([repo, repo_url, provider, org, binder_url, description])
+        results.append([repo, r[0], provider, org, r[1], r[2]])
 
     return results
 
