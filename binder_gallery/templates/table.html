@@ -31,7 +31,7 @@
         </tr>
         {% if repo_data[5] %}
         <tr class="collapse multi-collapse" id="mc-{{ prefix }}-{{ loop.index }}">
-            <td colspan="{{ colspan }}" style="white-space: pre;">{{ repo_data[5] }}</td>
+            <td colspan="{{ colspan }}" style="white-space: pre;">{{ repo_data[5]|safe }}</td>
 {#            <td colspan="0"></td>#}
 {#            <td colspan="0"></td>#}
 {#            <td colspan="0"></td>#}

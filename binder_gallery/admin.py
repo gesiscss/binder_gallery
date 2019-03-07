@@ -40,21 +40,16 @@ class FeaturedProjectModelView(CreatedByGesisModelView):
 
 
 class RepoModelView(BaseModelView):
-    column_list = ('provider_spec', 'url', 'description')
+    column_list = ('provider_spec', 'repo_url', 'description')
     column_searchable_list = ['provider_spec']
     column_editable_list = ['description']
-    form_widget_args = {
-        'launches': {
-            'disabled': True
-        }
-    }
 
 
 class BinderLaunchModelView(BaseModelView):
     can_delete = True if os.environ.get('FLASK_DEBUG', False) in [1, '1', True] else False
     can_edit = True if os.environ.get('FLASK_DEBUG', False) in [1, '1', True] else False
     column_default_sort = [('timestamp', True)]
-    column_list = ('schema', 'version', 'timestamp', 'provider', 'status', 'repo_id', 'repo_description')
+    column_list = ('timestamp', 'provider', 'provider_spec', 'repo_id', 'repo_description')
 
     def is_accessible(self):
         # require Bearer token authentication for creating new launch entry
