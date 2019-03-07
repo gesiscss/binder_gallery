@@ -12,125 +12,31 @@
 {% endblock extra_css %}
 
 {% block main %}
-
-
-
     <div id="tabs">
         <h2>Popular repositories</h2>
-
         <ul>
-            {% for i, title, popular_repos, time_range in popular_repos_all %}
-{#                {% if popular_repos|length >=5 %}#}
-                <li><a href="#tabs-{{ i }}">{{ title }}</a></li>
-{#                {% endif %}#}
+            {% for time_range, title, popular_repos in popular_repos_all %}
+            <li><a href="#tabs-{{ loop.index }}">{{ title }}</a></li>
             {% endfor %}
         </ul>
-
-        {% for i, title, popular_repos, time_range in popular_repos_all %}
-            <div id="tabs-{{ i }}" class="table-responsive" style="padding: 0;">
-                <table class="table table-hover">
-                    <thead>
-                    <tr>
-                        <th scope="col">Repo</th>
-                        <th scope="col">Org./User</th>
-                        <th scope="col">Provider</th>
-                        <th scope="col">Launches</th>
-                        <th scope="col"></th>
-                        <th scope="col"></th>
-                    </tr>
-                    </thead>
-                    <tbody>
-                    {% for repo_data in popular_repos[:5] %}
-                        <tr>
-                            <td><a href="{{ repo_data[4] }}" target="_blank">{{ repo_data[0] }} </a>
-                            </td>
-                            <td>{{ repo_data[1] }}</td>
-                            <td>{{ repo_data[2] }}</td>
-                            <td>{{ repo_data[3] }}</td>
-                            <td data-toggle="collapse" data-target="#mc-{{ repo_data[0] }}" aria-expanded="false"
-                                aria-controls="mc-{{ repo_data[0] }}">
-                                {% if repo_data[5] %}
-                                    <button type="button" class="btn btn-default btn-sm"><span
-                                            class="glyphicon glyphicon-th-list"></span> Description
-                                    </button>
-                                {% endif %}
-                            </td>
-                            <td>
-                                {% if repo_data[6] %}
-                                <a href="{{ repo_data[6] }}" target="_blank">
-                                <img src="https://notebooks.gesis.org/binder/badge_logo.svg">
-                                </a>
-                                {% endif %}
-                            </td>
-                        </tr>
-                        {% if repo_data[5] %}
-                            <tr class="collapse multi-collapse" id="mc-{{ repo_data[0] }}">
-                                <td colspan="5">{{ repo_data[5] }}</td>
-                            </tr>
-                        {% endif %}
-                    {% endfor %}
-                    </tbody>
-
-                    <tfoot>
-                    <tr>
-                        <td colspan="5">
-                            {% if popular_repos|length > 5 %}
-                            <a href="/popular_repos/{{ time_range }}">
-                                View all ({{ title }})
-                            </a>
-                            {% endif %}
-                        </td>
-                    </tr>
-                    </tfoot>
-
-                </table>
-
-            </div>
+        {% for time_range, title, popular_repos in popular_repos_all %}
+        <div id="tabs-{{ loop.index }}" class="table-responsive" style="padding: 0;">
+            {% with repos=popular_repos[:5], launch=True, time_range=time_range, title=title,
+                    prefix=time_range, footer=True, popular_repos_length=popular_repos|length %}
+            {% include "table.html" %}
+            {% endwith %}
+        </div>
         {% endfor %}
     </div>
- {%  for title, repos in projects %}
+
+    {%  for title, repos in projects %}
     <div class="table-responsive">
         <h2> {{ title }}</h2>
-
-        <table class="table table-hover">
-            <thead>
-            <tr>
-                <th scope="col">Repo</th>
-                <th scope="col">Org./User</th>
-                <th scope="col">Provider</th>
-                <th scope="col"></th>
-                <th scope="col"></th>
-            </tr>
-            </thead>
-            <tbody>
-            {% for repo_name, repo_url, org, provider, binder_url, description in repos %}
-                <tr>
-                    <td><a href="{{ repo_url }}" target="_blank">{{ repo_name }}</a></td>
-                    <td>{{ org }}</td>
-                    <td>{{ provider }}</td>
-                    <td data-toggle="collapse" data-target="#mc-{{ repo_name }}" aria-expanded="false" aria-controls="mc-{{ repo_name }}">
-                        {% if description %}
-                        <button type="button" class="btn btn-default btn-sm"><span class="glyphicon glyphicon-th-list"></span> Description</button>
-                        {% endif %}
-                    </td>
-                    <td>
-                        {% if binder_url %}
-                        <a href="{{ binder_url }}" target="_blank">
-                            <img src="https://notebooks.gesis.org/binder/badge_logo.svg">
-                        </a>
-                        {% endif %}
-                    </td>
-                </tr>
-                {% if description %}
-                <tr class="collapse multi-collapse" id="mc-{{ repo_name }}">
-                    <td colspan="5" style="white-space: pre;">{{ description }}</td>
-                </tr>
-                {% endif %}
-            {% endfor %}
-            </tbody>
-        </table>
+        {% with repos=repos, prefix=loop.index %}
+        {% include "table.html" %}
+        {% endwith %}
     </div>
-        {% endfor %}
+    {% endfor %}
 {% endblock main %}
 
 {% block extra_js %}

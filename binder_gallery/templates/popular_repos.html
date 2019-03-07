@@ -13,36 +13,12 @@
 
 {% block main %}
 <h2>{{ title }}</h2>
+{# FIXME detail button/row and datatable dont work together #}
 <div class="table-responsive">
-    <table id="repos-table" class="table table-hover" >
-            <thead>
-            <tr>
-                <th scope="col">Repo</th>
-                <th scope="col">Org./User</th>
-                <th scope="col">Provider</th>
-                <th scope="col">Launches</th>
-                <th scope="col"></th>
-            </tr>
-            </thead>
-            <tbody>
-            {% for repo_data in popular_repos %}
-                <tr>
-                    <td><a href="{{ repo_data[4] }}" target="_blank">{{ repo_data[0] }}</a></td>
-                    <td>{{ repo_data[1] }}</td>
-                    <td>{{ repo_data[2] }}</td>
-                    <td>{{ repo_data[3] }}</td>
-                    <td>
-                        {% if repo_data[5] %}
-                        <a href="{{ repo_data[5] }}" target="_blank">
-                        <img src="https://notebooks.gesis.org/binder/badge_logo.svg">
-                        </a>
-                        {% endif %}
-                    </td>
-                </tr>
-            {% endfor %}
-
-            </tbody>
-        </table>
+    {% with repos=popular_repos, launch=True, title=title, prefix=0,
+            table_id="repos-table", popular_repos_length=popular_repos|length %}
+    {% include "table.html" %}
+    {% endwith %}
 </div>
 
 {% block extra_js %}

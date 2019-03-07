@@ -3,9 +3,10 @@ from flask import Flask, render_template, abort
 import flask_login as login
 from flask_admin import Admin
 from flask_debugtoolbar import DebugToolbarExtension
-from .utilities_db import get_projects, get_popular_repos, get_popular_repos_2
+from .utilities_db import get_projects, get_popular_repos
 from .models import db, CreatedByGesis, User, Repo, BinderLaunch, FeaturedProject
-from .admin import UserModelView, CreatedByGesisModelView, AdminIndexView, RepoModelView, BinderLaunchModelView, FeaturedProjectModelView
+from .admin import UserModelView, CreatedByGesisModelView, AdminIndexView, RepoModelView, \
+    BinderLaunchModelView, FeaturedProjectModelView
 
 
 # Initialize flask-login
@@ -76,14 +77,13 @@ def get_default_template_context():
 @app.route('/')
 def gallery():
     popular_repos_all = [
-        (1, 'Last 24 hours', get_popular_repos('24h'), '24h',),
-        (2, 'Last week', get_popular_repos('7d'), '7d',),
-        (3, 'Last 30 days', get_popular_repos('30d'), '30d',),
-        (4, 'Last 60 days', get_popular_repos('60d'), '60d',),
+        ('24h', 'Last 24 hours', get_popular_repos('24h'), ),
+        ('7d', 'Last week', get_popular_repos('7d'), ),
+        ('30d', 'Last 30 days', get_popular_repos('30d'), ),
+        ('60d', 'Last 60 days', get_popular_repos('60d'), ),
     ]
-    created_by_gesis = get_projects(CreatedByGesis)
-    featured_projects = get_projects(FeaturedProject)
-    projects = [('Created By Gesis', created_by_gesis), ('Featured Projects', featured_projects)]
+    projects = [('Created By Gesis', get_projects(CreatedByGesis)),
+                ('Featured Projects', get_projects(FeaturedProject))]
 
     context = get_default_template_context()
     context.update({'active': 'gallery',
@@ -105,7 +105,7 @@ def popular_repos(time_range):
     context = get_default_template_context()
     context.update({'active': 'gallery',
                     'title': titles[time_range],
-                    'popular_repos': get_popular_repos_2(time_range)})
+                    'popular_repos': get_popular_repos(time_range)})
     return render_template('popular_repos.html', **context)
 
 

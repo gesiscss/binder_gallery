@@ -7,7 +7,6 @@ from flask_admin.helpers import is_safe_url
 from wtforms import validators
 from .forms import LoginForm
 from .models import User, Repo
-from .utilities import repo_url_parts, get_repo_description
 
 
 class BaseModelView(ModelView):
@@ -30,8 +29,7 @@ class CreatedByGesisModelView(BaseModelView):
 
     def on_model_change(self, form, model, is_created):
         if form.repo_url and form.repo_url.data:
-            provider_org_repo = repo_url_parts(form.repo_url.data)
-            if len(provider_org_repo) == 3:
+            if len(model.repo_url_parts) == 3:
                 return super().on_model_change(form, model, is_created)
             raise validators.ValidationError('Invalid repo url! '
                                              'It must in form "https://<provider>/<org_or_user/<repo_name>"')
@@ -53,8 +51,8 @@ class RepoModelView(BaseModelView):
 
 
 class BinderLaunchModelView(BaseModelView):
-    can_delete = False
-    can_edit = False
+    can_delete = True if os.environ.get('FLASK_DEBUG', False) in [1, '1', True] else False
+    can_edit = True if os.environ.get('FLASK_DEBUG', False) in [1, '1', True] else False
     column_default_sort = [('timestamp', True)]
     column_list = ('schema', 'version', 'timestamp', 'provider', 'status', 'repo_id', 'repo_description')
 
@@ -80,7 +78,7 @@ class BinderLaunchModelView(BaseModelView):
             self.session.expunge(model)
             provider_spec = model.provider_spec
             repo = Repo.query.filter_by(provider_spec=provider_spec).first()
-            description = get_repo_description(model.repo_url)
+            description = model.get_repo_description()
             if repo:
                 repo.launches.append(model)
                 repo.description = description
