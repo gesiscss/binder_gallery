@@ -29,6 +29,12 @@ def get_projects(table):
 
 
 def get_popular_repos(time_range):
+    """DOes sth
+
+    :param time_range: (24h,7d,30d, all time) the interval to count launches
+    :return: list {repo_id: [repo_name,org,provider,repo_url,binder_url,description,launches]}
+    :rtype: list
+    """
     if time_range.endswith('h'):
         p = {'hours': int(time_range.split('h')[0])}
     elif time_range.endswith('d'):
@@ -62,34 +68,3 @@ def get_popular_repos(time_range):
     return popular_repos
 
 
-"""
-def get_popular_repos(time_range):
-    #FixME binder_url
-    popular_repos = []  # [ (repo,org,provider,launches,repo_url)
-    if time_range.endswith('h'):
-        p = {'hours': int(time_range.split('h')[0])}
-    elif time_range.endswith('d'):
-        p = {'days': int(time_range.split('d')[0])}
-    else:
-        raise ValueError('Time range must be in hours or days.')
-    time_delta = timedelta(**p)
-    end_time = datetime.utcnow() - time_delta
-    objects = BinderLaunch.query.join(Repo, BinderLaunch.repo_id == Repo.id).\
-        with_entities(Repo.provider_spec, Repo.description, db.func.count(BinderLaunch.repo_id)).\
-        filter(BinderLaunch.timestamp.between(end_time, datetime.utcnow())).\
-        group_by(Repo.provider_spec, Repo.description).all()
-
-    for o in objects:
-        repo_url = provider_spec_to_url(o[0])
-        provider_org_repo = o[0].rsplit('/')
-        provider, org, repo, ss = provider_org_repo
-        if provider == 'gh':
-            provider = 'GitHub'
-        description = o[1]
-        launches = o[2]
-        repository = (repo, org, provider, launches, repo_url, description, 'binder_url')
-        popular_repos.append(repository)
-    popular_repos.sort(key=lambda x: x[3], reverse=True)
-
-    return popular_repos
-"""

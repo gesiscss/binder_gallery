@@ -10,3 +10,6 @@ Flask-Login==0.4.*
 PyJWT==1.7.*
 flask-DebugToolbar==0.10.*
 architect==0.5.*
+Werkzeug==0.14.*
+WTForms==2.2.*
+SQLAlchemy==1.2.*

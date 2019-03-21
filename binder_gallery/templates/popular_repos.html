@@ -13,7 +13,6 @@
 
 {% block main %}
 <h2>{{ title }}</h2>
-{# FIXME detail button/row and datatable dont work together #}
 <div class="table-responsive">
     {% with repos=popular_repos, launch=True, title=title, prefix=0,
             table_id="repos-table", popular_repos_length=popular_repos|length %}
@@ -22,10 +21,9 @@
 </div>
 
 {% block extra_js %}
-<script src="https://code.jquery.com/jquery-3.3.1.js"></script>
 {#https://datatables.net/#}
-<script src="https://cdn.datatables.net/1.10.19/js/jquery.dataTables.min.js"></script>
-<script src="https://cdn.datatables.net/1.10.19/js/dataTables.bootstrap.min.js"></script>
+<script src="/static/vendor/DataTables/DataTables-1.10.18/js/jquery.dataTables.min.js"></script>
+<script src="/static/vendor/DataTables/DataTables-1.10.18/js/dataTables.bootstrap.min.js"></script>
 
 <script>
     $(document).ready(function () {

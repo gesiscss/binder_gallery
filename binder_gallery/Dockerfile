@@ -15,7 +15,7 @@ RUN apt-get update -y && \
 RUN pip install --no-cache-dir --upgrade pip
 
 # We copy just the requirements.txt first to leverage Docker cache
-COPY ./requirements.txt /orc_site/requirements.txt
+COPY ./requirements.txt /binder_gallery/requirements.txt
 
 #WORKDIR /orc_site
 
