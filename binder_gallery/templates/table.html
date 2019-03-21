@@ -6,49 +6,31 @@
         <th scope="col">Org./User</th>
         <th scope="col">Provider</th>
         {% if launch %}<th scope="col">Launches</th>{% endif %}
-        <th scope="col"></th>  {# description button #}
         <th scope="col"></th>  {# binder badge #}
     </tr>
     </thead>
     <tbody>
     {% for repo_data in repos %}
         {# repo_name, org, provider, repo_url, binder_url, description, launches  #}
-        <tr>
+        <tr  data-description="{{ repo_data[5] }}">
             <td><a href="{{ repo_data[3] }}" target="_blank">{{ repo_data[0] }}</a></td>
             <td>{{ repo_data[1] }}</td>
             <td>{{ repo_data[2] }}</td>
             {% if launch %}<td>{{ repo_data[6] }}</td>{% endif %}
-            <td data-toggle="collapse" data-target="#mc-{{ prefix }}-{{ loop.index }}" aria-expanded="false" aria-controls="mc-{{ prefix }}-{{ loop.index }}">
-                {% if repo_data[5] %}
-                <button type="button" class="btn btn-default btn-sm"><span class="glyphicon glyphicon-th-list"></span> Description</button>
-                {% endif %}
-            </td>
             <td>
                 {% if repo_data[4] %}
                 <a href="{{ repo_data[4] }}" target="_blank"><img src="https://notebooks.gesis.org/binder/badge_logo.svg"></a>
                 {% endif %}
             </td>
         </tr>
-        {% if repo_data[5] %}
-        <tr class="collapse multi-collapse" id="mc-{{ prefix }}-{{ loop.index }}">
-            <td colspan="{{ colspan }}" style="white-space: pre;">{{ repo_data[5]|safe }}</td>
-{#            <td colspan="0"></td>#}
-{#            <td colspan="0"></td>#}
-{#            <td colspan="0"></td>#}
-{#            <td colspan="0"></td>#}
-{#            <td colspan="0"></td>#}
-        </tr>
-        {% endif %}
     {% endfor %}
     </tbody>
 
-    {% if footer %}
+    {% if footer and popular_repos_length > 5 %}
     <tfoot>
         <tr>
             <td colspan="{{ colspan }}">
-                {% if popular_repos_length > 5 %}
                 <a href="/{{ time_range }}">View all ({{ title }})</a>
-                {% endif %}
             </td>
         </tr>
     </tfoot>
