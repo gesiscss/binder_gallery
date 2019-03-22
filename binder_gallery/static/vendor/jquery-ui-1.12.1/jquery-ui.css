@@ -835,8 +835,7 @@ button.ui-button::-moz-focus-inner {
 	padding: .2em;
 }
 .ui-tabs .ui-tabs-nav {
-	width: 55%;
-	margin: auto;
+	margin: 0;
 	padding: .2em .2em 0;
 }
 .ui-tabs .ui-tabs-nav li {

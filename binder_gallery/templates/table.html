@@ -1,5 +1,5 @@
 {% set colspan = repos[0]|length-1 %}
-<table {% if table_id %}id="{{ table_id }}"{% endif %}class="table table-hover">
+<table id="{{ table_id }}" class="table table-hover">
     <thead>
     <tr>
         <th scope="col">Repo</th>
@@ -26,7 +26,7 @@
     {% endfor %}
     </tbody>
 
-    {% if footer and popular_repos_length > 5 %}
+    {% if repos_length and repos_length > 5 %}
     <tfoot>
         <tr>
             <td colspan="{{ colspan }}">
@@ -35,5 +35,4 @@
         </tr>
     </tfoot>
     {% endif %}
-
 </table>

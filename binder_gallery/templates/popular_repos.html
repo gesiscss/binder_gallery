@@ -14,8 +14,7 @@
 {% block main %}
 <h2>{{ title }}</h2>
 <div class="table-responsive">
-    {% with repos=popular_repos, launch=True, title=title, prefix=0,
-            table_id="repos-table", popular_repos_length=popular_repos|length %}
+    {% with table_id="repos-table", repos=popular_repos, launch=True %}
     {% include "table.html" %}
     {% endwith %}
 </div>

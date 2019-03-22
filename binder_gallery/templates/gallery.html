@@ -7,22 +7,25 @@
     {% block etracker_et_areas_no_js %}%2Fgallery{% endblock etracker_et_areas_no_js %}
 {% endif %}
 
-{% block extra_css %}
+{% block head %}
 <link rel="stylesheet" href="/static/vendor/jquery-ui-1.12.1/jquery-ui.css">
-{% endblock extra_css %}
+{{ super() }}
+{% endblock head %}
 
 {% block main %}
     <div id="tabs">
         <h2>Popular repositories</h2>
-        <ul>
-            {% for time_range, title, popular_repos in popular_repos_all %}
-            <li><a href="#tabs-{{ loop.index }}">{{ title }}</a></li>
-            {% endfor %}
-        </ul>
+        <div class="tabs_wrapper">
+            <ul>
+                {% for time_range, title, popular_repos in popular_repos_all %}
+                <li><a href="#tabs-{{ loop.index }}">{{ title }}</a></li>
+                {% endfor %}
+            </ul>
+        </div>
         {% for time_range, title, popular_repos in popular_repos_all %}
         <div id="tabs-{{ loop.index }}" class="table-responsive" style="padding: 0;">
-            {% with repos=popular_repos[:5], launch=True, time_range=time_range, title=title,
-                    prefix=time_range, footer=True, popular_repos_length=popular_repos|length %}
+            {% with table_id=time_range, repos=popular_repos[:5], launch=True,
+                    repos_length=popular_repos|length, time_range=time_range, title=title %}
             {% include "table.html" %}
             {% endwith %}
         </div>
@@ -32,7 +35,7 @@
     {%  for title, repos in projects %}
     <div class="table-responsive">
         <h2> {{ title }}</h2>
-        {% with repos=repos, prefix=loop.index %}
+        {% with table_id=loop.index, repos=repos %}
         {% include "table.html" %}
         {% endwith %}
     </div>
