@@ -28,11 +28,13 @@ def get_projects(table):
     return projects
 
 
-def get_popular_repos(time_range):
-    """DOes sth
+def get_launched_repos(time_range):
+    """Gets launched repos from BinderLaunch table in a given time range
+    and aggregates them over launch count in order according to position
 
-    :param time_range: (24h,7d,30d, all time) the interval to count launches
-    :return: list {repo_id: [repo_name,org,provider,repo_url,binder_url,description,launches]}
+    :param time_range: the interval to get launches
+    :return: list of launched repos, ordered by launch count,
+    an item in list: [repo_name,org,provider,repo_url,binder_url,description,launch_count]
     :rtype: list
     """
     if time_range.endswith('h'):
@@ -42,6 +44,7 @@ def get_popular_repos(time_range):
     else:
         raise ValueError('Time range must be in hours or days.')
 
+    # get launch counts in given time range
     _to = datetime.utcnow()
     _from = _to - timedelta(**p)
     objects = BinderLaunch.query.\
@@ -49,7 +52,8 @@ def get_popular_repos(time_range):
         filter(BinderLaunch.timestamp.between(_from, _to)).\
         all()
 
-    popular_repos = {}  # {repo_id: [repo_name,org,provider,repo_url,binder_url,description,launches]}
+    # aggregate over launch count
+    popular_repos = {}  # {repo_id: [repo_name,org,provider,repo_url,binder_url,description,launch_count]}
     for o in objects:
         repo_id = o.repo_id
         if repo_id in popular_repos:
@@ -58,13 +62,13 @@ def get_popular_repos(time_range):
             org, repo_name = o.spec_parts[:2]
             if org == '':
                 # for Git provider
-                repo_name = repo_name.replace('https://', '').rstrip('.git')
-            launches = 1
+                repo_name = repo_name.replace('https://', '').replace('http://', '').rstrip('.git')
+            launch_count = 1
             popular_repos[repo_id] = [repo_name, org, o.provider, o.repo_url,
-                                      o.binder_url, o.repo_description, launches]
+                                      o.binder_url, o.repo_description, launch_count]
 
+    # order according to launch count
     popular_repos = list(popular_repos.values())
     popular_repos.sort(key=lambda x: x[-1], reverse=True)
+
     return popular_repos
-
-
