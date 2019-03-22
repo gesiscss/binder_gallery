@@ -53,7 +53,9 @@ class BinderLaunchModelView(BaseModelView):
 
     def is_accessible(self):
         # require Bearer token authentication for creating new launch entry
-        if not os.environ.get('FLASK_DEBUG', False) and request.path == '/admin/binderlaunch/new/' and request.method == "POST":
+        if not os.environ.get('FLASK_DEBUG', False) and \
+           request.path == '/admin/binderlaunch/new/' and \
+           request.method == "POST":
             token = request.headers.get('Authorization')
             if token:
                 if self.validate_form(self.create_form()):

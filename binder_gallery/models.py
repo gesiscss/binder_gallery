@@ -7,6 +7,7 @@ from bs4 import BeautifulSoup
 from flask_sqlalchemy import SQLAlchemy
 from flask_login import UserMixin
 from werkzeug.security import generate_password_hash, check_password_hash
+from werkzeug.utils import cached_property
 from urllib.parse import unquote
 
 PROVIDER_PREFIXES = {
@@ -47,7 +48,7 @@ class ProjectMixin(object):
             'active': self.active
         }
 
-    @property
+    @cached_property
     def repo_url_parts(self):
         # provider, org, repo_name
         return self.repo_url.replace('https://', '').rstrip('.git').rsplit('/', 2)
@@ -136,7 +137,7 @@ class User(db.Model, UserMixin):
 
 class RepoMixin(object):
 
-    @property
+    @cached_property
     def spec_parts(self):
         if self.provider_prefix == 'git':
             repo_url, resolved_ref = self.spec.rsplit('/', 1)
@@ -157,7 +158,7 @@ class RepoMixin(object):
             parts = [user_name, gist_id, unresolved_ref]
         return parts
 
-    @property
+    @cached_property
     def repo_url(self):
         if self.provider_prefix == 'git':
             repo_url = self.spec_parts[1]
@@ -183,7 +184,7 @@ class RepoMixin(object):
             ref_url = f'https://www.github.com/{org}/{repo_name}/tree/{unresolved_ref}'
         elif self.provider_prefix == 'gl':
             org, repo_name, unresolved_ref = self.spec_parts
-            ref_url = f'https://www.gitlab.com/{org}/{repo_name}/commit/{unresolved_ref}'
+            ref_url = f'https://www.gitlab.com/{org}/{repo_name}/tree/{unresolved_ref}'
         elif self.provider_prefix == 'gist':
             user_name, gist_id, unresolved_ref = self.spec_parts
             ref_url = f'https://gist.github.com/{user_name}/{gist_id}/{unresolved_ref}'
@@ -230,7 +231,7 @@ class Repo(RepoMixin, db.Model):
     def __repr__(self):
         return f'{self.id}: {self.provider_spec}'
 
-    @property
+    @cached_property
     def provider_prefix(self):
         for prefix in PROVIDER_PREFIXES.values():
             if self.provider_spec.startswith(prefix+'/'):
@@ -259,7 +260,7 @@ class BinderLaunch(RepoMixin, db.Model):
     def __repr__(self):
         return f'{self.id}'
 
-    @property
+    @cached_property
     def provider_prefix(self):
         return PROVIDER_PREFIXES[self.provider]
 
