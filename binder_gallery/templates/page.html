@@ -66,7 +66,11 @@
     <div id="main-container" class="container">
         {% block headline %}
         {% endblock headline %}
-
+        <select id="binder-select" onchange="update_launch_urls()" >
+            <option value="https://notebooks.gesis.org/binder/" selected>GESIS
+            <option value="https://mybinder.org">MyBinder
+            <option value="https://binder.pangeo.io">Pangeo
+        </select>
         {% block main %}
         {% endblock main %}
     </div>
@@ -82,6 +86,16 @@
 
     <script src="/static/scripts/gesis_nav.js"></script>
     <script src="/static/scripts/description_row.js"></script>
+    <script>
+    function update_launch_urls() {
+        var new_binder_url = $("#binder-select").prop("value");
+         $('.launch-badge-link').each(function () {
+             var href = $(this).attr('href');
+             $(this).attr('href', href.replace($(this).data('binder'), new_binder_url));
+             $(this).data('binder', new_binder_url);
+         });
+    }
+</script>
     {% block extra_js %}
     {% endblock extra_js %}
 </body>

@@ -19,7 +19,10 @@
             {% if launch %}<td>{{ repo_data[6] }}</td>{% endif %}
             <td>
                 {% if repo_data[4] %}
-                <a href="{{ repo_data[4] }}" target="_blank"><img src="https://notebooks.gesis.org/binder/badge_logo.svg"></a>
+                    <a class="launch-badge-link" href="{{ repo_data[4] }}" target="_blank"
+                       data-binder="https://notebooks.gesis.org/binder">
+                        <img src="https://notebooks.gesis.org/binder/badge_logo.svg">
+                    </a>
                 {% endif %}
             </td>
         </tr>
