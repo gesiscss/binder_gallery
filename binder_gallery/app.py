@@ -76,6 +76,7 @@ def get_default_template_context():
 
 @app.route('/')
 def gallery():
+
     popular_repos_all = [
         ('24h', 'Last 24 hours', get_launched_repos('24h'), ),
         ('7d', 'Last week', get_launched_repos('7d'), ),
@@ -84,11 +85,16 @@ def gallery():
     ]
     projects = [('Created By Gesis', get_projects(CreatedByGesis)),
                 ('Featured Projects', get_projects(FeaturedProject))]
-
+    binders = [
+        ('GESIS', 'https://notebooks.gesis.org/binder'),
+        ('MyBinder', 'https://mybinder.org'),
+        ('Pangeo', 'https://binder.pangeo.io'),
+                    ]
     context = get_default_template_context()
     context.update({'active': 'gallery',
                     'popular_repos_all': popular_repos_all,
                     'projects': projects,
+                    'binders': binders,
                     })
     return render_template('gallery.html', **context)
 
@@ -99,12 +105,18 @@ def popular_repos(time_range):
               '7d': 'Popular repositories in last week',
               '30d': 'Popular repositories in last 30 days',
               '60d': 'Popular repositories in last 60 days'}
+    binders = [
+        ('GESIS', 'https://notebooks.gesis.org/binder'),
+        ('MyBinder', 'https://mybinder.org'),
+        ('Pangeo', 'https://binder.pangeo.io'),
+                    ]
     if time_range not in titles:
         abort(404)
 
     context = get_default_template_context()
     context.update({'active': 'gallery',
                     'title': titles[time_range],
+                    'binders': binders,
                     'popular_repos': get_launched_repos(time_range)})
     return render_template('popular_repos.html', **context)
 

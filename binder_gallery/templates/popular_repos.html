@@ -12,12 +12,15 @@
 {% endblock extra_css %}
 
 {% block main %}
-<h2>{{ title }}</h2>
-<div class="table-responsive">
-    {% with table_id="repos-table", repos=popular_repos, launch=True %}
-    {% include "table.html" %}
+    {% with binders = binders %}
+        {% include "select_binder.html" %}
     {% endwith %}
-</div>
+    <h2>{{ title }}</h2>
+    <div class="table-responsive">
+        {% with table_id="repos-table", repos=popular_repos, launch=True %}
+            {% include "table.html" %}
+        {% endwith %}
+    </div>
 
 {% block extra_js %}
 {#https://datatables.net/#}

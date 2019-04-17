@@ -1,0 +1,8 @@
+<div class="input-group col-xs-6 col-sm-3" style="margin-top: 10px;">
+    <span class="input-group-addon">Launch repo at:</span>
+    <select id="binder-select" class="form-control selectpicker" onchange="update_launch_urls()">
+        {% for binder in binders %}
+            <option value={{ binder[1] }}> {{ binder[0] }}
+        {% endfor %}
+    </select>
+</div>

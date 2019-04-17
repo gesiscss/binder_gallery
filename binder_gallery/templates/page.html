@@ -66,11 +66,6 @@
     <div id="main-container" class="container">
         {% block headline %}
         {% endblock headline %}
-        <select id="binder-select" onchange="update_launch_urls()" >
-            <option value="https://notebooks.gesis.org/binder/" selected>GESIS
-            <option value="https://mybinder.org">MyBinder
-            <option value="https://binder.pangeo.io">Pangeo
-        </select>
         {% block main %}
         {% endblock main %}
     </div>
