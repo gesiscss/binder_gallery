@@ -12,9 +12,6 @@
 {% endblock extra_css %}
 
 {% block main %}
-    {% with binders = binders %}
-        {% include "select_binder.html" %}
-    {% endwith %}
     <h2>{{ title }}</h2>
     <div class="table-responsive">
         {% with table_id="repos-table", repos=popular_repos, launch=True %}
@@ -37,6 +34,20 @@
                 "order": [[3, "desc"]]
             });
         }
+
+        // https://datatables.net/reference/event/preDraw#Example
+        // update launch badges after each search event is done
+        var binders = {{ binders|safe }};
+        table.on('draw.dt', function () {
+            for (const b of binders) {
+                var binder_select = $('#binder-select');
+                var new_binder_url = binder_select.prop('value');
+                binder_select.attr('data-binder', b.url);  // this will be prev url
+                if (b.url !== new_binder_url) {
+                    update_launch_urls();
+                }
+            }
+        });
     });
 </script>
 {% endblock extra_js %}

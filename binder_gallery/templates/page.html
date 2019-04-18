@@ -66,6 +66,13 @@
     <div id="main-container" class="container">
         {% block headline %}
         {% endblock headline %}
+
+        {% block binder_select %}
+        {%  with binders = binders  %}
+        {% include "select_binder.html" %}
+        {% endwith %}
+        {% endblock binder_select %}
+
         {% block main %}
         {% endblock main %}
     </div>
@@ -81,16 +88,46 @@
 
     <script src="/static/scripts/gesis_nav.js"></script>
     <script src="/static/scripts/description_row.js"></script>
+
+    {% block binder_select_js %}
     <script>
+
     function update_launch_urls() {
-        var new_binder_url = $("#binder-select").prop("value");
-         $('.launch-badge-link').each(function () {
-             var href = $(this).attr('href');
-             $(this).attr('href', href.replace($(this).data('binder'), new_binder_url));
-             $(this).data('binder', new_binder_url);
-         });
+        var binder_select = $('#binder-select');
+        var prev_binder_url = binder_select.attr('data-binder');
+        var new_binder_url = binder_select.prop('value');
+
+        $('.launch-badge-link').each(function () {
+            var href = $(this).attr('href');
+            $(this).attr('href', href.replace(prev_binder_url, new_binder_url));
+        });
+
+        // save latest binder url in select element
+        binder_select.attr('data-binder', new_binder_url);
     }
-</script>
+
+    function update_binder_data() {
+        // update content of popover with versions info of each selected binder
+        $("#binder-versions-info").data('bs.popover').options.content = $('#binder-select').find('option:selected').data('versions');
+
+        // update launch badge urls for selected binder
+        update_launch_urls();
+    }
+
+    $( document ).ready(function() {
+        // https://getbootstrap.com/docs/3.3/javascript/#popovers-options
+        // initialize popover without content
+        $("#binder-versions-info").popover({'trigger': 'hover'});
+        // update data with last saved selection
+        update_binder_data();
+        // add event to update binder launch urls and version info when selection changes
+        $("#binder-select").change(function() {
+            update_binder_data();
+        });
+    });
+    </script>
+    {% endblock binder_select_js %}
+
     {% block extra_js %}
     {% endblock extra_js %}
 </body>

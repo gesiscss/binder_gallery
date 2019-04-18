@@ -1,4 +1,5 @@
 import os
+import requests
 from flask import Flask, render_template, abort
 import flask_login as login
 from flask_admin import Admin
@@ -7,6 +8,24 @@ from .utilities_db import get_projects, get_launched_repos
 from .models import db, CreatedByGesis, User, Repo, BinderLaunch, FeaturedProject
 from .admin import UserModelView, CreatedByGesisModelView, AdminIndexView, RepoModelView, \
     BinderLaunchModelView, FeaturedProjectModelView
+from logging.config import dictConfig
+
+# http://flask.pocoo.org/docs/1.0/logging/
+dictConfig({
+    'version': 1,
+    'formatters': {'default': {
+        'format': '[%(asctime)s] %(levelname)s in %(module)s: %(message)s',
+    }},
+    'handlers': {'wsgi': {
+        'class': 'logging.StreamHandler',
+        'stream': 'ext://flask.logging.wsgi_errors_stream',
+        'formatter': 'default'
+    }},
+    'root': {
+        'level': 'INFO',
+        'handlers': ['wsgi']
+    }
+})
 
 
 # Initialize flask-login
@@ -47,6 +66,26 @@ db.init_app(app)
 init_login()
 
 
+def get_binders(fetch_versions=True):
+    binders = [
+        {'name': 'GESIS', 'url': 'https://notebooks.gesis.org/binder'},
+        {'name': 'mybinder.org', 'url': 'https://mybinder.org'},
+        {'name': 'Pangeo', 'url': 'https://binder.pangeo.io'},
+    ]
+    if fetch_versions is True:
+        for binder in binders:
+            versions = "No versions info is available"
+            try:
+                response = requests.get(binder['url'] + '/versions', timeout=0.5)
+                if response.status_code == 200:
+                    versions = response.json()
+                    versions = f"BinderHub {versions['binderhub']} with {versions['builder']}"
+            except Exception as e:
+                app.logger.error(e)
+            binder['versions'] = versions
+    return binders
+
+
 def get_default_template_context():
     staging = os.environ.get('DEPLOYMENT_ENV') == 'staging'
     production = os.environ.get('DEPLOYMENT_ENV') == 'production'
@@ -85,16 +124,11 @@ def gallery():
     ]
     projects = [('Created By Gesis', get_projects(CreatedByGesis)),
                 ('Featured Projects', get_projects(FeaturedProject))]
-    binders = [
-        ('GESIS', 'https://notebooks.gesis.org/binder'),
-        ('MyBinder', 'https://mybinder.org'),
-        ('Pangeo', 'https://binder.pangeo.io'),
-                    ]
     context = get_default_template_context()
     context.update({'active': 'gallery',
                     'popular_repos_all': popular_repos_all,
                     'projects': projects,
-                    'binders': binders,
+                    'binders': get_binders(),
                     })
     return render_template('gallery.html', **context)
 
@@ -105,18 +139,13 @@ def popular_repos(time_range):
               '7d': 'Popular repositories in last week',
               '30d': 'Popular repositories in last 30 days',
               '60d': 'Popular repositories in last 60 days'}
-    binders = [
-        ('GESIS', 'https://notebooks.gesis.org/binder'),
-        ('MyBinder', 'https://mybinder.org'),
-        ('Pangeo', 'https://binder.pangeo.io'),
-                    ]
     if time_range not in titles:
         abort(404)
 
     context = get_default_template_context()
     context.update({'active': 'gallery',
                     'title': titles[time_range],
-                    'binders': binders,
+                    'binders': get_binders(),
                     'popular_repos': get_launched_repos(time_range)})
     return render_template('popular_repos.html', **context)
 
