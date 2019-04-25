@@ -119,12 +119,33 @@
         // initialize popover without content
         $("#binder-versions-info").popover({'trigger': 'hover'});
         // update data with last saved selection
+        // console.log(document.cookie.split('=')[1]);
+
+        var cookiename = document.cookie.split(';')[1];
+        var cookievalue = cookiename.split('=')[1];
+        console.log(cookievalue);
+        if (cookievalue != null){
+            $('#binder-select').val(cookievalue);
+        }
         update_binder_data();
-        // add event to update binder launch urls and version info when selection changes
+
+            // add event to update binder launch urls and version info when selection changes
         $("#binder-select").change(function() {
-            update_binder_data();
+            $.ajax({
+              method: "POST",
+              url: "/select_binder",
+              contentType: 'application/json;charset=UTF-8',
+              {#data: JSON.stringify({ name: $('#binder-select').find('option:selected').data('name') })#}
+              data: JSON.stringify({ name: $('#binder-select').prop('value') })
+            })
+              .done(function( msg ) {
+                console.log( "Binder selection is saved: " + msg );
+                update_binder_data();
+              }
+              );
         });
     });
+
     </script>
     {% endblock binder_select_js %}
 

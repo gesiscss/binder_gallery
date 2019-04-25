@@ -1,6 +1,6 @@
 import os
 import requests
-from flask import Flask, render_template, abort
+from flask import Flask, render_template, abort, make_response, request
 import flask_login as login
 from flask_admin import Admin
 from flask_debugtoolbar import DebugToolbarExtension
@@ -111,6 +111,14 @@ def get_default_template_context():
         # 'help_url': 'https://www.gesis.org/en/help/',
     }
     return context
+
+
+@app.route('/select_binder', methods=['POST'])
+def select_binder():
+    selected_binder = request.json.get('name', 'GESIS')
+    resp = make_response(f"Selected Binder: {selected_binder}")
+    resp.set_cookie("selected_binder", selected_binder)
+    return resp
 
 
 @app.route('/')

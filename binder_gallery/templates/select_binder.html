@@ -1,10 +1,11 @@
+{#<div class="input-group col-xs-12 col-sm-5 col-md-5" style="margin-top: 15px; float:right">#}
 <div class="input-group col-xs-12 col-sm-5 col-md-5" style="margin-top: 15px;">
     <span class="input-group-addon">Launch repos at</span>
 
     <select id="binder-select" class="form-control selectpicker"
             data-binder="https://notebooks.gesis.org/binder">
         {% for binder in binders %}
-            <option value="{{ binder['url'] }}" data-versions="{{ binder['versions'] }}"> {{ binder['name'] }}
+            <option value="{{ binder['url'] }}" data-name="{{ binder['name'] }}" data-versions="{{ binder['versions'] }}"> {{ binder['name'] }}
         {% endfor %}
     </select>
 
