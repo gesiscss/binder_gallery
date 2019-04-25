@@ -68,10 +68,15 @@ init_login()
 
 def get_binders(fetch_versions=True):
     binders = [
-        {'name': 'GESIS', 'url': 'https://notebooks.gesis.org/binder'},
-        {'name': 'mybinder.org', 'url': 'https://mybinder.org'},
-        {'name': 'Pangeo', 'url': 'https://binder.pangeo.io'},
+        {'name': 'GESIS', 'url': 'https://notebooks.gesis.org/binder', 'selected': 'false'},
+        {'name': 'mybinder.org', 'url': 'https://mybinder.org', 'selected': 'false'},
+        {'name': 'Pangeo', 'url': 'https://binder.pangeo.io', 'selected': 'false'},
     ]
+    selected_binder = request.cookies.get('selected_binder')
+    for binder in binders:
+        if binder['name'] == selected_binder:
+            binder['selected'] = 'true'
+
     if fetch_versions is True:
         for binder in binders:
             versions = "No versions info is available"
@@ -115,7 +120,7 @@ def get_default_template_context():
 
 @app.route('/select_binder', methods=['POST'])
 def select_binder():
-    selected_binder = request.json.get('name', 'GESIS')
+    selected_binder = request.json['name']
     resp = make_response(f"Selected Binder: {selected_binder}")
     resp.set_cookie("selected_binder", selected_binder)
     return resp

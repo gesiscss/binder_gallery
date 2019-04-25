@@ -118,28 +118,20 @@
         // https://getbootstrap.com/docs/3.3/javascript/#popovers-options
         // initialize popover without content
         $("#binder-versions-info").popover({'trigger': 'hover'});
-        // update data with last saved selection
-        // console.log(document.cookie.split('=')[1]);
 
-        var cookiename = document.cookie.split(';')[1];
-        var cookievalue = cookiename.split('=')[1];
-        console.log(cookievalue);
-        if (cookievalue != null){
-            $('#binder-select').val(cookievalue);
-        }
+        // update data with last saved selection
         update_binder_data();
 
-            // add event to update binder launch urls and version info when selection changes
-        $("#binder-select").change(function() {
+        // add event to update binder launch urls and version info when selection changes
+        $('#binder-select').change(function() {
             $.ajax({
               method: "POST",
               url: "/select_binder",
               contentType: 'application/json;charset=UTF-8',
-              {#data: JSON.stringify({ name: $('#binder-select').find('option:selected').data('name') })#}
-              data: JSON.stringify({ name: $('#binder-select').prop('value') })
+              data: JSON.stringify({ name: $('#binder-select').find('option:selected').data('name') })
             })
-              .done(function( msg ) {
-                console.log( "Binder selection is saved: " + msg );
+              .done(function(msg) {
+                console.log(msg);
                 update_binder_data();
               }
               );
