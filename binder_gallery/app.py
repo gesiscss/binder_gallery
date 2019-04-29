@@ -10,61 +10,8 @@ from .admin import UserModelView, CreatedByGesisModelView, AdminIndexView, RepoM
     BinderLaunchModelView, FeaturedProjectModelView
 from logging.config import dictConfig
 
-# http://flask.pocoo.org/docs/1.0/logging/
-dictConfig({
-    'version': 1,
-    'formatters': {'default': {
-        'format': '[%(asctime)s] %(levelname)s in %(module)s: %(message)s',
-    }},
-    'handlers': {'wsgi': {
-        'class': 'logging.StreamHandler',
-        'stream': 'ext://flask.logging.wsgi_errors_stream',
-        'formatter': 'default'
-    }},
-    'root': {
-        'level': 'INFO',
-        'handlers': ['wsgi']
-    }
-})
 
-
-# Initialize flask-login
-def init_login():
-    login_manager = login.LoginManager()
-    login_manager.init_app(app)
-
-    # Create user loader function
-    @login_manager.user_loader
-    def load_user(user_id):
-        return db.session.query(User).get(user_id)
-
-
-# app = Flask(__name__, template_folder='../templates/orc_site')
 app = Flask(__name__)
-# BG_DATABASE_URL = 'postgresql://%(user)s:%(pw)s@%(host)s:%(port)s/%(db)s'
-app.config['SQLALCHEMY_DATABASE_URI'] = os.environ['BG_DATABASE_URL']
-app.config['SECRET_KEY'] = os.environ['BG_SECRET_KEY']
-app.config['SESSION_COOKIE_NAME'] = 'bg_session'
-app.config['SESSION_COOKIE_PATH'] = '/admin/'
-if app.debug:
-    # debug toolbar
-    toolbar = DebugToolbarExtension(app)
-# SQLALCHEMY_TRACK_MODIFICATIONS
-# If set to True (the default) Flask-SQLAlchemy will track modifications of objects and emit signals.
-# This requires extra memory and can be disabled if not needed.
-app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
-admin = Admin(app, name='Binder Gallery', index_view=AdminIndexView(),
-              base_template='admin/master.html', template_mode='bootstrap3')
-admin.add_view(UserModelView(User, db.session))
-admin.add_view(CreatedByGesisModelView(CreatedByGesis, db.session))
-admin.add_view(FeaturedProjectModelView(FeaturedProject, db.session))
-admin.add_view(RepoModelView(Repo, db.session))
-admin.add_view(BinderLaunchModelView(BinderLaunch, db.session))
-
-# initialize db
-db.init_app(app)
-# Initialize flask-login
-init_login()
 
 
 def get_binders(fetch_versions=True):
@@ -175,7 +122,60 @@ def not_found(error):
     return render_template('error.html', **context), 404
 
 
+def init():
+    # http://flask.pocoo.org/docs/1.0/logging/
+    dictConfig({
+        'version': 1,
+        'formatters': {'default': {
+            'format': '[%(asctime)s] %(levelname)s in %(module)s: %(message)s',
+        }},
+        'handlers': {'wsgi': {
+            'class': 'logging.StreamHandler',
+            'stream': 'ext://flask.logging.wsgi_errors_stream',
+            'formatter': 'default'
+        }},
+        'root': {
+            'level': 'INFO',
+            'handlers': ['wsgi']
+        }
+    })
+
+    admin_url = "/admin"
+    # BG_DATABASE_URL = 'postgresql://%(user)s:%(pw)s@%(host)s:%(port)s/%(db)s'
+    app.config['SQLALCHEMY_DATABASE_URI'] = os.environ['BG_DATABASE_URL']
+    app.config['SECRET_KEY'] = os.environ['BG_SECRET_KEY']
+    app.config['SESSION_COOKIE_NAME'] = 'bg_session'
+    app.config['SESSION_COOKIE_PATH'] = admin_url
+    if app.debug:
+        # debug toolbar
+        toolbar = DebugToolbarExtension(app)
+    # SQLALCHEMY_TRACK_MODIFICATIONS
+    # If set to True (the default) Flask-SQLAlchemy will track modifications of objects and emit signals.
+    # This requires extra memory and can be disabled if not needed.
+    app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+    admin = Admin(app, name='Binder Gallery', index_view=AdminIndexView(url=admin_url),
+                  base_template='admin/master.html', template_mode='bootstrap3')
+    admin.add_view(UserModelView(User, db.session))
+    admin.add_view(CreatedByGesisModelView(CreatedByGesis, db.session))
+    admin.add_view(FeaturedProjectModelView(FeaturedProject, db.session))
+    admin.add_view(RepoModelView(Repo, db.session))
+    admin.add_view(BinderLaunchModelView(BinderLaunch, db.session))
+
+    # initialize db
+    db.init_app(app)
+
+    # Initialize flask-login
+    login_manager = login.LoginManager()
+    login_manager.init_app(app)
+
+    # Create user loader function
+    @login_manager.user_loader
+    def load_user(user_id):
+        return db.session.query(User).get(user_id)
+
+
 def run_app():
+    init()
     app.run(host='0.0.0.0')
 
 
