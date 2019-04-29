@@ -17,6 +17,7 @@ PROVIDER_PREFIXES = {
     'GitHub': 'gh',  # github.com: repo name or full url + branch/tag/commit
     'GitLab': 'gl',  # gitlab.com: repo name or full url + branch/tag/commit
 }
+BINDER_URL = os.getenv('BINDER_URL', 'https://notebooks.gesis.org/binder').rstrip('/')
 
 
 def _strip(type_, text, affixes):
@@ -211,12 +212,12 @@ class RepoMixin(object):
 
     @property
     def binder_url(self):
-        return f'https://notebooks.gesis.org/binder/v2/{self.provider_spec}'
+        return f'{BINDER_URL}/v2/{self.provider_spec}'
 
     @property
     def binder_ref_url(self):
         # TODO this should be v2/spec_with_resolved_ref
-        return f'https://notebooks.gesis.org/binder/v2/{self.provider_spec}'
+        return f'{BINDER_URL}/v2/{self.provider_spec}'
 
     def get_repo_description(self):
         repo_url = self.repo_url
