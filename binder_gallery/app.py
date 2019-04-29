@@ -46,8 +46,9 @@ app.config['SQLALCHEMY_DATABASE_URI'] = os.environ['BG_DATABASE_URL']
 app.config['SECRET_KEY'] = os.environ['BG_SECRET_KEY']
 app.config['SESSION_COOKIE_NAME'] = 'bg_session'
 app.config['SESSION_COOKIE_PATH'] = '/admin/'
-# debug toolbar
-toolbar = DebugToolbarExtension(app)
+if app.debug:
+    # debug toolbar
+    toolbar = DebugToolbarExtension(app)
 # SQLALCHEMY_TRACK_MODIFICATIONS
 # If set to True (the default) Flask-SQLAlchemy will track modifications of objects and emit signals.
 # This requires extra memory and can be disabled if not needed.
