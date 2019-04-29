@@ -18,6 +18,21 @@ PROVIDER_PREFIXES = {
     'GitLab': 'gl',  # gitlab.com: repo name or full url + branch/tag/commit
 }
 
+
+def _strip(type_, text, affixes):
+    if type(affixes) == str:
+        affixes = [affixes]
+
+    for affix in affixes:
+        if type_ == 'prefix':
+            if text.startswith(affix):
+                text = text[len(affix):]
+        elif type_ == 'suffix':
+            if text.endswith(affix):
+                text = text[:-(len(affix))]
+    return text
+
+
 db = SQLAlchemy()
 
 
@@ -51,7 +66,9 @@ class ProjectMixin(object):
     @cached_property
     def repo_url_parts(self):
         # provider, org, repo_name
-        return self.repo_url.replace('https://', '').rstrip('.git').rsplit('/', 2)
+        return _strip('suffix',
+                      _strip('prefix', self.repo_url, ['https://', 'http://']),
+                      ['.git']).rsplit('/', 2)
 
     @property
     def provider(self):
@@ -141,8 +158,10 @@ class RepoMixin(object):
     def spec_parts(self):
         if self.provider_prefix == 'git':
             repo_url, resolved_ref = self.spec.rsplit('/', 1)
-            repo_url = unquote(repo_url)
-            parts = ['', repo_url, resolved_ref]
+            repo_name = _strip('suffix',
+                               _strip('prefix', unquote(repo_url), ['https://', 'http://']),
+                               ['.git'])
+            parts = ['', repo_name, resolved_ref]
         elif self.provider_prefix == 'gh':
             org, repo_name, unresolved_ref = self.spec.split('/', 2)
             parts = [org, repo_name, unresolved_ref]

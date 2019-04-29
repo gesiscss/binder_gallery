@@ -60,9 +60,6 @@ def get_launched_repos(time_range):
             popular_repos[repo_id][-1] += 1
         else:
             org, repo_name = o.spec_parts[:2]
-            if org == '':
-                # for Git provider
-                repo_name = repo_name.replace('https://', '').replace('http://', '').rstrip('.git')
             launch_count = 1
             popular_repos[repo_id] = [repo_name, org, o.provider, o.repo_url,
                                       o.binder_url, o.repo_description, launch_count]
