@@ -2,22 +2,22 @@
 <table id="{{ table_id }}" class="table table-hover">
     <thead>
     <tr>
-        <th scope="col">Repo</th>
-        <th scope="col">Org./User</th>
-        <th scope="col">Provider</th>
-        {% if launch %}<th scope="col">Launches</th>{% endif %}
-        <th scope="col"></th>  {# binder badge #}
+        <th scope="col" class="col-lg-6 col-sm-6 col-xs-8">Repo</th>
+        <th scope="col" class="col-lg-2 col-sm-2 hidden-xs">Org./User</th>
+        <th scope="col" class="col-lg-2 col-sm-2 hidden-xs">Provider</th>
+        <th scope="col" class="col-lg-1 col-sm-1 col-xs-2">{% if launch %}Launches{% endif %}</th>
+        <th scope="col" class="col-lg-1 col-sm-1 col-xs-2"></th>  {# binder badge #}
     </tr>
     </thead>
     <tbody>
     {% for repo_data in repos %}
         {# repo_name, org, provider, repo_url, binder_url, description, launches  #}
         <tr  data-description="{{ repo_data[5] }}">
-            <td><a href="{{ repo_data[3] }}" target="_blank">{{ repo_data[0] }}</a></td>
-            <td>{{ repo_data[1] }}</td>
-            <td>{{ repo_data[2] }}</td>
-            {% if launch %}<td>{{ repo_data[6] }}</td>{% endif %}
-            <td>
+            <td class="col-lg-6 col-sm-6 col-xs-8"><a href="{{ repo_data[3] }}" target="_blank">{{ repo_data[0] }}</a></td>
+            <td class="col-lg-2 col-sm-2 hidden-xs">{{ repo_data[1] }}</td>
+            <td class="col-lg-2 col-sm-2 hidden-xs">{{ repo_data[2] }}</td>
+            <td class="col-lg-1 col-sm-1 col-xs-2">{% if launch %}{{ repo_data[6] }}{% endif %}</td>
+            <td class="col-lg-1 col-sm-1 col-xs-2">
                 {% if repo_data[4] %}
                     <a class="launch-badge-link" href="{{ repo_data[4] }}" target="_blank">
                         <img src="https://notebooks.gesis.org/binder/badge_logo.svg">
