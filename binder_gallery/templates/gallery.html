@@ -8,7 +8,7 @@
 {% endif %}
 
 {% block head %}
-<link rel="stylesheet" href="/static/vendor/jquery-ui-1.12.1/jquery-ui.css">
+<link rel="stylesheet" href="{{ url_for('static', filename='vendor/jquery-ui-1.12.1/jquery-ui.css') }}">
 {{ super() }}
 {% endblock head %}
 
@@ -43,7 +43,7 @@
 {% endblock main %}
 
 {% block extra_js %}
-<script src="/static/vendor/jquery-ui-1.12.1/jquery-ui.js"></script>
+<script src="{{ url_for('static', filename='vendor/jquery-ui-1.12.1/jquery-ui.js') }}"></script>
 <script>
     $(function () {
         $("#tabs").tabs();
