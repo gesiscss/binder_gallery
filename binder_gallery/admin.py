@@ -1,12 +1,14 @@
-import os
 import flask_login as login
 from flask import request, url_for, redirect, abort
+from flask.helpers import get_debug_flag
 from flask_admin import AdminIndexView as BaseAdminIndexView, expose, helpers
 from flask_admin.contrib.sqla import ModelView
 from flask_admin.helpers import is_safe_url
 from wtforms import validators
 from .forms import LoginForm
 from .models import User, Repo
+
+DEBUG_FLAG = get_debug_flag()
 
 
 class BaseModelView(ModelView):
@@ -47,14 +49,14 @@ class RepoModelView(BaseModelView):
 
 
 class BinderLaunchModelView(BaseModelView):
-    can_delete = True if os.environ.get('FLASK_DEBUG', False) in [1, '1', True] else False
-    can_edit = True if os.environ.get('FLASK_DEBUG', False) in [1, '1', True] else False
+    can_delete = DEBUG_FLAG
+    can_edit = DEBUG_FLAG
     column_default_sort = [('timestamp', True)]
     column_list = ('timestamp', 'provider', 'provider_spec', 'repo_id', 'repo_description')
 
     def is_accessible(self):
         # require Bearer token authentication for creating new launch entry
-        if not os.environ.get('FLASK_DEBUG', False) and \
+        if not DEBUG_FLAG and \
            request.path.endswith('/admin/binderlaunch/new/') and \
            request.method == "POST":
             token = request.headers.get('Authorization')
