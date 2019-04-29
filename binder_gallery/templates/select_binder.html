@@ -3,7 +3,7 @@
     <span class="input-group-addon">Launch repos at</span>
 
     <select id="binder-select" class="form-control selectpicker"
-            data-binder="https://notebooks.gesis.org/binder"
+            data-binder="{{ binder_url }}"
             autocomplete="off">
         {% for binder in binders %}
             <option value="{{ binder['url'] }}" data-name="{{ binder['name'] }}" data-versions="{{ binder['versions'] }}"

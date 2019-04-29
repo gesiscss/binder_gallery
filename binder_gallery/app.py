@@ -5,7 +5,7 @@ import flask_login as login
 from flask_admin import Admin
 from flask_debugtoolbar import DebugToolbarExtension
 from .utilities_db import get_projects, get_launched_repos
-from .models import db, CreatedByGesis, User, Repo, BinderLaunch, FeaturedProject
+from .models import db, CreatedByGesis, User, Repo, BinderLaunch, FeaturedProject, BINDER_URL
 from .admin import UserModelView, CreatedByGesisModelView, AdminIndexView, RepoModelView, \
     BinderLaunchModelView, FeaturedProjectModelView
 from logging.config import dictConfig
@@ -92,28 +92,23 @@ def get_binders(fetch_versions=True):
 
 
 def get_default_template_context():
-    staging = os.environ.get('DEPLOYMENT_ENV') == 'staging'
-    production = os.environ.get('DEPLOYMENT_ENV') == 'production'
-    site_url = 'https://notebooks{}.gesis.org'.format('-test' if staging else '')
+    staging = app.debug
+    production = not app.debug
     context = {
         'staging': staging,
         'production': production,
         'version': 'beta',
-        # 'shibboleth_entityID': f'{site_url}/shibboleth',
-
         'home_url': '/',
         'jhub_url': '/jupyter/',
-        'gesis_login_url': f'{site_url}/Shibboleth.sso/Login?SAMLDS=1&'
-                           f'target={site_url}/hub/login&'
-                           f'entityID=https%3A%2F%2Fidp.gesis.org%2Fidp%2Fshibboleth',
         'bhub_url': '/binder/',
         'about_url': '/about/',
         'tou_url': '/terms_of_use/',
         'imprint_url': 'https://www.gesis.org/en/institute/imprint/',
         'data_protection_url': 'https://www.gesis.org/en/institute/data-protection/',
         'gesis_url': 'https://www.gesis.org/en/home/',
-        'gallery_url': '/gallery/'
+        'gallery_url': '/gallery/',
         # 'help_url': 'https://www.gesis.org/en/help/',
+        'binder_url': BINDER_URL,
     }
     return context
 
@@ -174,7 +169,7 @@ def not_found(error):
 
 
 def run_app():
-    app.run(debug=os.getenv('FLASK_DEBUG', False), host='0.0.0.0')
+    app.run(host='0.0.0.0')
 
 
 main = run_app
