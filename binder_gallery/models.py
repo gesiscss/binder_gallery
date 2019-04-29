@@ -132,7 +132,8 @@ class User(db.Model, UserMixin):
     @property
     def encoded_token(self):
         try:
-            token = jwt.encode({'launch': True}, os.environ['BG_SECRET_KEY'], algorithm='HS256')
+            # user name to make tokens unique per user
+            token = jwt.encode({'launch': True, 'name': self.name}, os.environ['BG_SECRET_KEY'], algorithm='HS256')
             token = token.decode()
             return token
         except Exception as e:
