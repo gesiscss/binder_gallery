@@ -124,13 +124,19 @@ def select_binder():
 
 @app.route('/')
 def gallery():
-
-    popular_repos_all = [
+    _popular_repos_all = [
         ('24h', 'Last 24 hours', get_launched_repos('24h'), ),
         ('7d', 'Last week', get_launched_repos('7d'), ),
         ('30d', 'Last 30 days', get_launched_repos('30d'), ),
         ('60d', 'Last 60 days', get_launched_repos('60d'), ),
     ]
+    popular_repos_all = []
+    # don't show empty tabs (no launched happened)
+    for pr in _popular_repos_all:
+        if pr[-1]:
+            popular_repos_all.append(pr)
+    del _popular_repos_all
+
     projects = [('Created By Gesis', get_projects(CreatedByGesis)),
                 ('Featured Projects', get_projects(FeaturedProject))]
     context = get_default_template_context()
