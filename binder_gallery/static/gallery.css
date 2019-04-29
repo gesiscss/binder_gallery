@@ -1,0 +1,17 @@
+/* popular repos tabs */
+.tabs_wrapper {
+    text-align: center;
+}
+.tabs_wrapper ul {
+    display: inline-block;
+    margin: 0;
+    padding: 0;
+    /* For IE, the outcast */
+    zoom:1;
+    *display: inline;
+}
+.tabs_wrapper li {
+    float: left;
+    /*padding: 2px 5px;*/
+    /*border: 1px solid black;*/
+}
