@@ -132,19 +132,20 @@ class User(db.Model, UserMixin):
     @property
     def encoded_token(self):
         try:
-            token = jwt.encode({'id': self.id}, os.environ['BG_SECRET_KEY'], algorithm='HS256')
+            token = jwt.encode({'launch': True}, os.environ['BG_SECRET_KEY'], algorithm='HS256')
             token = token.decode()
             return token
         except Exception as e:
             return e
 
     @staticmethod
-    def validate_token(encoded_token):
+    def validate_token(encoded_token, permission='launch'):
         try:
             payload = jwt.decode(encoded_token, os.environ['BG_SECRET_KEY'], algorithms='HS256')
         except Exception as e:
-            return e
-        return 'id' in payload
+            # FIXME log error
+            return False
+        return payload.get(permission, False)
 
     # @classmethod
     # def create_user(cls, name, password):

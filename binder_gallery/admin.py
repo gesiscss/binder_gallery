@@ -30,6 +30,7 @@ class CreatedByGesisModelView(BaseModelView):
     def on_model_change(self, form, model, is_created):
         if form.repo_url and form.repo_url.data:
             if len(model.repo_url_parts) == 3:
+                # FIXME for Git provider
                 return super().on_model_change(form, model, is_created)
             raise validators.ValidationError('Invalid repo url! '
                                              'It must in form "https://<provider>/<org_or_user/<repo_name>"')
@@ -54,14 +55,13 @@ class BinderLaunchModelView(BaseModelView):
     def is_accessible(self):
         # require Bearer token authentication for creating new launch entry
         if not os.environ.get('FLASK_DEBUG', False) and \
-           request.path == '/admin/binderlaunch/new/' and \
+           request.path.endswith('/admin/binderlaunch/new/') and \
            request.method == "POST":
             token = request.headers.get('Authorization')
             if token:
                 if self.validate_form(self.create_form()):
                     token = token.replace('Bearer ', '', 1)
-                    is_valid = User.validate_token(token)
-                    if is_valid is True:
+                    if User.validate_token(token) is True:
                         return True
                 # TODO return the form error
                 abort(400)
