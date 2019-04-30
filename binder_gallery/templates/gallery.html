@@ -6,6 +6,8 @@
 {% endblock head %}
 
 {% block main %}
+    {{ super() }}
+
     <div id="tabs">
         <h2>Popular repositories</h2>
         <div class="tabs_wrapper">
@@ -26,12 +28,14 @@
     </div>
 
     {%  for title, repos in projects %}
+    {% if repos %}
     <div class="table-responsive">
         <h2> {{ title }}</h2>
         {% with table_id=loop.index, repos=repos %}
         {% include "table.html" %}
         {% endwith %}
     </div>
+    {% endif %}
     {% endfor %}
 {% endblock main %}
 

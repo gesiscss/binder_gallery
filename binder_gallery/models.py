@@ -4,11 +4,15 @@ import architect
 from requests import get
 from requests.exceptions import Timeout
 from bs4 import BeautifulSoup
-from flask_sqlalchemy import SQLAlchemy
 from flask_login import UserMixin
 from werkzeug.security import generate_password_hash, check_password_hash
 from werkzeug.utils import cached_property
 from urllib.parse import unquote
+
+from binder_gallery import db, app
+
+BINDER_URL = app.config['BINDER_URL'].rstrip('/')
+
 
 PROVIDER_PREFIXES = {
     # name: prefix
@@ -17,7 +21,6 @@ PROVIDER_PREFIXES = {
     'GitHub': 'gh',  # github.com: repo name or full url + branch/tag/commit
     'GitLab': 'gl',  # gitlab.com: repo name or full url + branch/tag/commit
 }
-BINDER_URL = os.getenv('BINDER_URL', 'https://notebooks.gesis.org/binder').rstrip('/')
 
 
 def _strip(type_, text, affixes):
@@ -32,9 +35,6 @@ def _strip(type_, text, affixes):
             if text.endswith(affix):
                 text = text[:-(len(affix))]
     return text
-
-
-db = SQLAlchemy()
 
 
 class ProjectMixin(object):
@@ -268,7 +268,7 @@ class Repo(RepoMixin, db.Model):
         raise ValueError(f'{self.provider_spec} is not valid.')
 
 
-@architect.install('partition', type='range', subtype='date', constraint='year', column='timestamp', orm='sqlalchemy', db=os.environ['BG_DATABASE_URL'])
+@architect.install('partition', type='range', subtype='date', constraint='year', column='timestamp', orm='sqlalchemy', db=app.config['SQLALCHEMY_DATABASE_URI'])
 class BinderLaunch(RepoMixin, db.Model):
     id = db.Column(db.Integer, primary_key=True)
     schema = db.Column(db.String, nullable=False)

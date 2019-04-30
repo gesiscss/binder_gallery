@@ -1,14 +1,58 @@
-Binder Gallery
+# Binder Gallery
 
-Example how to fill BinderLaunch table
-```python
-from datetime import datetime
-import requests
-token = ''
-# token = token.decode()
-headers = {'Authorization': 'Bearer ' + token}
-timestamp = datetime.utcnow().strftime('%Y-%m-%d %H:%M:%S')
-data = {'schema': 'test schema', 'version': '1.0', 'timestamp': timestamp, 
-        'provider': 'gh', 'spec': 'gesiscss/orc/ref', 'status': 'success'}
-requests.post('http://127.0.0.1:5000/admin/binderlaunch/new/', data=data, headers=headers)
+Binder Gallery for [GESIS Notebooks](https://notebooks.gesis.org/)
+
+## Run the gallery locally
+
+1. Clone the repository and get into it
+
+```bash
+git clone https://github.com/gesiscss/binder_gallery.git
+cd binder_gallery
 ```
+
+2. [Create and activate a virtual environment](http://flask.pocoo.org/docs/1.0/installation/#virtual-environments)
+with python version at least 3.7.
+
+3. Install dependencies: 
+```bash
+pip install -r dev_requirements.txt
+
+```
+4. Set required environment variables
+```bash
+export FLASK_APP=binder_gallery/app.py
+export FLASK_ENV=development
+
+```
+
+5. Create a local sqlite3 db and apply migrations
+```bash
+python manage.py db upgrade
+```
+
+6. Run the application
+```bash
+flask run
+```
+
+## To have custom configuration
+
+1. Create a config file `local_config.py` under project folder `binder_gallery`
+
+2. Put your custom configuration:
+
+```python
+from config import Config as BaseConfig
+
+
+class Config(BaseConfig):
+    # add your custom configuration here
+
+```
+
+3. `export BG_APPLICATION_SETTINGS=local_config.Config`
+
+## TODOs
+
+1. Remove GESIS related parts (templates, static files...)?

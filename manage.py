@@ -1,6 +1,6 @@
 from flask_script import Manager
 from flask_migrate import Migrate, MigrateCommand
-from binder_gallery.app import app, db
+from binder_gallery import app, db
 
 
 migrate = Migrate(app, db, compare_type=True)

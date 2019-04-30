@@ -32,7 +32,7 @@ $( document ).ready(function() {
     $('#binder-select').change(function() {
         $.ajax({
           method: "POST",
-          url: "/select_binder",
+          url: "/select_binder/",
           contentType: 'application/json;charset=UTF-8',
           data: JSON.stringify({ name: $('#binder-select').find('option:selected').data('name') })
         })

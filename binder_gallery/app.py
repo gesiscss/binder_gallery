@@ -1,17 +1,9 @@
-import os
 import requests
-from flask import Flask, render_template, abort, make_response, request
-import flask_login as login
-from flask_admin import Admin
-from flask_debugtoolbar import DebugToolbarExtension
-from .utilities_db import get_projects, get_launched_repos
-from .models import db, CreatedByGesis, User, Repo, BinderLaunch, FeaturedProject, BINDER_URL
-from .admin import UserModelView, CreatedByGesisModelView, AdminIndexView, RepoModelView, \
-    BinderLaunchModelView, FeaturedProjectModelView
-from logging.config import dictConfig
+from flask import render_template, abort, make_response, request
+from .utilities_db import get_all_projects, get_launched_repos
+from . import app
 
-
-app = Flask(__name__)
+BINDER_URL = app.config['BINDER_URL'].rstrip('/')
 
 
 def get_binders(fetch_versions=True):
@@ -20,9 +12,9 @@ def get_binders(fetch_versions=True):
         {'name': 'mybinder.org', 'url': 'https://mybinder.org', 'selected': 'false'},
         {'name': 'Pangeo', 'url': 'https://binder.pangeo.io', 'selected': 'false'},
     ]
-    selected_binder = request.cookies.get('selected_binder')
+    selected_binder = request.cookies.get('selected_binder') or BINDER_URL
     for binder in binders:
-        if binder['name'] == selected_binder:
+        if binder['name'] == selected_binder or binder['url'] == selected_binder:
             binder['selected'] = 'true'
 
     if fetch_versions is True:
@@ -54,14 +46,14 @@ def get_default_template_context():
         'imprint_url': 'https://www.gesis.org/en/institute/imprint/',
         'data_protection_url': 'https://www.gesis.org/en/institute/data-protection/',
         'gesis_url': 'https://www.gesis.org/en/home/',
-        'gallery_url': '/gallery/',
+        'gallery_url': '/gallery/',  # TODO base url
         # 'help_url': 'https://www.gesis.org/en/help/',
         'binder_url': BINDER_URL,
     }
     return context
 
 
-@app.route('/select_binder', methods=['POST'])
+@app.route('/select_binder/', methods=['POST'])
 def select_binder():
     selected_binder = request.json['name']
     resp = make_response(f"Selected Binder: {selected_binder}")
@@ -84,18 +76,16 @@ def gallery():
             popular_repos_all.append(pr)
     del _popular_repos_all
 
-    projects = [('Created By Gesis', get_projects(CreatedByGesis)),
-                ('Featured Projects', get_projects(FeaturedProject))]
     context = get_default_template_context()
     context.update({'active': 'gallery',
                     'popular_repos_all': popular_repos_all,
-                    'projects': projects,
+                    'projects': get_all_projects(),
                     'binders': get_binders(),
                     })
     return render_template('gallery.html', **context)
 
 
-@app.route('/<string:time_range>')
+@app.route('/<string:time_range>/')
 def popular_repos(time_range):
     titles = {'24h': 'Popular repositories in last 24 hours',
               '7d': 'Popular repositories in last week',
@@ -122,60 +112,7 @@ def not_found(error):
     return render_template('error.html', **context), 404
 
 
-def init():
-    # http://flask.pocoo.org/docs/1.0/logging/
-    dictConfig({
-        'version': 1,
-        'formatters': {'default': {
-            'format': '[%(asctime)s] %(levelname)s in %(module)s: %(message)s',
-        }},
-        'handlers': {'wsgi': {
-            'class': 'logging.StreamHandler',
-            'stream': 'ext://flask.logging.wsgi_errors_stream',
-            'formatter': 'default'
-        }},
-        'root': {
-            'level': 'INFO',
-            'handlers': ['wsgi']
-        }
-    })
-
-    admin_url = "/admin"
-    # BG_DATABASE_URL = 'postgresql://%(user)s:%(pw)s@%(host)s:%(port)s/%(db)s'
-    app.config['SQLALCHEMY_DATABASE_URI'] = os.environ['BG_DATABASE_URL']
-    app.config['SECRET_KEY'] = os.environ['BG_SECRET_KEY']
-    app.config['SESSION_COOKIE_NAME'] = 'bg_session'
-    app.config['SESSION_COOKIE_PATH'] = admin_url
-    if app.debug:
-        # debug toolbar
-        toolbar = DebugToolbarExtension(app)
-    # SQLALCHEMY_TRACK_MODIFICATIONS
-    # If set to True (the default) Flask-SQLAlchemy will track modifications of objects and emit signals.
-    # This requires extra memory and can be disabled if not needed.
-    app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
-    admin = Admin(app, name='Binder Gallery', index_view=AdminIndexView(url=admin_url),
-                  base_template='admin/master.html', template_mode='bootstrap3')
-    admin.add_view(UserModelView(User, db.session))
-    admin.add_view(CreatedByGesisModelView(CreatedByGesis, db.session))
-    admin.add_view(FeaturedProjectModelView(FeaturedProject, db.session))
-    admin.add_view(RepoModelView(Repo, db.session))
-    admin.add_view(BinderLaunchModelView(BinderLaunch, db.session))
-
-    # initialize db
-    db.init_app(app)
-
-    # Initialize flask-login
-    login_manager = login.LoginManager()
-    login_manager.init_app(app)
-
-    # Create user loader function
-    @login_manager.user_loader
-    def load_user(user_id):
-        return db.session.query(User).get(user_id)
-
-
 def run_app():
-    init()
     app.run(host='0.0.0.0')
 
 

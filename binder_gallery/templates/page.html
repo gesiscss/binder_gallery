@@ -69,13 +69,15 @@
         {% block headline %}
         {% endblock headline %}
 
+        {% block main %}
+
         {% block binder_select %}
+
         {%  with binders = binders  %}
         {% include "select_binder.html" %}
         {% endwith %}
         {% endblock binder_select %}
 
-        {% block main %}
         {% endblock main %}
     </div>
 

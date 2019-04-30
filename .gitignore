@@ -2,3 +2,5 @@
 *.pyc
 ignore/*
 venv
+local_config.py
+local.sqlite
