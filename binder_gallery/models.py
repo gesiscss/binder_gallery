@@ -1,4 +1,3 @@
-import os
 import jwt
 import architect
 from requests import get
@@ -133,18 +132,19 @@ class User(db.Model, UserMixin):
     def encoded_token(self):
         try:
             # user name to make tokens unique per user
-            token = jwt.encode({'launch': True, 'name': self.name}, os.environ['BG_SECRET_KEY'], algorithm='HS256')
+            token = jwt.encode({'launch': True, 'name': self.name}, app.config['SECRET_KEY'], algorithm='HS256')
             token = token.decode()
             return token
         except Exception as e:
+            app.logger.error(e)
             return e
 
     @staticmethod
     def validate_token(encoded_token, permission='launch'):
         try:
-            payload = jwt.decode(encoded_token, os.environ['BG_SECRET_KEY'], algorithms='HS256')
+            payload = jwt.decode(encoded_token, app.config['SECRET_KEY']+'+', algorithms='HS256')
         except Exception as e:
-            # FIXME log error
+            app.logger.error(e)
             return False
         return payload.get(permission, False)
 
