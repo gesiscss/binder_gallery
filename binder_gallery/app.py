@@ -9,7 +9,7 @@ from .models import db, CreatedByGesis, User, Repo, BinderLaunch, FeaturedProjec
 from .admin import UserModelView, CreatedByGesisModelView, AdminIndexView, RepoModelView, \
     BinderLaunchModelView, FeaturedProjectModelView
 from logging.config import dictConfig
-
+from flask_restful import Resource, Api
 
 app = Flask(__name__)
 
@@ -110,6 +110,16 @@ def popular_repos(time_range):
                     'binders': get_binders(),
                     'popular_repos': get_launched_repos(time_range)})
     return render_template('popular_repos.html', **context)
+
+
+class ReposLaunches(Resource):
+    def get(self, time_range):
+        repos = get_launched_repos(time_range)
+        return repos
+
+
+api = Api(app)
+api.add_resource(ReposLaunches, '/gesisgallery/api/v1.0/repos/<string:time_range>')
 
 
 @app.errorhandler(404)

@@ -41,6 +41,8 @@ def get_launched_repos(time_range):
         p = {'hours': int(time_range.split('h')[0])}
     elif time_range.endswith('d'):
         p = {'days': int(time_range.split('d')[0])}
+    elif time_range.endswith('m'):
+        p = {'minutes': int(time_range.split('m')[0])}
     else:
         raise ValueError('Time range must be in hours or days.')
 
