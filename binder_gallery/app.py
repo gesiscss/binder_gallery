@@ -118,10 +118,6 @@ class ReposLaunches(Resource):
         return repos
 
 
-api = Api(app)
-api.add_resource(ReposLaunches, '/gesisgallery/api/v1.0/repos/<string:time_range>')
-
-
 @app.errorhandler(404)
 def not_found(error):
     context = get_default_template_context()
@@ -182,6 +178,9 @@ def init():
     @login_manager.user_loader
     def load_user(user_id):
         return db.session.query(User).get(user_id)
+
+    api = Api(app)
+    api.add_resource(ReposLaunches, '/api/v1.0/repos/<string:time_range>')
 
 
 def run_app():
