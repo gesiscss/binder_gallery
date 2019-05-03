@@ -51,6 +51,31 @@ class Config(BaseConfig):
 
 3. `export BG_APPLICATION_SETTINGS=local_config.Config`
 
+## Run gallery in docker
+
+```bash
+cd binder_gallery
+
+# build
+docker build -t binder-gallery:test .
+
+# run with default config
+docker run --name binder-gallery -it --rm \
+    -p 5000:5000 \
+    --env FLASK_ENV=production \
+    binder-gallery:test
+
+# run with custom config (you have to create a `docker_config.py` which includes your config)
+# and also run with base url (`/gallery/`)
+docker run --name binder-gallery -it --rm \
+    -p 5000:5000 \
+    --env FLASK_ENV=production \
+    --env BG_BASE_URL=/gallery/ \
+    --env BG_APPLICATION_SETTINGS=docker_config.Config \
+    -v $(pwd)/docker_config.py:/binder_gallery/docker_config.py \
+    binder-gallery:test
+```
+
 ## TODOs
 
 1. Remove GESIS related parts (templates, static files...)?
