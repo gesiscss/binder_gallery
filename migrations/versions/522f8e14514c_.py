@@ -1,8 +1,8 @@
 """empty message
 
-Revision ID: fcc81e19b86d
+Revision ID: 522f8e14514c
 Revises: 
-Create Date: 2019-03-06 17:17:26.582086
+Create Date: 2019-05-03 13:59:09.583951
 
 """
 from alembic import op
@@ -10,7 +10,7 @@ import sqlalchemy as sa
 
 
 # revision identifiers, used by Alembic.
-revision = 'fcc81e19b86d'
+revision = '522f8e14514c'
 down_revision = None
 branch_labels = None
 depends_on = None
@@ -40,11 +40,11 @@ def upgrade():
     )
     op.create_table('repo',
     sa.Column('id', sa.Integer(), nullable=False),
-    sa.Column('provider_spec', sa.String(), nullable=True),
+    sa.Column('provider_namespace', sa.String(), nullable=True),
     sa.Column('description', sa.Text(), nullable=True),
     sa.PrimaryKeyConstraint('id')
     )
-    op.create_index(op.f('ix_repo_provider_spec'), 'repo', ['provider_spec'], unique=True)
+    op.create_index(op.f('ix_repo_provider_namespace'), 'repo', ['provider_namespace'], unique=True)
     op.create_table('user',
     sa.Column('id', sa.Integer(), nullable=False),
     sa.Column('name', sa.String(length=80), nullable=True),
@@ -77,7 +77,7 @@ def downgrade():
     op.drop_index(op.f('ix_binder_launch_repo_id'), table_name='binder_launch')
     op.drop_table('binder_launch')
     op.drop_table('user')
-    op.drop_index(op.f('ix_repo_provider_spec'), table_name='repo')
+    op.drop_index(op.f('ix_repo_provider_namespace'), table_name='repo')
     op.drop_table('repo')
     op.drop_table('featured_project')
     op.drop_table('created_by_gesis')

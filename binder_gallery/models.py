@@ -186,41 +186,41 @@ class RepoMixin(object):
         if self.provider_prefix == 'git':
             repo_url = self.spec_parts[1]
         elif self.provider_prefix == 'gh':
-            org, repo_name, unresolved_ref = self.spec_parts
+            org, repo_name, _ = self.spec_parts
             repo_url = f'https://www.github.com/{org}/{repo_name}'
         elif self.provider_prefix == 'gl':
-            org, repo_name, unresolved_ref = self.spec_parts
+            org, repo_name, _ = self.spec_parts
             repo_url = f'https://www.gitlab.com/{org}/{repo_name}'
         elif self.provider_prefix == 'gist':
-            user_name, gist_id, unresolved_ref = self.spec_parts
+            user_name, gist_id, _ = self.spec_parts
             repo_url = f'https://gist.github.com/{user_name}/{gist_id}'
         return repo_url
 
-    @property
-    def ref_url(self):
-        if self.provider_prefix == 'git':
-            # FIXME ref is missing
-            ref_url = self.spec_parts[1]
-        # FIXME we need resolved refs
-        elif self.provider_prefix == 'gh':
-            org, repo_name, unresolved_ref = self.spec_parts
-            ref_url = f'https://www.github.com/{org}/{repo_name}/tree/{unresolved_ref}'
-        elif self.provider_prefix == 'gl':
-            org, repo_name, unresolved_ref = self.spec_parts
-            ref_url = f'https://www.gitlab.com/{org}/{repo_name}/tree/{unresolved_ref}'
-        elif self.provider_prefix == 'gist':
-            user_name, gist_id, unresolved_ref = self.spec_parts
-            ref_url = f'https://gist.github.com/{user_name}/{gist_id}/{unresolved_ref}'
-        return ref_url
+    # @property
+    # def ref_url(self):
+    #     if self.provider_prefix == 'git':
+    #         # FIXME ref is missing
+    #         ref_url = self.spec_parts[1]
+    #     # FIXME we need resolved refs
+    #     elif self.provider_prefix == 'gh':
+    #         org, repo_name, unresolved_ref = self.spec_parts
+    #         ref_url = f'https://www.github.com/{org}/{repo_name}/tree/{unresolved_ref}'
+    #     elif self.provider_prefix == 'gl':
+    #         org, repo_name, unresolved_ref = self.spec_parts
+    #         ref_url = f'https://www.gitlab.com/{org}/{repo_name}/tree/{unresolved_ref}'
+    #     elif self.provider_prefix == 'gist':
+    #         user_name, gist_id, unresolved_ref = self.spec_parts
+    #         ref_url = f'https://gist.github.com/{user_name}/{gist_id}/{unresolved_ref}'
+    #     return ref_url
 
     @property
     def binder_url(self):
         return f'{app.default_binder_url}/v2/{self.provider_spec}'
 
-    @property
-    def binder_ref_url(self):
-        # TODO this should be v2/spec_with_resolved_ref
-        return f'{app.default_binder_url}/v2/{self.provider_spec}'
+    # @property
+    # def binder_ref_url(self):
+    #     # TODO this should be v2/spec_with_resolved_ref
+    #     return f'{app.default_binder_url}/v2/{self.provider_spec}'
 
     def get_repo_description(self):
         repo_url = self.repo_url
@@ -248,18 +248,23 @@ class Repo(RepoMixin, db.Model):
     launches = db.relationship('BinderLaunch',
                                backref=db.backref('detail', lazy='joined'),
                                lazy='dynamic')
-    provider_spec = db.Column(db.String, unique=True, index=True)  # provider_prefix/spec
+    provider_namespace = db.Column(db.String, unique=True, index=True)  # provider_prefix/namespace
     description = db.Column(db.Text)
 
     def __repr__(self):
-        return f'{self.id}: {self.provider_spec}'
+        return f'{self.id}: {self.provider_namespace}'
 
     @cached_property
     def provider_prefix(self):
         for prefix in PROVIDER_PREFIXES.values():
-            if self.provider_spec.startswith(prefix+'/'):
+            if self.provider_namespace.startswith(prefix+'/'):
                 return prefix
-        raise ValueError(f'{self.provider_spec} is not valid.')
+        raise ValueError(f'{self.provider_namespace} is not valid.')
+
+    @property
+    def provider_spec(self):
+        # without real ref information
+        return self.provider_namespace + "/ref"
 
     @property
     def spec(self):

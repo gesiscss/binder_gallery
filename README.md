@@ -43,14 +43,14 @@ with python version at least 3.7.
 
 2. With flask shell:
 
-    2.1 Start a flask shell
+    2.1. Start a flask shell
 
     ```bash
     flask shell
     ```
 
-    2.2 Run this code to create a user:
-
+    2.2. Run this code to create a user:
+   
     ```python
     from binder_gallery.models import User
     User.create_user("name", "password")

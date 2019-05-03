@@ -44,8 +44,8 @@ class FeaturedProjectModelView(CreatedByGesisModelView):
 
 
 class RepoModelView(BaseModelView):
-    column_list = ('provider_spec', 'repo_url', 'description')
-    column_searchable_list = ['provider_spec']
+    column_list = ('provider_namespace', 'repo_url', 'description')
+    column_searchable_list = ['provider_namespace']
     column_editable_list = ['description']
 
 
@@ -76,16 +76,16 @@ class BinderLaunchModelView(BaseModelView):
         if is_created is True:
             # model was added into session before checking if repo exist, thats why we remove it first
             self.session.expunge(model)
-            provider_spec = model.provider_spec
-            repo = Repo.query.filter_by(provider_spec=provider_spec).first()
-            app.logger.info(f"New binder launch {provider_spec} on {model.timestamp} - "
+            provider_namespace = model.provider_spec.rsplit('/', 1)[0]  # without ref
+            repo = Repo.query.filter_by(provider_namespace=provider_namespace).first()
+            app.logger.info(f"New binder launch {model.provider_spec} on {model.timestamp} - "
                             f"{model.schema} {model.version} {model.status}")
             description = model.get_repo_description()
             if repo:
                 repo.launches.append(model)
                 repo.description = description
             else:
-                repo = Repo(provider_spec=provider_spec, description=description, launches=[model])
+                repo = Repo(provider_namespace=provider_namespace, description=description, launches=[model])
                 self.session.add(repo)
             # Now the model should be added
             # into the Session after adding repo instance.
