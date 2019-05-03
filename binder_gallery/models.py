@@ -162,10 +162,11 @@ class RepoMixin(object):
     def spec_parts(self):
         if self.provider_prefix == 'git':
             repo_url, resolved_ref = self.spec.rsplit('/', 1)
+            repo_url = unquote(repo_url)
             repo_name = _strip('suffix',
-                               _strip('prefix', unquote(repo_url), ['https://', 'http://']),
+                               _strip('prefix', repo_url, ['https://', 'http://']),
                                ['.git'])
-            parts = ['', repo_name, resolved_ref]
+            parts = ['', repo_name, resolved_ref, repo_url]
         elif self.provider_prefix == 'gh':
             org, repo_name, unresolved_ref = self.spec.split('/', 2)
             parts = [org, repo_name, unresolved_ref]
@@ -184,15 +185,15 @@ class RepoMixin(object):
     @cached_property
     def repo_url(self):
         if self.provider_prefix == 'git':
-            repo_url = self.spec_parts[1]
+            repo_url = self.spec_parts[3]
         elif self.provider_prefix == 'gh':
-            org, repo_name, _ = self.spec_parts
+            org, repo_name = self.spec_parts[:2]
             repo_url = f'https://www.github.com/{org}/{repo_name}'
         elif self.provider_prefix == 'gl':
-            org, repo_name, _ = self.spec_parts
+            org, repo_name = self.spec_parts[:2]
             repo_url = f'https://www.gitlab.com/{org}/{repo_name}'
         elif self.provider_prefix == 'gist':
-            user_name, gist_id, _ = self.spec_parts
+            user_name, gist_id = self.spec_parts[:2]
             repo_url = f'https://gist.github.com/{user_name}/{gist_id}'
         return repo_url
 
@@ -200,17 +201,17 @@ class RepoMixin(object):
     # def ref_url(self):
     #     if self.provider_prefix == 'git':
     #         # FIXME ref is missing
-    #         ref_url = self.spec_parts[1]
+    #         ref_url = self.spec_parts[3]
     #     # FIXME we need resolved refs
     #     elif self.provider_prefix == 'gh':
-    #         org, repo_name, unresolved_ref = self.spec_parts
-    #         ref_url = f'https://www.github.com/{org}/{repo_name}/tree/{unresolved_ref}'
+    #         org, repo_name, *r = self.spec_parts
+    #         ref_url = f'https://www.github.com/{org}/{repo_name}/tree/{r[0]}'
     #     elif self.provider_prefix == 'gl':
-    #         org, repo_name, unresolved_ref = self.spec_parts
-    #         ref_url = f'https://www.gitlab.com/{org}/{repo_name}/tree/{unresolved_ref}'
+    #         org, repo_name, *r = self.spec_parts
+    #         ref_url = f'https://www.gitlab.com/{org}/{repo_name}/tree/{r[0]}'
     #     elif self.provider_prefix == 'gist':
-    #         user_name, gist_id, unresolved_ref = self.spec_parts
-    #         ref_url = f'https://gist.github.com/{user_name}/{gist_id}/{unresolved_ref}'
+    #         user_name, gist_id, *r = self.spec_parts
+    #         ref_url = f'https://gist.github.com/{user_name}/{gist_id}/{r[0]}'
     #     return ref_url
 
     @property
