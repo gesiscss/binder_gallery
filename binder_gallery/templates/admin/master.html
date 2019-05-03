@@ -1,7 +1,7 @@
 {% extends 'admin/base.html' %}
 
 {% block brand %}
-<a class="navbar-brand" href="/">{{ admin_view.admin.name }}</a>
+<a class="navbar-brand" href="{{ url_for('gallery') }}">{{ admin_view.admin.name }}</a>
 {% endblock %}
 
 {% block access_control %}

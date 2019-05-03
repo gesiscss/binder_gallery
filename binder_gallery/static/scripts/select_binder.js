@@ -30,9 +30,10 @@ $( document ).ready(function() {
 
     // add event to update binder launch urls and version info when selection changes
     $('#binder-select').change(function() {
+        var base_url = $(this).data("base-url");
         $.ajax({
           method: "POST",
-          url: "/select_binder",
+          url: base_url+"select_binder/",
           contentType: 'application/json;charset=UTF-8',
           data: JSON.stringify({ name: $('#binder-select').find('option:selected').data('name') })
         })

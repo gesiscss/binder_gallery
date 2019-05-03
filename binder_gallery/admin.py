@@ -1,12 +1,13 @@
 import flask_login as login
 from flask import request, url_for, redirect, abort
 from flask.helpers import get_debug_flag
-from flask_admin import AdminIndexView as BaseAdminIndexView, expose, helpers
+from flask_admin import AdminIndexView as BaseAdminIndexView, expose, helpers, Admin
 from flask_admin.contrib.sqla import ModelView
 from flask_admin.helpers import is_safe_url
 from wtforms import validators
 from .forms import LoginForm
-from .models import User, Repo
+from .models import User, Repo, CreatedByGesis, FeaturedProject, BinderLaunch
+from . import app, db
 
 DEBUG_FLAG = get_debug_flag()
 
@@ -77,6 +78,8 @@ class BinderLaunchModelView(BaseModelView):
             self.session.expunge(model)
             provider_spec = model.provider_spec
             repo = Repo.query.filter_by(provider_spec=provider_spec).first()
+            app.logger.info(f"New binder launch {provider_spec} on {model.timestamp} - "
+                            f"{model.schema} {model.version} {model.status}")
             description = model.get_repo_description()
             if repo:
                 repo.launches.append(model)
@@ -119,3 +122,13 @@ class AdminIndexView(BaseAdminIndexView):
     def logout_view(self):
         login.logout_user()
         return redirect(url_for('.index'))
+
+
+admin = Admin(app, name='Binder Gallery', index_view=AdminIndexView(),
+              base_template='admin/master.html', template_mode='bootstrap3')
+
+admin.add_view(UserModelView(User, db.session))
+admin.add_view(RepoModelView(Repo, db.session))
+admin.add_view(CreatedByGesisModelView(CreatedByGesis, db.session))
+admin.add_view(FeaturedProjectModelView(FeaturedProject, db.session))
+admin.add_view(BinderLaunchModelView(BinderLaunch, db.session))

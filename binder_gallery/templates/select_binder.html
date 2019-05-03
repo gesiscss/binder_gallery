@@ -3,7 +3,7 @@
     <span class="input-group-addon">Launch repos at</span>
 
     <select id="binder-select" class="form-control selectpicker"
-            data-binder="{{ binder_url }}"
+            data-binder="{{ binder_url }}" data-base-url="{{ gallery_url }}"
             autocomplete="off">
         {% for binder in binders %}
             <option value="{{ binder['url'] }}" data-name="{{ binder['name'] }}" data-versions="{{ binder['versions'] }}"
@@ -16,6 +16,7 @@
         <button id="binder-versions-info" type="button" class="btn btn-default" aria-label="Versions"
                 data-container="body" data-toggle="popover" data-placement="right">
             {# <span class="glyphicon glyphicon-info-sign"></span>#}
+            {# TODO add a sign to show if up-to-date with mybinder.org #}
             Versions
         </button>
     </div>

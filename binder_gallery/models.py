@@ -1,14 +1,15 @@
-import os
 import jwt
 import architect
 from requests import get
 from requests.exceptions import Timeout
 from bs4 import BeautifulSoup
-from flask_sqlalchemy import SQLAlchemy
 from flask_login import UserMixin
 from werkzeug.security import generate_password_hash, check_password_hash
 from werkzeug.utils import cached_property
 from urllib.parse import unquote
+
+from binder_gallery import db, app
+
 
 PROVIDER_PREFIXES = {
     # name: prefix
@@ -17,7 +18,6 @@ PROVIDER_PREFIXES = {
     'GitHub': 'gh',  # github.com: repo name or full url + branch/tag/commit
     'GitLab': 'gl',  # gitlab.com: repo name or full url + branch/tag/commit
 }
-BINDER_URL = os.getenv('BINDER_URL', 'https://notebooks.gesis.org/binder').rstrip('/')
 
 
 def _strip(type_, text, affixes):
@@ -32,9 +32,6 @@ def _strip(type_, text, affixes):
             if text.endswith(affix):
                 text = text[:-(len(affix))]
     return text
-
-
-db = SQLAlchemy()
 
 
 class ProjectMixin(object):
@@ -133,18 +130,21 @@ class User(db.Model, UserMixin):
     def encoded_token(self):
         try:
             # user name to make tokens unique per user
-            token = jwt.encode({'launch': True, 'name': self.name}, os.environ['BG_SECRET_KEY'], algorithm='HS256')
+            token = jwt.encode({'launch': True, 'name': self.name}, app.config['SECRET_KEY'], algorithm='HS256')
             token = token.decode()
             return token
         except Exception as e:
+            app.logger.error("token generation error: " + str(e))
             return e
 
     @staticmethod
     def validate_token(encoded_token, permission='launch'):
         try:
-            payload = jwt.decode(encoded_token, os.environ['BG_SECRET_KEY'], algorithms='HS256')
+            payload = jwt.decode(encoded_token, app.config['SECRET_KEY']+'+', algorithms='HS256')
         except Exception as e:
-            # FIXME log error
+            from flask import request
+            request_info = f"Token validation error: {request.remote_addr} requested {request.url}: "
+            app.logger.error(request_info + str(e))
             return False
         return payload.get(permission, False)
 
@@ -214,12 +214,12 @@ class RepoMixin(object):
 
     @property
     def binder_url(self):
-        return f'{BINDER_URL}/v2/{self.provider_spec}'
+        return f'{app.default_binder_url}/v2/{self.provider_spec}'
 
     @property
     def binder_ref_url(self):
         # TODO this should be v2/spec_with_resolved_ref
-        return f'{BINDER_URL}/v2/{self.provider_spec}'
+        return f'{app.default_binder_url}/v2/{self.provider_spec}'
 
     def get_repo_description(self):
         repo_url = self.repo_url
@@ -264,11 +264,11 @@ class Repo(RepoMixin, db.Model):
     def spec(self):
         for prefix in PROVIDER_PREFIXES.values():
             if self.provider_spec.startswith(prefix+'/'):
-                return self.provider_spec.lstrip(prefix+'/')
+                return self.provider_spec[len(prefix+'/'):]
         raise ValueError(f'{self.provider_spec} is not valid.')
 
 
-@architect.install('partition', type='range', subtype='date', constraint='year', column='timestamp', orm='sqlalchemy', db=os.environ['BG_DATABASE_URL'])
+@architect.install('partition', type='range', subtype='date', constraint='year', column='timestamp', orm='sqlalchemy', db=app.config['SQLALCHEMY_DATABASE_URI'])
 class BinderLaunch(RepoMixin, db.Model):
     id = db.Column(db.Integer, primary_key=True)
     schema = db.Column(db.String, nullable=False)

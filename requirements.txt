@@ -13,3 +13,4 @@ Werkzeug==0.14.*
 WTForms==2.2.*
 SQLAlchemy==1.2.*
 flask-restful==0.3.7
+gunicorn==19.9.0

@@ -1,4 +1,4 @@
-from .models import BinderLaunch
+from .models import BinderLaunch, CreatedByGesis, FeaturedProject
 from datetime import datetime, timedelta
 from sqlalchemy.orm import load_only
 
@@ -26,6 +26,11 @@ def get_projects(table):
     for o in objects:
         projects.append([o.repo_name, o.org, o.provider, o.repo_url, o.binder_url, o.description])
     return projects
+
+
+def get_all_projects():
+    return [('Created By Gesis', get_projects(CreatedByGesis)),
+            ('Featured Projects', get_projects(FeaturedProject))]
 
 
 def get_launched_repos(time_range):
