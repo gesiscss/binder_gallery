@@ -1,2 +1,2 @@
 -r requirements.txt
-flask-DebugToolbar==0.10.*
+flask-DebugToolbar==0.10.1
