@@ -16,7 +16,6 @@ with python version at least 3.7.
 3. Install dependencies: 
     ```bash
     pip install -r dev_requirements.txt
-    
     ```
     
 4. Set required environment variables
@@ -34,6 +33,28 @@ with python version at least 3.7.
     ```bash
     flask run
     ```
+### Create user
+
+1. With `create-user` command:
+
+    ```bash
+    flask create-user <name> <password>
+    ```
+
+2. With flask shell:
+
+    2.1 Start a flask shell
+
+    ```bash
+    flask shell
+    ```
+
+    2.2 Run this code to create a user:
+
+    ```python
+    from binder_gallery.models import User
+    User.create_user("name", "password")
+    ```
 
 ## To have custom configuration
 
@@ -50,31 +71,6 @@ class Config(BaseConfig):
 ```
 
 3. `export BG_APPLICATION_SETTINGS=local_config.Config`
-
-## Run gallery in docker
-
-```bash
-cd binder_gallery
-
-# build
-docker build -t binder-gallery:test .
-
-# run with default config
-docker run --name binder-gallery -it --rm \
-    -p 5000:5000 \
-    --env FLASK_ENV=production \
-    binder-gallery:test
-
-# run with custom config (you have to create a `docker_config.py` which includes your config)
-# and also run with base url (`/gallery/`)
-docker run --name binder-gallery -it --rm \
-    -p 5000:5000 \
-    --env FLASK_ENV=production \
-    --env BG_BASE_URL=/gallery/ \
-    --env BG_APPLICATION_SETTINGS=docker_config.Config \
-    -v $(pwd)/docker_config.py:/binder_gallery/docker_config.py \
-    binder-gallery:test
-```
 
 ## TODOs
 

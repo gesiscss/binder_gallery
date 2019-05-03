@@ -54,6 +54,9 @@ def init_plugins():
     # flask admin
     from binder_gallery import admin
 
+    # flask commands
+    import binder_gallery.commands
+
 
 # init plugins after the app is initialized
 init_plugins()

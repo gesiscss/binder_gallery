@@ -140,7 +140,7 @@ class User(db.Model, UserMixin):
     @staticmethod
     def validate_token(encoded_token, permission='launch'):
         try:
-            payload = jwt.decode(encoded_token, app.config['SECRET_KEY']+'+', algorithms='HS256')
+            payload = jwt.decode(encoded_token, app.config['SECRET_KEY'], algorithms='HS256')
         except Exception as e:
             from flask import request
             request_info = f"Token validation error: {request.remote_addr} requested {request.url}: "
@@ -148,11 +148,12 @@ class User(db.Model, UserMixin):
             return False
         return payload.get(permission, False)
 
-    # @classmethod
-    # def create_user(cls, name, password):
-    #     u = cls(name, "", generate_password_hash(password), True)
-    #     db.session.add(u)
-    #     db.session.commit()
+    @classmethod
+    def create_user(cls, name, password, email="", active=True):
+        u = cls(name=name, email=email, password_hash=generate_password_hash(password), active=active)
+        db.session.add(u)
+        db.session.commit()
+        return u
 
 
 class RepoMixin(object):
