@@ -1,3 +1,5 @@
+from binder_gallery import app
+
 if __name__ == '__main__':
-    from binder_gallery.app import main
-    main()
+    # run the application on local development server
+    app.run()

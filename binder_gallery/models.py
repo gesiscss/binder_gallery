@@ -10,8 +10,6 @@ from urllib.parse import unquote
 
 from binder_gallery import db, app
 
-BINDER_URL = app.config['BINDER_URL'].rstrip('/')
-
 
 PROVIDER_PREFIXES = {
     # name: prefix
@@ -136,7 +134,7 @@ class User(db.Model, UserMixin):
             token = token.decode()
             return token
         except Exception as e:
-            app.logger.error(e)
+            app.logger.error("token generation error: " + str(e))
             return e
 
     @staticmethod
@@ -144,7 +142,9 @@ class User(db.Model, UserMixin):
         try:
             payload = jwt.decode(encoded_token, app.config['SECRET_KEY']+'+', algorithms='HS256')
         except Exception as e:
-            app.logger.error(e)
+            from flask import request
+            request_info = f"Token validation error: {request.remote_addr} requested {request.url}: "
+            app.logger.error(request_info + str(e))
             return False
         return payload.get(permission, False)
 
@@ -214,12 +214,12 @@ class RepoMixin(object):
 
     @property
     def binder_url(self):
-        return f'{BINDER_URL}/v2/{self.provider_spec}'
+        return f'{app.default_binder_url}/v2/{self.provider_spec}'
 
     @property
     def binder_ref_url(self):
         # TODO this should be v2/spec_with_resolved_ref
-        return f'{BINDER_URL}/v2/{self.provider_spec}'
+        return f'{app.default_binder_url}/v2/{self.provider_spec}'
 
     def get_repo_description(self):
         repo_url = self.repo_url
@@ -264,7 +264,7 @@ class Repo(RepoMixin, db.Model):
     def spec(self):
         for prefix in PROVIDER_PREFIXES.values():
             if self.provider_spec.startswith(prefix+'/'):
-                return self.provider_spec.lstrip(prefix+'/')
+                return self.provider_spec[len(prefix+'/'):]
         raise ValueError(f'{self.provider_spec} is not valid.')
 
 

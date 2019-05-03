@@ -1,35 +1,35 @@
-import os
-from flask import Flask
 from flask_sqlalchemy import SQLAlchemy
+from .flask_app import Flask
 
-app = Flask(__name__)
+# configure logging before creating the application object
+# http://flask.pocoo.org/docs/1.0/logging/
+from logging.config import dictConfig
+dictConfig({
+    'version': 1,
+    'formatters': {'default': {
+        'format': '[%(asctime)s] %(levelname)s in %(module)s: %(message)s',
+    }},
+    'handlers': {'wsgi': {
+        'class': 'logging.StreamHandler',
+        'stream': 'ext://flask.logging.wsgi_errors_stream',
+        'formatter': 'default'
+    }},
+    'root': {
+        'level': 'INFO',
+        'handlers': ['wsgi']
+    }
+})
+
+
+# set static_folder to None in order to prevent adding default static url rule
+# it will be added manually later in __init__
+app = Flask(__name__, static_folder=None)
 db = SQLAlchemy()
 
 
-def init_app():
-    app.config.from_object('config.Config')
-    # to override default config
-    custom_config = os.getenv('BG_APPLICATION_SETTINGS')
-    if custom_config:
-        app.config.from_object(custom_config)
-
-    # http://flask.pocoo.org/docs/1.0/logging/
-    from logging.config import dictConfig
-    dictConfig({
-        'version': 1,
-        'formatters': {'default': {
-            'format': '[%(asctime)s] %(levelname)s in %(module)s: %(message)s',
-        }},
-        'handlers': {'wsgi': {
-            'class': 'logging.StreamHandler',
-            'stream': 'ext://flask.logging.wsgi_errors_stream',
-            'formatter': 'default'
-        }},
-        'root': {
-            'level': 'INFO',
-            'handlers': ['wsgi']
-        }
-    })
+def init_plugins():
+    # add routes
+    import binder_gallery.views
 
     # debug toolbar
     if app.debug:
@@ -37,6 +37,7 @@ def init_app():
         toolbar = DebugToolbarExtension(app)
 
     # initialize db
+    # TODO how to detect a new migration and apply it?
     db.init_app(app)
 
     # initialize flask-login
@@ -54,4 +55,5 @@ def init_app():
     from binder_gallery import admin
 
 
-init_app()
+# init plugins after the app is initialized
+init_plugins()

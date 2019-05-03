@@ -5,36 +5,35 @@ Binder Gallery for [GESIS Notebooks](https://notebooks.gesis.org/)
 ## Run the gallery locally
 
 1. Clone the repository and get into it
-
-```bash
-git clone https://github.com/gesiscss/binder_gallery.git
-cd binder_gallery
-```
+    ```bash
+    git clone https://github.com/gesiscss/binder_gallery.git
+    cd binder_gallery
+    ```
 
 2. [Create and activate a virtual environment](http://flask.pocoo.org/docs/1.0/installation/#virtual-environments)
 with python version at least 3.7.
 
 3. Install dependencies: 
-```bash
-pip install -r dev_requirements.txt
-
-```
+    ```bash
+    pip install -r dev_requirements.txt
+    
+    ```
+    
 4. Set required environment variables
-```bash
-export FLASK_APP=binder_gallery/app.py
-export FLASK_ENV=development
-
-```
+    ```bash
+    export FLASK_APP=binder_gallery
+    export FLASK_ENV=development
+    ```
 
 5. Create a local sqlite3 db and apply migrations
-```bash
-python manage.py db upgrade
-```
+    ```bash
+    python manage.py db upgrade
+    ```
 
 6. Run the application
-```bash
-flask run
-```
+    ```bash
+    flask run
+    ```
 
 ## To have custom configuration
 
@@ -48,7 +47,6 @@ from config import Config as BaseConfig
 
 class Config(BaseConfig):
     # add your custom configuration here
-
 ```
 
 3. `export BG_APPLICATION_SETTINGS=local_config.Config`

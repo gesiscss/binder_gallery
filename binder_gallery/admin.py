@@ -78,6 +78,8 @@ class BinderLaunchModelView(BaseModelView):
             self.session.expunge(model)
             provider_spec = model.provider_spec
             repo = Repo.query.filter_by(provider_spec=provider_spec).first()
+            app.logger.info(f"New binder launch {provider_spec} on {model.timestamp} - "
+                            f"{model.schema} {model.version} {model.status}")
             description = model.get_repo_description()
             if repo:
                 repo.launches.append(model)
@@ -122,7 +124,7 @@ class AdminIndexView(BaseAdminIndexView):
         return redirect(url_for('.index'))
 
 
-admin = Admin(app, name='Binder Gallery', index_view=AdminIndexView(url=app.config['BG_ADMIN_URL']),
+admin = Admin(app, name='Binder Gallery', index_view=AdminIndexView(),
               base_template='admin/master.html', template_mode='bootstrap3')
 
 admin.add_view(UserModelView(User, db.session))

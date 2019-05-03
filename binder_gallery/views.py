@@ -3,8 +3,6 @@ from flask import render_template, abort, make_response, request
 from .utilities_db import get_all_projects, get_launched_repos
 from . import app
 
-BINDER_URL = app.config['BINDER_URL'].rstrip('/')
-
 
 def get_binders(fetch_versions=True):
     binders = [
@@ -12,7 +10,7 @@ def get_binders(fetch_versions=True):
         {'name': 'mybinder.org', 'url': 'https://mybinder.org', 'selected': 'false'},
         {'name': 'Pangeo', 'url': 'https://binder.pangeo.io', 'selected': 'false'},
     ]
-    selected_binder = request.cookies.get('selected_binder') or BINDER_URL
+    selected_binder = request.cookies.get('selected_binder') or app.default_binder_url
     for binder in binders:
         if binder['name'] == selected_binder or binder['url'] == selected_binder:
             binder['selected'] = 'true'
@@ -26,7 +24,7 @@ def get_binders(fetch_versions=True):
                     versions = response.json()
                     versions = f"BinderHub {versions['binderhub']} with {versions['builder']}"
             except Exception as e:
-                app.logger.error(e)
+                app.logger.error(f"fetching version of {binder['name']} failed: {str(e)}")
             binder['versions'] = versions
     return binders
 
@@ -46,9 +44,9 @@ def get_default_template_context():
         'imprint_url': 'https://www.gesis.org/en/institute/imprint/',
         'data_protection_url': 'https://www.gesis.org/en/institute/data-protection/',
         'gesis_url': 'https://www.gesis.org/en/home/',
-        'gallery_url': '/gallery/',  # TODO base url
+        'gallery_url': app.base_url,
         # 'help_url': 'https://www.gesis.org/en/help/',
-        'binder_url': BINDER_URL,
+        'binder_url': app.default_binder_url,
     }
     return context
 
@@ -57,7 +55,10 @@ def get_default_template_context():
 def select_binder():
     selected_binder = request.json['name']
     resp = make_response(f"Selected Binder: {selected_binder}")
-    resp.set_cookie("selected_binder", selected_binder)
+    resp.set_cookie("selected_binder", selected_binder,
+                    path=app.base_url, httponly=True, samesite='Lax',
+                    secure=app.config.get('SELECT_BINDER_COOKIE_SECURE', app.config['SESSION_COOKIE_SECURE']),
+                    domain=app.config.get('SELECT_BINDER_COOKIE_DOMAIN', app.config['SESSION_COOKIE_DOMAIN']))
     return resp
 
 
@@ -110,13 +111,3 @@ def not_found(error):
                     'message': error.description,
                     'active': None})
     return render_template('error.html', **context), 404
-
-
-def run_app():
-    app.run(host='0.0.0.0')
-
-
-main = run_app
-
-if __name__ == '__main__':
-    main()
