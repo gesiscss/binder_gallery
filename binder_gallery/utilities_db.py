@@ -30,7 +30,7 @@ def get_projects(table):
     return projects
 
 
-@cache.cached(timeout=60, key_prefix='all_projects')
+@cache.cached(timeout=None, key_prefix='all_projects')
 def get_all_projects():
     return [('Created By Gesis', get_projects(CreatedByGesis)),
             ('Featured Projects', get_projects(FeaturedProject))]
@@ -89,7 +89,7 @@ def get_launch_count():
     ).scalar()
 
 
-@cache.cached(timeout=60, key_prefix='first_launch_ts')
+@cache.cached(timeout=None, key_prefix='first_launch_ts')
 def get_first_launch_ts():
     return BinderLaunch.query.with_entities(BinderLaunch.timestamp).first()[0]
 
