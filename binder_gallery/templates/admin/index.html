@@ -2,7 +2,7 @@
 
 {% block body %}
 {{ super() }}
-<div class="row-fluid" style="padding-left: 30px; padding-right: 30px;">
+<p class="row-fluid" style="padding-left: 30px; padding-right: 30px;">
     <p>
         {% if current_user.is_authenticated %}
         Hello {{ current_user.name }}!
@@ -26,6 +26,6 @@
             <button class="btn btn-default" type="submit">Submit</button>
         </form>
         {% endif %}
-    </div>
+    </p>
 </div>
 {% endblock body %}

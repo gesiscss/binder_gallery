@@ -1,6 +1,8 @@
 from .models import BinderLaunch, CreatedByGesis, FeaturedProject
 from datetime import datetime, timedelta
 from sqlalchemy.orm import load_only
+from sqlalchemy import func
+from . import db, cache
 
 
 def get_projects(table):
@@ -28,6 +30,7 @@ def get_projects(table):
     return projects
 
 
+@cache.cached(timeout=60, key_prefix='all_projects')
 def get_all_projects():
     return [('Created By Gesis', get_projects(CreatedByGesis)),
             ('Featured Projects', get_projects(FeaturedProject))]
@@ -76,3 +79,23 @@ def get_launched_repos(time_range):
     popular_repos.sort(key=lambda x: x[-1], reverse=True)
 
     return popular_repos
+
+
+def get_launch_count():
+    return db.session.execute(
+        db.session.query(
+            func.count(BinderLaunch.id)
+        )
+    ).scalar()
+
+
+@cache.cached(timeout=60, key_prefix='first_launch_ts')
+def get_first_launch_ts():
+    return BinderLaunch.query.with_entities(BinderLaunch.timestamp).first()[0]
+
+
+def get_launch_data():
+    return {
+        "count": get_launch_count(),
+        "first_ts": get_first_launch_ts()
+    }

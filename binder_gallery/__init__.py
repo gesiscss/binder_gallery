@@ -1,3 +1,4 @@
+from flask_caching import Cache
 from flask_sqlalchemy import SQLAlchemy
 from .flask_app import Flask
 
@@ -25,6 +26,7 @@ dictConfig({
 # it will be added manually later in __init__
 app = Flask(__name__, static_folder=None)
 db = SQLAlchemy()
+cache = Cache(config={'CACHE_TYPE': 'simple'})
 
 
 def init_plugins():
@@ -39,6 +41,8 @@ def init_plugins():
     # initialize db
     # TODO how to detect a new migration and apply it?
     db.init_app(app)
+
+    cache.init_app(app)
 
     # initialize flask-login
     import flask_login as login

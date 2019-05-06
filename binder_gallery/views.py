@@ -1,7 +1,7 @@
 import requests
 from flask_restful import Resource, Api
 from flask import render_template, abort, make_response, request
-from .utilities_db import get_all_projects, get_launched_repos
+from .utilities_db import get_all_projects, get_launched_repos, get_launch_data
 from . import app
 
 
@@ -83,6 +83,7 @@ def gallery():
                     'popular_repos_all': popular_repos_all,
                     'projects': get_all_projects(),
                     'binders': get_binders(),
+                    'launch_data': get_launch_data(),
                     })
     return render_template('gallery.html', **context)
 
@@ -100,6 +101,7 @@ def popular_repos(time_range):
     context.update({'active': 'gallery',
                     'title': titles[time_range],
                     'binders': get_binders(),
+                    'launch_data': get_launch_data(),
                     'popular_repos': get_launched_repos(time_range)})
     return render_template('popular_repos.html', **context)
 

@@ -1,23 +1,31 @@
-{#<div class="input-group col-xs-12 col-sm-5 col-md-5" style="margin-top: 15px; float:right">#}
-<div class="input-group col-xs-12 col-sm-5 col-md-5" style="margin-top: 15px;">
-    <span class="input-group-addon">Launch repos at</span>
+<div class="row">
+    {#<div class="input-group col-xs-12 col-sm-5 col-md-5" style="margin-top: 15px; float:right">#}
+    <div class="col-xs-12 col-sm-5 col-md-5" style="margin-top: 15px;">
+        <div class="input-group ">
+            <span class="input-group-addon">Launch repos at</span>
 
-    <select id="binder-select" class="form-control selectpicker"
-            data-binder="{{ binder_url }}" data-base-url="{{ gallery_url }}"
-            autocomplete="off">
-        {% for binder in binders %}
-            <option value="{{ binder['url'] }}" data-name="{{ binder['name'] }}" data-versions="{{ binder['versions'] }}"
-                    {% if binder['selected'] == 'true' %}selected="selected"{% endif %}> {{ binder['name'] }}
-        {% endfor %}
-    </select>
+            <select id="binder-select" class="form-control selectpicker"
+                    data-binder="{{ binder_url }}" data-base-url="{{ gallery_url }}"
+                    autocomplete="off">
+                {% for binder in binders %}
+                    <option value="{{ binder['url'] }}" data-name="{{ binder['name'] }}" data-versions="{{ binder['versions'] }}"
+                            {% if binder['selected'] == 'true' %}selected="selected"{% endif %}> {{ binder['name'] }}
+                {% endfor %}
+            </select>
 
-    <div class="input-group-btn">
-        {# https://getbootstrap.com/docs/3.3/javascript/#popovers #}
-        <button id="binder-versions-info" type="button" class="btn btn-default" aria-label="Versions"
-                data-container="body" data-toggle="popover" data-placement="right">
-            {# <span class="glyphicon glyphicon-info-sign"></span>#}
-            {# TODO add a sign to show if up-to-date with mybinder.org #}
-            Versions
-        </button>
+            <div class="input-group-btn">
+                {# https://getbootstrap.com/docs/3.3/javascript/#popovers #}
+                <button id="binder-versions-info" type="button" class="btn btn-default" aria-label="Versions"
+                        data-container="body" data-toggle="popover" data-placement="right">
+                    {# <span class="glyphicon glyphicon-info-sign"></span>#}
+                    {# TODO add a sign to show if up-to-date with mybinder.org #}
+                    Versions
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-xs-12 col-sm-4 col-md-3" style="margin-top: 20px; float:right">
+        {{ launch_data["count"] }} launches since {{ launch_data["first_ts"].date() }}
     </div>
 </div>

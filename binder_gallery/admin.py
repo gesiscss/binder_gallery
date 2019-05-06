@@ -1,13 +1,13 @@
 import flask_login as login
 from flask import request, url_for, redirect, abort
 from flask.helpers import get_debug_flag
-from flask_admin import AdminIndexView as BaseAdminIndexView, expose, helpers, Admin
+from flask_admin import AdminIndexView as BaseAdminIndexView, expose, helpers, Admin, BaseView
 from flask_admin.contrib.sqla import ModelView
 from flask_admin.helpers import is_safe_url
 from wtforms import validators
 from .forms import LoginForm
 from .models import User, Repo, CreatedByGesis, FeaturedProject, BinderLaunch
-from . import app, db
+from . import app, db, cache
 
 DEBUG_FLAG = get_debug_flag()
 
@@ -124,6 +124,14 @@ class AdminIndexView(BaseAdminIndexView):
         return redirect(url_for('.index'))
 
 
+class CacheView(BaseView):
+    @expose('/')
+    def index(self):
+        with app.app_context():
+            cache.clear()
+        return redirect(url_for('admin.index'))
+
+
 admin = Admin(app, name='Binder Gallery', index_view=AdminIndexView(),
               base_template='admin/master.html', template_mode='bootstrap3')
 
@@ -132,3 +140,4 @@ admin.add_view(RepoModelView(Repo, db.session))
 admin.add_view(CreatedByGesisModelView(CreatedByGesis, db.session))
 admin.add_view(FeaturedProjectModelView(FeaturedProject, db.session))
 admin.add_view(BinderLaunchModelView(BinderLaunch, db.session))
+admin.add_view(CacheView(name='Clear Cache', endpoint='clear_cache'))
