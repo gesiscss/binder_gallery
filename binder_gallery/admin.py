@@ -1,6 +1,6 @@
 import flask_login as login
-from flask import request, url_for, redirect, abort
-from flask.helpers import get_debug_flag
+from flask import request, url_for, redirect, abort, jsonify
+from flask.helpers import get_debug_flag, make_response
 from flask_admin import AdminIndexView as BaseAdminIndexView, expose, helpers, Admin, BaseView
 from flask_admin.contrib.sqla import ModelView
 from flask_admin.helpers import is_safe_url
@@ -33,7 +33,6 @@ class CreatedByGesisModelView(BaseModelView):
     def on_model_change(self, form, model, is_created):
         if form.repo_url and form.repo_url.data:
             if len(model.repo_url_parts) == 3:
-                # FIXME for Git provider
                 return super().on_model_change(form, model, is_created)
             raise validators.ValidationError('Invalid repo url! '
                                              'It must in form "https://<provider>/<org_or_user/<repo_name>"')
@@ -62,13 +61,14 @@ class BinderLaunchModelView(BaseModelView):
            request.method == "POST":
             token = request.headers.get('Authorization')
             if token:
-                if self.validate_form(self.create_form()):
+                form = self.create_form()
+                if self.validate_form(form):
                     token = token.replace('Bearer ', '', 1)
                     if User.validate_token(token) is True:
                         return True
-                # TODO return the form error
-                abort(400)
-            abort(403)
+                    abort(make_response(jsonify(error="Authorization token is not valid."), 400))
+                abort(make_response(jsonify(**form.errors), 400))
+            abort(make_response(jsonify(error="Authorization token is needed."), 403))
         return super(BinderLaunchModelView, self).is_accessible()
 
     def on_model_change(self, form, model, is_created):
