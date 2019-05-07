@@ -1,4 +1,5 @@
 import requests
+import os
 from flask_restful import Resource, Api
 from flask import render_template, abort, make_response, request
 from .utilities_db import get_all_projects, get_launched_repos, get_launch_data
@@ -31,8 +32,8 @@ def get_binders(fetch_versions=True):
 
 
 def get_default_template_context():
-    staging = app.debug
-    production = not app.debug
+    production = bool(os.getenv("PRODUCTION_SERVER", False))
+    staging = not production
     context = {
         'staging': staging,
         'production': production,
