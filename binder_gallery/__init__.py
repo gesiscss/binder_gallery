@@ -25,6 +25,9 @@ dictConfig({
 # set static_folder to None in order to prevent adding default static url rule
 # it will be added manually later in __init__
 app = Flask(__name__, static_folder=None)
+if not app.debug:
+    from werkzeug.middleware.proxy_fix import ProxyFix
+    app.wsgi_app = ProxyFix(app.wsgi_app)
 db = SQLAlchemy()
 cache = Cache(config={'CACHE_TYPE': 'simple'})
 
