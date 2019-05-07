@@ -91,7 +91,8 @@ def get_launch_count():
 
 @cache.cached(timeout=None, key_prefix='first_launch_ts')
 def get_first_launch_ts():
-    return BinderLaunch.query.with_entities(BinderLaunch.timestamp).first()[0]
+    first_launch = BinderLaunch.query.with_entities(BinderLaunch.timestamp).first()
+    return first_launch[0] if first_launch else None
 
 
 def get_launch_data():
