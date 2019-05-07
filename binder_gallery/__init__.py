@@ -2,25 +2,6 @@ from flask_caching import Cache
 from flask_sqlalchemy import SQLAlchemy
 from .flask_app import Flask
 
-# configure logging before creating the application object
-# http://flask.pocoo.org/docs/1.0/logging/
-from logging.config import dictConfig
-dictConfig({
-    'version': 1,
-    'formatters': {'default': {
-        'format': '[%(asctime)s] %(levelname)s in %(module)s: %(message)s',
-    }},
-    'handlers': {'wsgi': {
-        'class': 'logging.StreamHandler',
-        'stream': 'ext://flask.logging.wsgi_errors_stream',
-        'formatter': 'default'
-    }},
-    'root': {
-        'level': 'INFO',
-        'handlers': ['wsgi']
-    }
-})
-
 
 # set static_folder to None in order to prevent adding default static url rule
 # it will be added manually later in __init__
