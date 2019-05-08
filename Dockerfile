@@ -31,6 +31,8 @@ EXPOSE 5000
 # run the application
 CMD ["python", "-m", "binder_gallery"]
 # run the application behind Gunicorn WSGI HTTP Server
-#CMD ["gunicorn", "--log-file=-", "--error-logfile=-", "--access-logfile=-", "-b", "0.0.0.0:5000", "binder_gallery:app"]
+#CMD ["gunicorn", "-b", "0.0.0.0:5000", "binder_gallery:app"]
 # run the application behind Gunicorn WSGI HTTP Server with 4 worker processes
-#CMD ["gunicorn", "--log-file=-", "--error-logfile=-", "--access-logfile=-", "-b", "0.0.0.0:5000", "-w", "4", "binder_gallery:app"]
+#CMD ["gunicorn", "-b", "0.0.0.0:5000", "-w", "4", "binder_gallery:app"]
+# enable access logs
+#CMD ["gunicorn", "--access-logfile=-", "-b", "0.0.0.0:5000", "binder_gallery:app"]
