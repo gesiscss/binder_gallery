@@ -13,7 +13,7 @@ class Config(object):
     BASE_URL = os.getenv("BG_BASE_URL", "/")
     # list of binders. default is GESIS binder.
     BINDERS = [
-        {'name': 'GESIS', 'url': 'https://notebooks.gesis.org/binder', 'default': True},
+        {'name': 'GESIS', 'url': 'https://notebooks.gesis.org/binder', 'default': "true"},
         {'name': 'mybinder.org', 'url': 'https://mybinder.org'},
         {'name': 'Pangeo', 'url': 'https://binder.pangeo.io'},
     ]

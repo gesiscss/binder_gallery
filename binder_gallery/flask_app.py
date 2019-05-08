@@ -20,7 +20,7 @@ class Flask(BaseFlask):
         self.default_binder_url = None
         for b in self.binders:
             b['versions'] = "No versions info is available"
-            if "default" in b and b["default"] is True:
+            if "default" in b and b["default"] == "true":
                 self.default_binder_url = b["url"]
         if self.default_binder_url is None:
             self.default_binder_url = self.binders[0]["url"]
