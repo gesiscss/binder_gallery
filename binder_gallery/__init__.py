@@ -10,10 +10,10 @@ app = Flask(__name__, static_folder=None)
 if not app.debug:
     # configure flask.app logger
     import logging
-    sh = logging.StreamHandler()
-    formatter = logging.Formatter('[%(asctime)s] %(levelname)s in %(module)s: %(message)s')
-    sh.setFormatter(formatter)
-    app.logger.handlers = [sh]
+    # sh = logging.StreamHandler()
+    # formatter = logging.Formatter('[%(asctime)s] %(levelname)s in %(module)s: %(message)s')
+    # sh.setFormatter(formatter)
+    # app.logger.handlers = [sh]
     app.logger.setLevel(logging.INFO)
     # reverse proxy fix
     from werkzeug.middleware.proxy_fix import ProxyFix
