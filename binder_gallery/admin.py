@@ -125,6 +125,14 @@ class AdminIndexView(BaseAdminIndexView):
 
 
 class CacheView(BaseView):
+
+    def is_accessible(self):
+        return login.current_user.is_authenticated
+
+    def inaccessible_callback(self, name, **kwargs):
+        # redirect to login page if user doesn't have access
+        return redirect(url_for('admin.login_view', next=request.url))
+
     @expose('/')
     def index(self):
         with app.app_context():
