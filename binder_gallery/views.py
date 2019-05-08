@@ -7,28 +7,26 @@ from . import app
 
 
 def get_binders(fetch_versions=True):
-    binders = [
-        {'name': 'GESIS', 'url': 'https://notebooks.gesis.org/binder', 'selected': 'false'},
-        {'name': 'mybinder.org', 'url': 'https://mybinder.org', 'selected': 'false'},
-        {'name': 'Pangeo', 'url': 'https://binder.pangeo.io', 'selected': 'false'},
-    ]
     selected_binder = request.cookies.get('selected_binder') or app.default_binder_url
-    for binder in binders:
+    for binder in app.binders:
+        binder['selected'] = 'false'
         if binder['name'] == selected_binder or binder['url'] == selected_binder:
             binder['selected'] = 'true'
 
     if fetch_versions is True:
-        for binder in binders:
-            versions = "No versions info is available"
+        for binder in app.binders:
+            # lasts ~0.3 seconds per binder
             try:
                 response = requests.get(binder['url'] + '/versions', timeout=0.5)
                 if response.status_code == 200:
                     versions = response.json()
                     versions = f"BinderHub {versions['binderhub']} with {versions['builder']}"
+                    binder['versions'] = versions
             except Exception as e:
+                # if fail, last fetched version info (of this binder) is displayed
                 app.logger.error(f"fetching version of {binder['name']} failed: {str(e)}")
-            binder['versions'] = versions
-    return binders
+
+    return app.binders
 
 
 def get_default_template_context():

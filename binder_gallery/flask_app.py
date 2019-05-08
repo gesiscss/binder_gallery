@@ -15,7 +15,15 @@ class Flask(BaseFlask):
             self.config.from_object(custom_config)
 
         self.base_url = self.config['BASE_URL']
-        self.default_binder_url = self.config['BINDER_URL'].rstrip('/')
+
+        self.binders = self.config['BINDERS']
+        self.default_binder_url = None
+        for b in self.binders:
+            b['versions'] = "No versions info is available"
+            if "default" in b and b["default"] is True:
+                self.default_binder_url = b["url"]
+        if self.default_binder_url is None:
+            self.default_binder_url = self.binders[0]["url"]
 
         # add static url rule manually
         # https://stackoverflow.com/questions/26722279/how-to-set-static-url-path-in-flask-application/26722526#26722526

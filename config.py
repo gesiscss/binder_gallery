@@ -11,8 +11,12 @@ class Config(object):
 
     # binder gallery config
     BASE_URL = os.getenv("BG_BASE_URL", "/")
-    # default binder url. default is GESIS binder
-    BINDER_URL = "https://notebooks.gesis.org/binder"
+    # list of binders. default is GESIS binder.
+    BINDERS = [
+        {'name': 'GESIS', 'url': 'https://notebooks.gesis.org/binder', 'default': True},
+        {'name': 'mybinder.org', 'url': 'https://mybinder.org'},
+        {'name': 'Pangeo', 'url': 'https://binder.pangeo.io'},
+    ]
 
     # flask builtin config: http://flask.pocoo.org/docs/1.0/config/#builtin-configuration-values
     SECRET_KEY = "development-secret"
