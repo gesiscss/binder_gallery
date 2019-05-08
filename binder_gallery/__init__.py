@@ -6,9 +6,19 @@ from .flask_app import Flask
 # set static_folder to None in order to prevent adding default static url rule
 # it will be added manually later in __init__
 app = Flask(__name__, static_folder=None)
+
 if not app.debug:
+    # configure flask.app logger
+    import logging
+    sh = logging.StreamHandler()
+    formatter = logging.Formatter('[%(asctime)s] %(levelname)s in %(module)s: %(message)s')
+    sh.setFormatter(formatter)
+    app.logger.addHandler(sh)
+    app.logger.setLevel(logging.INFO)
+    # reverse proxy fix
     from werkzeug.middleware.proxy_fix import ProxyFix
     app.wsgi_app = ProxyFix(app.wsgi_app)
+
 db = SQLAlchemy()
 cache = Cache(config={'CACHE_TYPE': 'simple'})
 
