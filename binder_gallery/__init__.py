@@ -13,7 +13,7 @@ if not app.debug:
     sh = logging.StreamHandler()
     formatter = logging.Formatter('[%(asctime)s] %(levelname)s in %(module)s: %(message)s')
     sh.setFormatter(formatter)
-    app.logger.addHandler(sh)
+    app.logger.handlers = [sh]
     app.logger.setLevel(logging.INFO)
     # reverse proxy fix
     from werkzeug.middleware.proxy_fix import ProxyFix
