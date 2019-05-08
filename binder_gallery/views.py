@@ -57,10 +57,16 @@ def get_default_template_context():
 def select_binder():
     selected_binder = request.json['name']
     resp = make_response(f"Selected Binder: {selected_binder}")
+
+    if 'SELECT_BINDER_COOKIE_DOMAIN' in app.config:
+        cookie_domain = app.config['SELECT_BINDER_COOKIE_DOMAIN']
+    else:
+        cookie_domain = app.config['SESSION_COOKIE_DOMAIN']
+        cookie_domain = None if cookie_domain is False else cookie_domain
     resp.set_cookie("selected_binder", selected_binder,
                     path=app.base_url, httponly=True, samesite='Lax',
                     secure=app.config.get('SELECT_BINDER_COOKIE_SECURE', app.config['SESSION_COOKIE_SECURE']),
-                    domain=app.config.get('SELECT_BINDER_COOKIE_DOMAIN', app.config['SESSION_COOKIE_DOMAIN']))
+                    domain=cookie_domain)
     return resp
 
 

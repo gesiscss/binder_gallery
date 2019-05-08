@@ -18,7 +18,7 @@ class Config(object):
     SECRET_KEY = "development-secret"
     APPLICATION_ROOT = BASE_URL
     SERVER_NAME = "127.0.0.1:5000"
-    SESSION_COOKIE_DOMAIN = "127.0.0.1"
+    SESSION_COOKIE_DOMAIN = False
     SESSION_COOKIE_NAME = "bg_session"
     SESSION_COOKIE_PATH = f"{BASE_URL}admin"
     SESSION_COOKIE_SECURE = False
