@@ -24,7 +24,7 @@ def get_binders(fetch_versions=True):
                     binder['versions'] = versions
             except Exception as e:
                 # if fail, last fetched version info (of this binder) is displayed
-                app.logger.error(f"fetching version of {binder['name']} failed: {str(e)}")
+                app.logger.error(f"Error: fetching version of {binder['name']} failed: {e}")
 
     return app.binders
 

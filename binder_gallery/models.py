@@ -134,7 +134,7 @@ class User(db.Model, UserMixin):
             token = token.decode()
             return token
         except Exception as e:
-            app.logger.error("token generation error: " + str(e))
+            app.logger.error(f"Error: token generation {e}")
             return e
 
     @staticmethod
@@ -143,8 +143,7 @@ class User(db.Model, UserMixin):
             payload = jwt.decode(encoded_token, app.config['SECRET_KEY'], algorithms='HS256')
         except Exception as e:
             from flask import request
-            request_info = f"Token validation error: {request.remote_addr} requested {request.url}: "
-            app.logger.error(request_info + str(e))
+            app.logger.error(f"Error: token validation: {request.remote_addr} requested {request.url}: {e}")
             return False
         return payload.get(permission, False)
 
