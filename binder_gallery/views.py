@@ -3,9 +3,10 @@ import os
 from flask_restful import Resource, Api
 from flask import render_template, abort, make_response, request
 from .utilities_db import get_all_projects, get_launched_repos, get_launch_data
-from . import app
+from . import app, cache
 
 
+@cache.cached(timeout=60, key_prefix='binders')
 def get_binders(fetch_versions=True):
     selected_binder = request.cookies.get('selected_binder') or app.default_binder_url
     for binder in app.binders:
