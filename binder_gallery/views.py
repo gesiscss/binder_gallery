@@ -6,28 +6,34 @@ from .utilities_db import get_all_projects, get_launched_repos, get_launch_data
 from . import app, cache
 
 
-@cache.cached(timeout=60, key_prefix='binders')
+@cache.cached(timeout=300, key_prefix='binder_versions')
+def get_binder_versions(binders):
+    for binder in binders:
+        # lasts ~0.3 seconds per binder
+        try:
+            response = requests.get(binder['url'] + '/versions', timeout=0.5)
+            if response.status_code == 200:
+                versions = response.json()
+                versions = f"BinderHub {versions['binderhub']} with {versions['builder']}"
+                binder['versions'] = versions
+        except Exception as e:
+            # if fail, last fetched version info (of this binder) is displayed
+            app.logger.error(f"Error: fetching version of {binder['name']} failed: {e}")
+    return binders
+
+
 def get_binders(fetch_versions=True):
+    binders = app.binders
+    # first fetch versions, because it is cached and otherwise cached value overwrites the selected info
+    if fetch_versions is True:
+        binders = get_binder_versions(binders)
+    # then set selected binder
     selected_binder = request.cookies.get('selected_binder') or app.default_binder_url
-    for binder in app.binders:
+    for binder in binders:
         binder['selected'] = 'false'
         if binder['name'] == selected_binder or binder['url'] == selected_binder:
             binder['selected'] = 'true'
-
-    if fetch_versions is True:
-        for binder in app.binders:
-            # lasts ~0.3 seconds per binder
-            try:
-                response = requests.get(binder['url'] + '/versions', timeout=0.5)
-                if response.status_code == 200:
-                    versions = response.json()
-                    versions = f"BinderHub {versions['binderhub']} with {versions['builder']}"
-                    binder['versions'] = versions
-            except Exception as e:
-                # if fail, last fetched version info (of this binder) is displayed
-                app.logger.error(f"Error: fetching version of {binder['name']} failed: {e}")
-
-    return app.binders
+    return binders
 
 
 def get_default_template_context():
