@@ -4,3 +4,4 @@ ignore/*
 venv
 local_config.py
 local.sqlite
+bg_cache

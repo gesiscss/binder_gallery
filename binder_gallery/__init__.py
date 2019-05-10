@@ -1,3 +1,4 @@
+import os
 from flask_caching import Cache
 from flask_sqlalchemy import SQLAlchemy
 from .flask_app import Flask
@@ -20,7 +21,9 @@ if not app.debug:
     app.wsgi_app = ProxyFix(app.wsgi_app)
 
 db = SQLAlchemy()
-cache = Cache(config={'CACHE_TYPE': 'simple'})
+project_dir = os.path.dirname(os.path.dirname(os.path.realpath(__file__)))
+cache = Cache(config={'CACHE_TYPE': 'filesystem',
+                      'CACHE_DIR': os.path.join(project_dir, 'bg_cache')})
 
 
 def init_plugins():
