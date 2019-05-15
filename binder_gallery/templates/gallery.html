@@ -28,25 +28,16 @@
         {% endfor %}
     </div>
 
-    {% if projects %}
-    <div id="tabsprojects">
-        <h2>Binderised Repos</h2>
-        <div class="tabs_wrapper">
-            <ul>
-                {%  for title, repos in projects %}
-                <li><a href="#tabsprojects-{{ loop.index }}">{{ title }}</a></li>
-                {% endfor %}
-            </ul>
-        </div>
-        {%  for title, repos in projects %}
-        <div id="tabsprojects-{{ loop.index }}" class="table-responsive" style="padding: 0;">
-            {% with table_id=loop.index, repos=repos %}
-            {% include "table.html" %}
-            {% endwith %}
-        </div>
-        {% endfor %}
+    {%  for title, repos in projects %}
+    {% if repos %}
+    <div class="table-responsive">
+        <h2> {{ title }}</h2>
+        {% with table_id=loop.index, repos=repos %}
+        {% include "table.html" %}
+        {% endwith %}
     </div>
     {% endif %}
+    {% endfor %}
 {% endblock main %}
 
 {% block extra_js %}
