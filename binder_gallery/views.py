@@ -120,7 +120,10 @@ def popular_repos(time_range):
 
 class ReposLaunches(Resource):
     def get(self, time_range):
-        repos = get_launched_repos(time_range)
+        try:
+            repos = get_launched_repos(time_range)
+        except ValueError as e:
+            return {"error": str(e)}, 400
         return repos
 
 

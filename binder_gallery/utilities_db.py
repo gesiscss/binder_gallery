@@ -52,7 +52,7 @@ def get_launched_repos(time_range):
     elif time_range.endswith('m'):
         p = {'minutes': int(time_range.split('m')[0])}
     else:
-        raise ValueError('Time range must be in hours or days.')
+        raise ValueError('Time range must be in minutes [m] or hours [h] or days [d].')
 
     # get launch counts in given time range
     _to = datetime.utcnow()
