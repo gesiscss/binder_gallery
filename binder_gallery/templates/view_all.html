@@ -12,6 +12,15 @@
         {% with table_id="repos-table", repos=launched_repos, launch=True %}
             {% include "table.html" %}
         {% endwith %}
+
+    {% set repos_length = launched_repos|length %}
+    <p>
+        <span style="float: left;">
+            {{ total_launches }} launches over {{ repos_length }}
+            {% if repos_length > 1 %} repos{% else %} repo{% endif %}
+            {% if time_range == "all" %} since {{ first_launch_ts.strftime('%d.%m.%Y') }}{% endif %}
+        </span>
+    </p>
     </div>
 
 {% block extra_js %}
@@ -26,7 +35,8 @@
         }
         else {
             table = $('#repos-table').DataTable({
-                "order": [[3, "desc"]]
+                "order": [[3, "desc"]],
+                "pageLength": 10
             });
         }
 

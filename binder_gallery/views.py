@@ -2,7 +2,7 @@ import requests
 import os
 from flask_restful import Resource, Api
 from flask import render_template, abort, make_response, request
-from .utilities_db import get_all_projects, get_launched_repos, get_launch_data
+from .utilities_db import get_all_projects, get_launched_repos, get_first_launch_ts
 from . import app, cache
 
 
@@ -80,7 +80,8 @@ def gallery():
     time_range_list = [('24h', 'Last 24 hours'),
                        ('7d', 'Last week'),
                        ('30d', 'Last 30 days'),
-                       ('60d', 'Last 60 days')]
+                       ('60d', 'Last 60 days'),
+                       ('all', 'All time')]
     launched_repos_all = []
     for time_rage, title in time_range_list:
         launched_repos = get_launched_repos(time_rage)
@@ -93,27 +94,30 @@ def gallery():
                     'launched_repos_all': launched_repos_all,
                     'projects': get_all_projects(),
                     'binders': get_binders(),
-                    'launch_data': get_launch_data(),
+                    'first_launch_ts': get_first_launch_ts(),
                     })
     return render_template('gallery.html', **context)
 
 
 @app.route('/<string:time_range>/')
 def view_all(time_range):
-    titles = {'24h': 'Binder launches in last 24 hours',
-              '7d': 'Binder launches in last week',
-              '30d': 'Binder launches in last 30 days',
-              '60d': 'Binder launches in last 60 days'}
+    titles = {'24h': 'Launches in last 24 hours',
+              '7d': 'Launches in last week',
+              '30d': 'Launches in last 30 days',
+              '60d': 'Launches in last 60 days',
+              'all': 'Launches in all time'}
     if time_range not in titles:
         abort(404)
 
     context = get_default_template_context()
     launched_repos = get_launched_repos(time_range)
     total_launches = sum([l[-1] for l in launched_repos])
-    title = titles[time_range] + f" ({total_launches})"
     context.update({'active': 'gallery',
-                    'title': title,
+                    'time_range': time_range,
+                    'title': titles[time_range],
                     'binders': get_binders(),
+                    'first_launch_ts': get_first_launch_ts(),
+                    'total_launches': total_launches,
                     'launched_repos': launched_repos})
     return render_template('view_all.html', **context)
 

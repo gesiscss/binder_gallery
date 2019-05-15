@@ -56,16 +56,23 @@ def get_launched_repos(time_range):
         p = {'days': int(time_range.split('d')[0])}
     elif time_range.endswith('m'):
         p = {'minutes': int(time_range.split('m')[0])}
+    elif time_range == "all":
+        pass
     else:
         raise ValueError('Time range must be in minutes [m] or hours [h] or days [d].')
 
-    # get launch counts in given time range
-    _to = datetime.utcnow()
-    _from = _to - timedelta(**p)
-    objects = BinderLaunch.query.\
-        options(load_only('repo_id', 'provider', 'spec')).\
-        filter(BinderLaunch.timestamp.between(_from, _to)).\
-        all()
+    if time_range == "all":
+        objects = BinderLaunch.query. \
+            options(load_only('repo_id', 'provider', 'spec')). \
+            all()
+    else:
+        # get launch counts in given time range
+        _to = datetime.utcnow()
+        _from = _to - timedelta(**p)
+        objects = BinderLaunch.query.\
+            options(load_only('repo_id', 'provider', 'spec')).\
+            filter(BinderLaunch.timestamp.between(_from, _to)).\
+            all()
 
     # aggregate over launch count
     launched_repos = {}  # {repo_id: [repo_name,org,provider,repo_url,binder_url,description,launch_count]}
