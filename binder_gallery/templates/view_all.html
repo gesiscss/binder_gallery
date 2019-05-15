@@ -9,7 +9,7 @@
 
     <h2>{{ title }}</h2>
     <div class="table-responsive">
-        {% with table_id="repos-table", repos=popular_repos, launch=True %}
+        {% with table_id="repos-table", repos=launched_repos, launch=True %}
             {% include "table.html" %}
         {% endwith %}
     </div>

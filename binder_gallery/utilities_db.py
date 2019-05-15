@@ -32,8 +32,13 @@ def get_projects(table):
 
 @cache.cached(timeout=None, key_prefix='all_projects')
 def get_all_projects():
-    return [('Created By Gesis', get_projects(CreatedByGesis)),
-            ('Featured Projects', get_projects(FeaturedProject))]
+    all_projects = []
+    for title, model_ in [('Created by GESIS', CreatedByGesis),
+                          ('Featured Projects', FeaturedProject)]:
+        projects = get_projects(model_)
+        if projects:
+            all_projects.append((title, projects))
+    return all_projects
 
 
 def get_launched_repos(time_range):
@@ -63,22 +68,22 @@ def get_launched_repos(time_range):
         all()
 
     # aggregate over launch count
-    popular_repos = {}  # {repo_id: [repo_name,org,provider,repo_url,binder_url,description,launch_count]}
+    launched_repos = {}  # {repo_id: [repo_name,org,provider,repo_url,binder_url,description,launch_count]}
     for o in objects:
         repo_id = o.repo_id
-        if repo_id in popular_repos:
-            popular_repos[repo_id][-1] += 1
+        if repo_id in launched_repos:
+            launched_repos[repo_id][-1] += 1
         else:
             org, repo_name = o.spec_parts[:2]
             launch_count = 1
-            popular_repos[repo_id] = [repo_name, org, o.provider, o.repo_url,
-                                      o.binder_url, o.repo_description, launch_count]
+            launched_repos[repo_id] = [repo_name, org, o.provider, o.repo_url,
+                                       o.binder_url, o.repo_description, launch_count]
 
     # order according to launch count
-    popular_repos = list(popular_repos.values())
-    popular_repos.sort(key=lambda x: x[-1], reverse=True)
+    launched_repos = list(launched_repos.values())
+    launched_repos.sort(key=lambda x: x[-1], reverse=True)
 
-    return popular_repos
+    return launched_repos
 
 
 def get_launch_count():

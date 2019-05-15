@@ -77,22 +77,20 @@ def select_binder():
 
 @app.route('/')
 def gallery():
-    _popular_repos_all = [
-        ('24h', 'Last 24 hours', get_launched_repos('24h'), ),
-        ('7d', 'Last week', get_launched_repos('7d'), ),
-        ('30d', 'Last 30 days', get_launched_repos('30d'), ),
-        ('60d', 'Last 60 days', get_launched_repos('60d'), ),
-    ]
-    popular_repos_all = []
-    # don't show empty tabs (no launched happened)
-    for pr in _popular_repos_all:
-        if pr[-1]:
-            popular_repos_all.append(pr)
-    del _popular_repos_all
+    time_range_list = [('24h', 'Last 24 hours'),
+                       ('7d', 'Last week'),
+                       ('30d', 'Last 30 days'),
+                       ('60d', 'Last 60 days')]
+    launched_repos_all = []
+    for time_rage, title in time_range_list:
+        launched_repos = get_launched_repos(time_rage)
+        if launched_repos:
+            total_launches = sum([l[-1] for l in launched_repos])
+            launched_repos_all.append((time_rage, title, launched_repos, total_launches))
 
     context = get_default_template_context()
     context.update({'active': 'gallery',
-                    'popular_repos_all': popular_repos_all,
+                    'launched_repos_all': launched_repos_all,
                     'projects': get_all_projects(),
                     'binders': get_binders(),
                     'launch_data': get_launch_data(),
@@ -101,21 +99,23 @@ def gallery():
 
 
 @app.route('/<string:time_range>/')
-def popular_repos(time_range):
-    titles = {'24h': 'Popular repositories in last 24 hours',
-              '7d': 'Popular repositories in last week',
-              '30d': 'Popular repositories in last 30 days',
-              '60d': 'Popular repositories in last 60 days'}
+def view_all(time_range):
+    titles = {'24h': 'Binder launches in last 24 hours',
+              '7d': 'Binder launches in last week',
+              '30d': 'Binder launches in last 30 days',
+              '60d': 'Binder launches in last 60 days'}
     if time_range not in titles:
         abort(404)
 
     context = get_default_template_context()
+    launched_repos = get_launched_repos(time_range)
+    total_launches = sum([l[-1] for l in launched_repos])
+    title = titles[time_range] + f" ({total_launches})"
     context.update({'active': 'gallery',
-                    'title': titles[time_range],
+                    'title': title,
                     'binders': get_binders(),
-                    'launch_data': get_launch_data(),
-                    'popular_repos': get_launched_repos(time_range)})
-    return render_template('popular_repos.html', **context)
+                    'launched_repos': launched_repos})
+    return render_template('view_all.html', **context)
 
 
 class ReposLaunches(Resource):

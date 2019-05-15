@@ -9,34 +9,46 @@
     {{ super() }}
 
     <div id="tabs">
-        <h2>Popular repositories</h2>
+        <h2>Binder Launches{# on GESIS#}</h2>
+        {% if launch_data["first_ts"] %}
+        <p>{{ launch_data["count"] }} launches since {{ launch_data["first_ts"].date() }}</p>
+        {% endif %}
         <div class="tabs_wrapper">
             <ul>
-                {% for time_range, title, popular_repos in popular_repos_all %}
-                <li><a href="#tabs-{{ loop.index }}">{{ title }}</a></li>
+                {% for time_range, title, launched_repos, total_launches in launched_repos_all %}
+                <li><a href="#tabs-{{ loop.index }}">{{ title }} ({{ total_launches }})</a></li>
                 {% endfor %}
             </ul>
         </div>
-        {% for time_range, title, popular_repos in popular_repos_all %}
+        {% for time_range, title, launched_repos, total_launches in launched_repos_all %}
         <div id="tabs-{{ loop.index }}" class="table-responsive" style="padding: 0;">
-            {% with table_id=time_range, repos=popular_repos[:5], launch=True,
-                    repos_length=popular_repos|length, time_range=time_range, title=title %}
+            {% with table_id=time_range, repos=launched_repos[:5], launch=True,
+                    repos_length=launched_repos|length, time_range=time_range, title=title %}
             {% include "table.html" %}
             {% endwith %}
         </div>
         {% endfor %}
     </div>
 
-    {%  for title, repos in projects %}
-    {% if repos %}
-    <div class="table-responsive">
-        <h2> {{ title }}</h2>
-        {% with table_id=loop.index, repos=repos %}
-        {% include "table.html" %}
-        {% endwith %}
+    {% if projects %}
+    <div id="tabsprojects">
+        <h2>Binderised Repos</h2>
+        <div class="tabs_wrapper">
+            <ul>
+                {%  for title, repos in projects %}
+                <li><a href="#tabsprojects-{{ loop.index }}">{{ title }}</a></li>
+                {% endfor %}
+            </ul>
+        </div>
+        {%  for title, repos in projects %}
+        <div id="tabsprojects-{{ loop.index }}" class="table-responsive" style="padding: 0;">
+            {% with table_id=loop.index, repos=repos %}
+            {% include "table.html" %}
+            {% endwith %}
+        </div>
+        {% endfor %}
     </div>
     {% endif %}
-    {% endfor %}
 {% endblock main %}
 
 {% block extra_js %}
@@ -44,6 +56,7 @@
 <script>
     $(function () {
         $("#tabs").tabs();
+        $("#tabsprojects").tabs();
     });
 </script>
 {% endblock extra_js %}
