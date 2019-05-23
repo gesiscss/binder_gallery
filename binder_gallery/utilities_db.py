@@ -93,6 +93,32 @@ def get_launched_repos(time_range):
     return launched_repos
 
 
+def get_launches(from_dt, to_dt):
+    #from_dt = datetime.fromisoformat('2012-11-01T04:16:13-04:00')
+    from_dt = datetime.fromisoformat(from_dt)
+    to_dt = datetime.fromisoformat(to_dt)
+
+    objects = BinderLaunch.query. \
+        options(load_only('repo_id', 'provider', 'spec')). \
+        filter(BinderLaunch.timestamp.between(from_dt, to_dt)). \
+        all()
+    launched_repos = {}  # {repo_id: [repo_name,org,provider,repo_url,binder_url,description,launch_count]}
+    for o in objects:
+        repo_id = o.repo_id
+        if repo_id in launched_repos:
+            launched_repos[repo_id][-1] += 1
+        else:
+            org, repo_name = o.spec_parts[:2]
+            launch_count = 1
+            launched_repos[repo_id] = [repo_name, org, o.provider, o.repo_url,
+                                       o.binder_url, o.repo_description, launch_count]
+
+    # order according to launch count
+    launched_repos = list(launched_repos.values())
+    launched_repos.sort(key=lambda x: x[-1], reverse=True)
+    return launched_repos
+
+
 def get_launch_count():
     return db.session.execute(
         db.session.query(

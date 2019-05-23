@@ -2,7 +2,7 @@ import requests
 import os
 from flask_restful import Resource, Api
 from flask import render_template, abort, make_response, request
-from .utilities_db import get_all_projects, get_launched_repos, get_first_launch_ts
+from .utilities_db import get_all_projects, get_launched_repos, get_first_launch_ts, get_launches
 from . import app, cache
 
 
@@ -122,10 +122,19 @@ def view_all(time_range):
     return render_template('view_all.html', **context)
 
 
-class ReposLaunches(Resource):
+class PopularRepos(Resource):
     def get(self, time_range):
         try:
             repos = get_launched_repos(time_range)
+        except ValueError as e:
+            return {"error": str(e)}, 400
+        return repos
+
+
+class RepoLaunches(Resource):
+    def get(self, from_datetime, to_datetime):
+        try:
+            repos = get_launches(from_datetime, to_datetime)
         except ValueError as e:
             return {"error": str(e)}, 400
         return repos
@@ -142,4 +151,6 @@ def not_found(error):
 
 
 api = Api(app)
-api.add_resource(ReposLaunches, '/api/v1.0/repos/<string:time_range>')
+api.add_resource(PopularRepos, '/api/v1.0/popular_repos/<string:time_range>')
+
+api.add_resource(RepoLaunches, '/api/v1.0/launches/<string:from_datetime>/<string:to_datetime>')
