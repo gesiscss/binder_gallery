@@ -1,9 +1,16 @@
 import requests
 import os
-from flask_restful import Resource, Api
-from flask import render_template, abort, make_response, request
+from flask import render_template, abort, make_response, request , Blueprint
 from .utilities_db import get_all_projects, get_launched_repos, get_first_launch_ts, get_launches
 from . import app, cache
+from flask_restplus import Api, Resource
+from .models import BinderLaunch
+from binder_gallery import db
+
+# blueprint in order to change API url base otherwise it overwrites 127.0.0.1/gallery
+blueprint = Blueprint('api', __name__, url_prefix='/api')
+api = Api(blueprint)
+app.register_blueprint(blueprint)
 
 
 @cache.cached(timeout=300, key_prefix='binder_versions')
@@ -122,24 +129,6 @@ def view_all(time_range):
     return render_template('view_all.html', **context)
 
 
-class PopularRepos(Resource):
-    def get(self, time_range):
-        try:
-            repos = get_launched_repos(time_range)
-        except ValueError as e:
-            return {"error": str(e)}, 400
-        return repos
-
-
-class RepoLaunches(Resource):
-    def get(self, from_datetime, to_datetime):
-        try:
-            repos = get_launches(from_datetime, to_datetime)
-        except ValueError as e:
-            return {"error": str(e)}, 400
-        return repos
-
-
 @app.errorhandler(404)
 def not_found(error):
     context = get_default_template_context()
@@ -150,7 +139,42 @@ def not_found(error):
     return render_template('error.html', **context), 404
 
 
-api = Api(app)
-api.add_resource(PopularRepos, '/api/v1.0/popular_repos/<string:time_range>')
+@api.route('/api/v1.0/launches/<string:from_datetime>/<string:to_datetime>', methods=['GET'])
+@api.doc(params={'from_date': 'DateTime format utc0 from when you want to see repo_launches', 'to_date': 'until what time'})
+class RepoLaunches(Resource):
+    # @api.marshal_with(Repos, envelope='resource')
+    def get(self, from_datetime, to_datetime):
+        try:
+            repos = get_launches(from_datetime, to_datetime)
+        except ValueError as e:
+            return {"error": str(e)}, 400
+        return repos
 
-api.add_resource(RepoLaunches, '/api/v1.0/launches/<string:from_datetime>/<string:to_datetime>')
+
+@api.route('/api/v1.0/launches/<string:from_datetime>', methods=['GET'])
+@api.doc(params={'from_date': 'DateTime format utc0 from when you want to see repo_launches'})
+class PopularRepos(Resource):
+    # @api.marshal_with(Repos, envelope='resource')
+    @api.doc(params={'from_date': 'DateTime format utc0 from when you want to see repo_launches'})
+    def get(self, from_datetime):
+        try:
+            repos = get_launched_repos(from_datetime)
+        except ValueError as e:
+            return {"error": str(e)}, 400
+        return repos
+
+
+@api.route('/api/v1.0/BinderLaunch', methods=['POST'])
+class BinderLaunchResource(Resource):
+    # @api.doc(parser=parser)
+    def post(self):
+        json_data = request.get_json()
+        if not json_data:
+               return {'message': 'No input data provided'}, 400
+        binderlaunch = BinderLaunch(schema=json_data['schema'], version=json_data['version'],
+                                    timestamp=json_data['timestamp'],
+                                    provider=json_data['provider'], spec=json_data['spec'], status=json_data['status'])
+        db.session.add(binderlaunch)
+        db.session.commit()
+        return {"status": 'success'}, 201
+
