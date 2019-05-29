@@ -8,7 +8,8 @@ from .models import BinderLaunch
 from binder_gallery import db
 
 # blueprint in order to change API url base otherwise it overwrites 127.0.0.1/gallery
-blueprint = Blueprint('api', __name__, url_prefix='/api')
+# TODO where to put version of api ?? it always displays 1.0 in swagger
+blueprint = Blueprint('api', __name__, url_prefix='/api/v1.0')
 api = Api(blueprint)
 app.register_blueprint(blueprint)
 
@@ -139,38 +140,31 @@ def not_found(error):
     return render_template('error.html', **context), 404
 
 
-@api.route('/api/v1.0/launches/<string:from_datetime>/<string:to_datetime>', methods=['GET'])
-@api.doc(params={'from_date': 'DateTime format utc0 from when you want to see repo_launches', 'to_date': 'until what time'})
+@api.route('/launches/<string:from_datetime>/<string:to_datetime>', methods=['GET', 'POST'])
 class RepoLaunches(Resource):
+
     # @api.marshal_with(Repos, envelope='resource')
-    def get(self, from_datetime, to_datetime):
+    # TODO to_datetime is not required
+    @api.doc(params={'from_datetime': 'DateTime format utc0 from when you want to see repo_launches',
+                     'to_datetime': 'until what time'})
+    def get(self, from_datetime, to_datetime=None):
         try:
-            repos = get_launches(from_datetime, to_datetime)
+            launches = get_launches(from_datetime, to_datetime)
         except ValueError as e:
-            return {"error": str(e)}, 400
-        return repos
+            return {"status": "error", "message": str(e)}, 400
+        except Exception as e:
+            # TODO
+            return {"status": "error", "message": str(e)}, 400
+        return {"status": "success", "launches": launches}
 
-
-@api.route('/api/v1.0/launches/<string:from_datetime>', methods=['GET'])
-@api.doc(params={'from_date': 'DateTime format utc0 from when you want to see repo_launches'})
-class PopularRepos(Resource):
-    # @api.marshal_with(Repos, envelope='resource')
-    @api.doc(params={'from_date': 'DateTime format utc0 from when you want to see repo_launches'})
-    def get(self, from_datetime):
-        try:
-            repos = get_launched_repos(from_datetime)
-        except ValueError as e:
-            return {"error": str(e)}, 400
-        return repos
-
-
-@api.route('/api/v1.0/BinderLaunch', methods=['POST'])
-class BinderLaunchResource(Resource):
     # @api.doc(parser=parser)
+    # TODO no params in swagger
+    @api.doc(responses={403: 'Not Authorized'}, params={})
     def post(self):
+        # TODO token validation...
         json_data = request.get_json()
         if not json_data:
-               return {'message': 'No input data provided'}, 400
+           return {'message': 'No input data provided'}, 400
         binderlaunch = BinderLaunch(schema=json_data['schema'], version=json_data['version'],
                                     timestamp=json_data['timestamp'],
                                     provider=json_data['provider'], spec=json_data['spec'], status=json_data['status'])
@@ -178,3 +172,17 @@ class BinderLaunchResource(Resource):
         db.session.commit()
         return {"status": 'success'}, 201
 
+
+@api.route('/popular_repos/<string:time_range>', methods=['GET'])
+# @api.doc(params={'from_date': 'DateTime format utc0 from when you want to see repo_launches'})
+class PopularRepos(Resource):
+    # @api.marshal_with(Repos, envelope='resource')
+    @api.doc(params={'time_range': 'TODO'})
+    def get(self, time_range):
+        try:
+            # TODO should we output popular repos in different format with different data?
+            # right now we output what is needed/specific for gallery
+            popular_repos = get_launched_repos(time_range)
+        except ValueError as e:
+            return {"status": "error", "message": str(e)}, 400
+        return {"status": "success", "popular_repos": popular_repos}

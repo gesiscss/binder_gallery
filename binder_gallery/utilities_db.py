@@ -43,7 +43,7 @@ def get_all_projects():
 
 def get_launched_repos(time_range):
     """Gets launched repos from BinderLaunch table in a given time range
-    and aggregates them over launch count in order according to position
+    and aggregates them over launch count in order according to launch count.
 
     :param time_range: the interval to get launches
     :return: list of launched repos, ordered by launch count,
@@ -93,30 +93,29 @@ def get_launched_repos(time_range):
     return launched_repos
 
 
-def get_launches(from_dt, to_dt):
-    #from_dt = datetime.fromisoformat('2012-11-01T04:16:13-04:00')
+def get_launches(from_dt, to_dt=None):
+    """Get launches from BinderLaunch table in given time range ordered by timestamp."""
     from_dt = datetime.fromisoformat(from_dt)
-    to_dt = datetime.fromisoformat(to_dt)
+    if to_dt is None:
+        to_dt = datetime.utcnow()
+    else:
+        to_dt = datetime.fromisoformat(to_dt)
 
-    objects = BinderLaunch.query. \
-        options(load_only('repo_id', 'provider', 'spec')). \
+    objects = BinderLaunch.query.\
         filter(BinderLaunch.timestamp.between(from_dt, to_dt)). \
+        order_by(BinderLaunch.timestamp).\
         all()
-    launched_repos = {}  # {repo_id: [repo_name,org,provider,repo_url,binder_url,description,launch_count]}
+    launches = []
     for o in objects:
-        repo_id = o.repo_id
-        if repo_id in launched_repos:
-            launched_repos[repo_id][-1] += 1
-        else:
-            org, repo_name = o.spec_parts[:2]
-            launch_count = 1
-            launched_repos[repo_id] = [repo_name, org, o.provider, o.repo_url,
-                                       o.binder_url, o.repo_description, launch_count]
-
-    # order according to launch count
-    launched_repos = list(launched_repos.values())
-    launched_repos.sort(key=lambda x: x[-1], reverse=True)
-    return launched_repos
+        launches.append({
+            'timestamp': o.timestamp.isoformat() + 'Z',
+            'schema': o.schema,
+            'version': o.version,
+            'provider': o.provider,
+            'spec': o.spec,
+            'status': o.status,
+        })
+    return launches
 
 
 def get_launch_count():
