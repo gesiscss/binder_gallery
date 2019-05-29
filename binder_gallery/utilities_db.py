@@ -101,19 +101,23 @@ def get_launches(from_dt, to_dt=None):
     else:
         to_dt = datetime.fromisoformat(to_dt)
 
-    objects = BinderLaunch.query.\
+    launches = BinderLaunch.query.\
         filter(BinderLaunch.timestamp.between(from_dt, to_dt)). \
         order_by(BinderLaunch.timestamp).\
         all()
+    return launches
+
+
+def get_launches_json(from_dt, to_dt=None):
     launches = []
-    for o in objects:
+    for l in get_launches(from_dt, to_dt):
         launches.append({
-            'timestamp': o.timestamp.isoformat() + 'Z',
-            'schema': o.schema,
-            'version': o.version,
-            'provider': o.provider,
-            'spec': o.spec,
-            'status': o.status,
+            'timestamp': l.timestamp.isoformat() + 'Z',
+            'schema': l.schema,
+            'version': l.version,
+            'provider': l.provider,
+            'spec': l.spec,
+            'status': l.status,
         })
     return launches
 

@@ -1,7 +1,7 @@
 import requests
 import os
 from flask import render_template, abort, make_response, request , Blueprint
-from .utilities_db import get_all_projects, get_launched_repos, get_first_launch_ts, get_launches
+from .utilities_db import get_all_projects, get_launched_repos, get_first_launch_ts, get_launches_json
 from . import app, cache
 from flask_restplus import Api, Resource
 from .models import BinderLaunch
@@ -149,7 +149,7 @@ class RepoLaunches(Resource):
                      'to_datetime': 'until what time'})
     def get(self, from_datetime, to_datetime=None):
         try:
-            launches = get_launches(from_datetime, to_datetime)
+            launches = get_launches_json(from_datetime, to_datetime)
         except ValueError as e:
             return {"status": "error", "message": str(e)}, 400
         except Exception as e:
