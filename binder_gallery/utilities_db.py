@@ -41,37 +41,21 @@ def get_all_projects():
     return all_projects
 
 
-def get_launched_repos(time_range):
-    """Gets launched repos from BinderLaunch table in a given time range
-    and aggregates them over launch count in order according to launch count.
-
-    :param time_range: the interval to get launches
-    :return: list of launched repos, ordered by launch count,
-    an item in list: [repo_name,org,provider,repo_url,binder_url,description,launch_count]
-    :rtype: list
-    """
-    if time_range.endswith('h'):
-        p = {'hours': int(time_range.split('h')[0])}
-    elif time_range.endswith('d'):
-        p = {'days': int(time_range.split('d')[0])}
-    elif time_range.endswith('m'):
-        p = {'minutes': int(time_range.split('m')[0])}
-    elif time_range == "all":
-        pass
-    else:
-        raise ValueError('Time range must be in minutes [m] or hours [h] or days [d].')
-
-    if time_range == "all":
+def get_popular_repos(from_dt, to_dt=None):
+    if from_dt is None and to_dt is None:
         objects = BinderLaunch.query. \
             options(load_only('repo_id', 'provider', 'spec')). \
             all()
     else:
+        from_dt = datetime.fromisoformat(from_dt)
+        if to_dt is None:
+            to_dt = datetime.utcnow()
+        else:
+            to_dt = datetime.fromisoformat(to_dt)
         # get launch counts in given time range
-        _to = datetime.utcnow()
-        _from = _to - timedelta(**p)
         objects = BinderLaunch.query.\
             options(load_only('repo_id', 'provider', 'spec')).\
-            filter(BinderLaunch.timestamp.between(_from, _to)).\
+            filter(BinderLaunch.timestamp.between(from_dt, to_dt)).\
             all()
 
     # aggregate over launch count
@@ -91,6 +75,35 @@ def get_launched_repos(time_range):
     launched_repos.sort(key=lambda x: x[-1], reverse=True)
 
     return launched_repos
+
+
+def get_popular_repos_tr(time_range):
+    """Gets launched repos from BinderLaunch table in a given time range
+    and aggregates them over launch count in order according to launch count.
+
+    :param time_range: the interval to get launches
+    :return: list of launched repos, ordered by launch count,
+    an item in list: [repo_name,org,provider,repo_url,binder_url,description,launch_count]
+    :rtype: list
+    """
+    if time_range == "all":
+        to_dt = None
+        from_dt = None
+    else:
+        if time_range.endswith('h'):
+            p = {'hours': int(time_range.split('h')[0])}
+        elif time_range.endswith('d'):
+            p = {'days': int(time_range.split('d')[0])}
+        elif time_range.endswith('m'):
+            p = {'minutes': int(time_range.split('m')[0])}
+        else:
+            raise ValueError('Time range must be in minutes [m] or hours [h] or days [d].')
+
+        to_dt = datetime.utcnow()
+        from_dt = to_dt - timedelta(**p)
+        to_dt = to_dt.isoformat()
+        from_dt = from_dt.isoformat()
+    return get_popular_repos(from_dt, to_dt)
 
 
 def get_launches(from_dt, to_dt=None):

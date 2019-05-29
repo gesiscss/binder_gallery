@@ -48,6 +48,7 @@ class RepoModelView(BaseModelView):
     column_editable_list = ['description']
 
 
+# TODO update this when rest api is ready
 class BinderLaunchModelView(BaseModelView):
     can_delete = DEBUG_FLAG
     can_edit = DEBUG_FLAG
