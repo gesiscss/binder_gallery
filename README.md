@@ -22,6 +22,9 @@ with python version at least 3.7.
     ```bash
     export FLASK_APP=binder_gallery
     export FLASK_ENV=development
+    # for windows
+    set FLASK_APP=binder_gallery
+    set FLASK_ENV=development
     ```
 
 5. Create a local sqlite3 db and apply migrations
@@ -70,7 +73,13 @@ class Config(BaseConfig):
     # add your custom configuration here
 ```
 
-3. `export BG_APPLICATION_SETTINGS=local_config.Config`
+3. Define the env variable for custom config:
+
+```bash
+export BG_APPLICATION_SETTINGS=local_config.Config
+# for windows
+set BG_APPLICATION_SETTINGS=local_config.Config
+```
 
 ## TODOs
 
