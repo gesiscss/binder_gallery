@@ -1,9 +1,18 @@
 from datetime import datetime
-from flask import abort, make_response, request, Blueprint, jsonify
+from flask import abort, make_response, request, Blueprint, jsonify, url_for
 from flask_restplus import Api, Resource, fields, marshal, Namespace, reqparse, inputs
 from .utilities_db import get_launches_paginated
 from . import app, db
 from .models import BinderLaunch, User, Repo
+
+
+class GalleryApi(Api):
+    @property
+    def specs_url(self):
+        """Fix for https"""
+        return url_for(self.endpoint('specs'), _external=False)
+        # scheme = 'http' if '5000' in self.base_url else 'https'
+        # return url_for(self.endpoint('specs'), _external=True, _scheme=scheme)
 
 
 # blueprint in order to change API url base otherwise it overwrites 127.0.0.1/gallery
@@ -17,11 +26,11 @@ authorizations = {
         'name': 'Authorization'
     }
 }
-api = Api(blueprint, version=version,
-          authorizations=authorizations,
-          title='Gallery API',
-          description='API for launch events on <a href="https://notebooks.gesis.org/binder">GESIS binder</a>',
-          )
+api = GalleryApi(blueprint, version=version,
+                 authorizations=authorizations,
+                 title='Gallery API',
+                 description='API for launch events on <a href="https://notebooks.gesis.org/binder">GESIS binder</a>',
+                 )
 
 launch_ns = Namespace('launches', description='Launch events related operations')
 api.add_namespace(launch_ns, path='/launches')
