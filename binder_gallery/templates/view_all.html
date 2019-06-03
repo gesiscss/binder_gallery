@@ -9,11 +9,11 @@
 
     <h2>{{ title }}</h2>
     <div class="table-responsive">
-        {% with table_id="repos-table", repos=launched_repos, launch=True %}
+        {% with table_id="repos-table", repos=popular_repos, launch=True %}
             {% include "table.html" %}
         {% endwith %}
 
-    {% set repos_length = launched_repos|length %}
+    {% set repos_length = popular_repos|length %}
     <p>
         <span style="float: left;">
             {{ total_launches }} launches over {{ repos_length }}

@@ -1,8 +1,8 @@
-from .models import BinderLaunch, CreatedByGesis, FeaturedProject
 from datetime import datetime, timedelta
 from sqlalchemy.orm import load_only
 from sqlalchemy import func
-from . import db, cache
+from . import db, cache, app
+from .models import BinderLaunch, CreatedByGesis, FeaturedProject
 
 
 def get_projects(table):
@@ -42,49 +42,51 @@ def get_all_projects():
 
 
 def get_popular_repos(from_dt, to_dt=None):
+    """Gets launched repos from BinderLaunch table in a given time range
+    and aggregates them over launch count in order according to launch count.
+
+    :param from_dt: beginning of time range
+    :param to_dt: end of time range
+    :return: list of popular repos, ordered by launch count,
+    an item in list: [repo_name,org,provider,repo_url,binder_url,description,launch_count]
+    :rtype: list
+    """
+    query = BinderLaunch.query.options(load_only('repo_id', 'provider', 'spec'))
     if from_dt is None and to_dt is None:
-        objects = BinderLaunch.query. \
-            options(load_only('repo_id', 'provider', 'spec')). \
-            all()
+        # all time
+        objects = query.all()
     else:
         from_dt = datetime.fromisoformat(from_dt)
         if to_dt is None:
+            # until now
             to_dt = datetime.utcnow()
         else:
             to_dt = datetime.fromisoformat(to_dt)
         # get launch counts in given time range
-        objects = BinderLaunch.query.\
-            options(load_only('repo_id', 'provider', 'spec')).\
-            filter(BinderLaunch.timestamp.between(from_dt, to_dt)).\
-            all()
+        objects = query.filter(BinderLaunch.timestamp.between(from_dt, to_dt)).all()
 
     # aggregate over launch count
-    launched_repos = {}  # {repo_id: [repo_name,org,provider,repo_url,binder_url,description,launch_count]}
+    repos = {}  # {repo_id: [repo_name,org,provider,repo_url,binder_url,description,launch_count]}
     for o in objects:
         repo_id = o.repo_id
-        if repo_id in launched_repos:
-            launched_repos[repo_id][-1] += 1
+        if repo_id in repos:
+            repos[repo_id][-1] += 1
         else:
             org, repo_name = o.spec_parts[:2]
             launch_count = 1
-            launched_repos[repo_id] = [repo_name, org, o.provider, o.repo_url,
-                                       o.binder_url, o.repo_description, launch_count]
+            repos[repo_id] = [repo_name, org, o.provider, o.repo_url, o.binder_url, o.repo_description, launch_count]
 
     # order according to launch count
-    launched_repos = list(launched_repos.values())
-    launched_repos.sort(key=lambda x: x[-1], reverse=True)
+    repos = list(repos.values())
+    repos.sort(key=lambda x: x[-1], reverse=True)
 
-    return launched_repos
+    return repos
 
 
 def get_popular_repos_tr(time_range):
-    """Gets launched repos from BinderLaunch table in a given time range
-    and aggregates them over launch count in order according to launch count.
+    """Gets popular repos in given time range.
 
-    :param time_range: the interval to get launches
-    :return: list of launched repos, ordered by launch count,
-    an item in list: [repo_name,org,provider,repo_url,binder_url,description,launch_count]
-    :rtype: list
+    :param time_range: the interval to get popular repos
     """
     if time_range == "all":
         to_dt = None
@@ -103,35 +105,40 @@ def get_popular_repos_tr(time_range):
         from_dt = to_dt - timedelta(**p)
         to_dt = to_dt.isoformat()
         from_dt = from_dt.isoformat()
+
     return get_popular_repos(from_dt, to_dt)
+
+
+def get_launches_query(from_dt, to_dt=None):
+    if to_dt is None:
+        to_dt = datetime.utcnow()
+
+    query = BinderLaunch.query. \
+        filter(BinderLaunch.timestamp.between(from_dt, to_dt)). \
+        order_by(BinderLaunch.timestamp)
+
+    return query
+
+
+def get_launches_paginated(from_dt, to_dt=None):
+    """Get launches from BinderLaunch table in given time range ordered by timestamp.
+    Returns a Pagination object: https://flask-sqlalchemy.palletsprojects.com/en/2.x/api/#flask_sqlalchemy.Pagination
+    """
+    query = get_launches_query(from_dt, to_dt)
+    # https://flask-sqlalchemy.palletsprojects.com/en/2.x/api/#flask_sqlalchemy.BaseQuery
+    # If page or per_page are None, they will be retrieved from the request query.
+    # ex: ?page=5
+    launches = query.paginate(per_page=app.config.get("PER_PAGE", 100))
+
+    return launches
 
 
 def get_launches(from_dt, to_dt=None):
     """Get launches from BinderLaunch table in given time range ordered by timestamp."""
-    from_dt = datetime.fromisoformat(from_dt)
-    if to_dt is None:
-        to_dt = datetime.utcnow()
-    else:
-        to_dt = datetime.fromisoformat(to_dt)
 
-    launches = BinderLaunch.query.\
-        filter(BinderLaunch.timestamp.between(from_dt, to_dt)). \
-        order_by(BinderLaunch.timestamp).\
-        all()
-    return launches
+    query = get_launches_query(from_dt, to_dt)
+    launches = query.all()
 
-
-def get_launches_json(from_dt, to_dt=None):
-    launches = []
-    for l in get_launches(from_dt, to_dt):
-        launches.append({
-            'timestamp': l.timestamp.isoformat() + 'Z',
-            'schema': l.schema,
-            'version': l.version,
-            'provider': l.provider,
-            'spec': l.spec,
-            'status': l.status,
-        })
     return launches
 
 

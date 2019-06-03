@@ -1,17 +1,8 @@
 import requests
 import os
-from flask import render_template, abort, make_response, request, Blueprint,  jsonify
-from .utilities_db import get_all_projects, get_popular_repos_tr, get_popular_repos, get_first_launch_ts, get_launches_json
+from flask import render_template, abort, make_response, request
+from .utilities_db import get_all_projects, get_popular_repos_tr, get_first_launch_ts
 from . import app, cache
-from flask_restplus import Api, Resource
-from .models import BinderLaunch, User, Repo
-from binder_gallery import db
-
-# blueprint in order to change API url base otherwise it overwrites 127.0.0.1/gallery
-# TODO where to put version of api ?? it always displays 1.0 in swagger
-blueprint = Blueprint('api', __name__, url_prefix='/api/v1.0')
-api = Api(blueprint)
-app.register_blueprint(blueprint)
 
 
 @cache.cached(timeout=300, key_prefix='binder_versions')
@@ -90,16 +81,16 @@ def gallery():
                        ('30d', 'Last 30 days'),
                        ('60d', 'Last 60 days'),
                        ('all', 'All time')]
-    launched_repos_all = []
+    popular_repos_all = []
     for time_rage, title in time_range_list:
-        launched_repos = get_popular_repos_tr(time_rage)
-        if launched_repos:
-            total_launches = sum([l[-1] for l in launched_repos])
-            launched_repos_all.append((time_rage, title, launched_repos, total_launches))
+        popular_repos = get_popular_repos_tr(time_rage)
+        if popular_repos:
+            total_launches = sum([l[-1] for l in popular_repos])
+            popular_repos_all.append((time_rage, title, popular_repos, total_launches))
 
     context = get_default_template_context()
     context.update({'active': 'gallery',
-                    'launched_repos_all': launched_repos_all,
+                    'popular_repos_all': popular_repos_all,
                     'projects': get_all_projects(),
                     'binders': get_binders(),
                     'first_launch_ts': get_first_launch_ts(),
@@ -118,15 +109,15 @@ def view_all(time_range):
         abort(404)
 
     context = get_default_template_context()
-    launched_repos = get_popular_repos_tr(time_range)
-    total_launches = sum([l[-1] for l in launched_repos])
+    popular_repos = get_popular_repos_tr(time_range)
+    total_launches = sum([l[-1] for l in popular_repos])
     context.update({'active': 'gallery',
                     'time_range': time_range,
                     'title': titles[time_range],
                     'binders': get_binders(),
                     'first_launch_ts': get_first_launch_ts(),
                     'total_launches': total_launches,
-                    'launched_repos': launched_repos})
+                    'popular_repos': popular_repos})
     return render_template('view_all.html', **context)
 
 
@@ -138,122 +129,3 @@ def not_found(error):
                     'message': error.description,
                     'active': None})
     return render_template('error.html', **context), 404
-
-
-@api.route('/launches/<string:from_datetime>/', methods=['GET'])
-class RepoLaunches(Resource):
-
-    # @api.marshal_with(Repos, envelope='resource')
-    @api.doc(params={'from_datetime': 'DateTime format utc0 from when you want to see repo_launches'})
-    def get(self, from_datetime):
-        try:
-            launches = get_launches_json(from_datetime)
-        except ValueError as e:
-            return {"status": "error", "message": str(e)}, 400
-        except Exception as e:
-            # TODO
-            return {"status": "error", "message": str(e)}, 400
-        return {"status": "success", "launches": launches}
-
-
-@api.route('/launches/<string:from_datetime>/<string:to_datetime>', methods=['GET'])
-class RepoLaunchesGet(Resource):
-
-    # @api.marshal_with(Repos, envelope='resource')
-    @api.doc(params={'from_datetime': 'DateTime format utc0 from when you want to see repo_launches',
-                     'to_datetime': 'until what time'})
-    def get(self, from_datetime, to_datetime):
-        try:
-            launches = get_launches_json(from_datetime, to_datetime)
-        except ValueError as e:
-            return {"status": "error", "message": str(e)}, 400
-        except Exception as e:
-            # TODO
-            return {"status": "error", "message": str(e)}, 400
-        return {"status": "success", "launches": launches}
-
-
-@api.route('/launches', methods=['POST'])
-class RepoLaunchesCreate(Resource):
-    # @api.doc(parser=parser)
-    # TODO add all responses: 400, 201
-    @api.doc(responses={403: 'Not Authorized'})
-    def post(self):
-        token = request.headers.get('Authorization')
-        if token:
-            token = token.replace('Bearer ', '', 1)
-            if User.validate_token(token) is True:
-
-                # data = dict(request.form)
-                data = request.form
-                # json_data = request.get_json(force=True)
-                if not data:
-                    return {"status": "error", 'message': 'No input data provided'}, 400
-                else:
-                    # FIXME
-                    fields = ["timestamp", "schema", "version", "provider", "spec", "status"]
-                    for field in fields:
-                        if field in data and data[field]:
-                            print(field, data[field])
-                            pass
-                        else:
-                            return {"status": "error", 'message': 'Data is incomplete.'}, 400
-                #launch = BinderLaunch(**data)
-                launch = BinderLaunch(schema=data['schema'],
-                                      version=data['version'],
-                                      timestamp=data['timestamp'],
-                                      provider=data['provider'],
-                                      spec=data['spec'],
-                                      status=data['status'])
-
-                provider_namespace = launch.provider_spec.rsplit('/', 1)[0]  # without ref
-                repo = Repo.query.filter_by(provider_namespace=provider_namespace).first()
-                app.logger.info(f"New binder launch {launch.provider_spec} on {launch.timestamp} - "
-                                f"{launch.schema} {launch.version} {launch.status}")
-                description = launch.get_repo_description()
-                if repo:
-                    repo.launches.append(launch)
-                    repo.description = description
-                else:
-                    repo = Repo(provider_namespace=provider_namespace, description=description, launches=[launch])
-                    db.session.add(repo)
-
-                db.session.add(launch)
-                db.session.commit()
-            else:
-                abort(make_response(jsonify(status="error", message="Authorization token is not valid."), 400))
-        else:
-            abort(make_response(jsonify(status="error", message="Authorization token is required."), 400))
-
-        return {"status": 'success'}, 201
-
-
-@api.route('/popular_repos/<string:time_range>', methods=['GET'])
-# @api.doc(params={'from_date': 'DateTime format utc0 from when you want to see repo_launches'})
-class PopularReposTr(Resource):
-    # @api.marshal_with(Repos, envelope='resource')
-    @api.doc(params={'time_range': 'TODO'})
-    def get(self, time_range):
-        try:
-            # TODO should we output popular repos in different format with different data?
-            # right now we output what is needed/specific for gallery
-            popular_repos = get_popular_repos_tr(time_range)
-        except ValueError as e:
-            return {"status": "error", "message": str(e)}, 400
-        return {"status": "success", "popular_repos": popular_repos}
-
-
-@api.route('/popular_repos/<string:from_datetime>/', defaults={'to_datetime': None})
-@api.route('/popular_repos/<string:from_datetime>/<string:to_datetime>', methods=['GET'])
-# @api.doc(params={'from_date': 'DateTime format utc0 from when you want to see repo_launches'})
-class PopularRepos(Resource):
-    # @api.marshal_with(Repos, envelope='resource')
-    @api.doc(params={'from_datetime': 'TODO', 'to_datetime': 'TODO'})
-    def get(self, from_datetime, to_datetime):
-        try:
-            # TODO should we output popular repos in different format with different data?
-            # right now we output what is needed/specific for gallery
-            popular_repos = get_popular_repos(from_datetime, to_datetime)
-        except ValueError as e:
-            return {"status": "error", "message": str(e)}, 400
-        return {"status": "success", "popular_repos": popular_repos}

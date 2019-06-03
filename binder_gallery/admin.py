@@ -1,6 +1,6 @@
 import flask_login as login
-from flask import request, url_for, redirect, abort, jsonify
-from flask.helpers import get_debug_flag, make_response
+from flask import request, url_for, redirect, abort
+from flask.helpers import get_debug_flag
 from flask_admin import AdminIndexView as BaseAdminIndexView, expose, helpers, Admin, BaseView
 from flask_admin.contrib.sqla import ModelView
 from flask_admin.helpers import is_safe_url
@@ -48,49 +48,12 @@ class RepoModelView(BaseModelView):
     column_editable_list = ['description']
 
 
-# TODO update this when rest api is ready
 class BinderLaunchModelView(BaseModelView):
     can_delete = DEBUG_FLAG
     can_edit = DEBUG_FLAG
+    can_create = DEBUG_FLAG
     column_default_sort = [('timestamp', True)]
     column_list = ('timestamp', 'provider', 'provider_spec', 'repo_id', 'repo_description')
-
-    def is_accessible(self):
-        # require Bearer token authentication for creating new launch entry
-        if not DEBUG_FLAG and \
-           request.path.endswith('/admin/binderlaunch/new/') and \
-           request.method == "POST":
-            token = request.headers.get('Authorization')
-            if token:
-                form = self.create_form()
-                if self.validate_form(form):
-                    token = token.replace('Bearer ', '', 1)
-                    if User.validate_token(token) is True:
-                        return True
-                    abort(make_response(jsonify(error="Authorization token is not valid."), 400))
-                abort(make_response(jsonify(**form.errors), 400))
-            abort(make_response(jsonify(error="Authorization token is needed."), 403))
-        return super(BinderLaunchModelView, self).is_accessible()
-
-    def on_model_change(self, form, model, is_created):
-        # https://docs.sqlalchemy.org/en/latest/orm/session_api.html
-        if is_created is True:
-            # model was added into session before checking if repo exist, thats why we remove it first
-            self.session.expunge(model)
-            provider_namespace = model.provider_spec.rsplit('/', 1)[0]  # without ref
-            repo = Repo.query.filter_by(provider_namespace=provider_namespace).first()
-            app.logger.info(f"New binder launch {model.provider_spec} on {model.timestamp} - "
-                            f"{model.schema} {model.version} {model.status}")
-            description = model.get_repo_description()
-            if repo:
-                repo.launches.append(model)
-                repo.description = description
-            else:
-                repo = Repo(provider_namespace=provider_namespace, description=description, launches=[model])
-                self.session.add(repo)
-            # Now the model should be added
-            # into the Session after adding repo instance.
-            self.session.add(model)
 
 
 # Create customized index view class that handles login & registration

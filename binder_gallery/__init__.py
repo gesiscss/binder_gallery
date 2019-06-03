@@ -29,6 +29,7 @@ cache = Cache(config={'CACHE_TYPE': 'filesystem',
 def init_plugins():
     # add routes
     import binder_gallery.views
+    import binder_gallery.api
 
     # debug toolbar
     if app.debug:
