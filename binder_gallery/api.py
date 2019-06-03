@@ -33,7 +33,7 @@ authorizations = {
 api = GalleryApi(blueprint, version=version,
                  authorizations=authorizations,
                  title='Gallery API',
-                 description='API for launch events on <a href="/binder">GESIS binder</a>',
+                 description=app.config.get("API_DESCRIPTION", "API for launch events"),
                  )
 
 launch_ns = Namespace('launches', description='Launch events related operations')
