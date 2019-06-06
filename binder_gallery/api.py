@@ -4,6 +4,10 @@ from flask_restplus import Api, Resource, fields, marshal, Namespace, reqparse, 
 from .utilities_db import get_launches_paginated
 from . import app, db
 from .models import BinderLaunch, User, Repo
+from flask_limiter import Limiter
+from flask_limiter.util import get_remote_address
+
+limiter = Limiter(app, key_func=get_remote_address)
 
 
 class GalleryApi(Api):
@@ -58,6 +62,10 @@ page_description = "Default is 1 (first page) and each page contains max 100 ite
 
 @launch_ns.route('/<string:from_datetime>/<string:to_datetime>', methods=['GET'])
 class RepoLaunchesBase(Resource):
+    # With class based approach to defining view function, the regular method of decorating a view function to apply a
+    # per route rate limit will not work.So had to use this way.
+    decorators = [limiter.limit("100/minute")]
+    decorators = [limiter.limit("2/second")]
 
     @launch_ns.doc(params={'from_datetime': dt_description,
                            'to_datetime': dt_description},
