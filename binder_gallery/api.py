@@ -69,7 +69,7 @@ class RepoLaunchesBase(Resource):
 
     @launch_ns.doc(params={'from_datetime': dt_description,
                            'to_datetime': dt_description},
-                   responses={200: 'Success', 400: 'DateTime Value Error'})
+                   responses={200: 'Success', 400: 'DateTime Value Error', 429: 'Too Many Requests' })
     @launch_ns.param('page', page_description)
     def get(self, from_datetime, to_datetime=None):
         try:
@@ -104,7 +104,7 @@ launch_parser.add_argument('status', type=str, required=True)
 class RepoLaunches(RepoLaunchesBase):
 
     @launch_ns.doc(params={'from_datetime': {'description': dt_description}},
-                   responses={200: 'Success', 400: 'DateTime Value Error'})
+                   responses={200: 'Success', 400: 'DateTime Value Error', 429: 'Too Many Requests'})
     @launch_ns.param('page', page_description)
     def get(self, from_datetime):
         return super().get(from_datetime)
