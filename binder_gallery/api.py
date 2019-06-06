@@ -64,8 +64,8 @@ page_description = "Default is 1 (first page) and each page contains max 100 ite
 class RepoLaunchesBase(Resource):
     # With class based approach to defining view function, the regular method of decorating a view function to apply a
     # per route rate limit will not work.So had to use this way.
-    decorators = [limiter.limit("100/minute")]
-    decorators = [limiter.limit("2/second")]
+    decorators = [limiter.limit("100/minute", per_method=True, methods=['GET'])]
+    decorators = [limiter.limit("2/second", per_method=True, methods=['GET'])]
 
     @launch_ns.doc(params={'from_datetime': dt_description,
                            'to_datetime': dt_description},
