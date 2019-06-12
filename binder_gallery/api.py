@@ -3,7 +3,7 @@ from flask import abort, make_response, request, Blueprint, jsonify, url_for
 from flask_restplus import Api, Resource, fields, marshal, Namespace, reqparse, inputs
 from .utilities_db import get_launches_paginated
 from . import app, db
-from .models import BinderLaunch, User, Repo
+from .models import BinderLaunch, User, Repo, _strip
 from flask_limiter import Limiter
 from flask_limiter.util import get_remote_address
 
@@ -133,8 +133,17 @@ class RepoLaunches(RepoLaunchesBase):
                 app.logger.info(f"New binder launch {provider_spec} on {launch.timestamp} - "
                                 f"{launch.schema} {launch.version} {launch.status}")
 
-                # NOTE: branch name can contain "/"
-                provider_namespace = "/".join(provider_spec.split('/', 3)[:3])  # without ref
+                provider_spec_parts = provider_spec.split('/')
+                # strip ref info from provider_spec_parts
+                if launch.provider_prefix in ['gh', 'gl']:
+                    # gh and gl branches can contain "/"
+                    provider_spec_parts = provider_spec_parts[:3]
+                else:
+                    # git and gist have ref only as commit SHA
+                    provider_spec_parts = provider_spec_parts[:-1]
+                provider_namespace = _strip('suffix',
+                                            "/".join(provider_spec_parts),
+                                            ['.git'])
                 repo = Repo.query.filter_by(provider_namespace=provider_namespace).first()
                 description = launch.get_repo_description()
                 if repo:

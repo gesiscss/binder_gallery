@@ -194,7 +194,7 @@ class RepoMixin(object):
         elif self.provider_prefix == 'gist':
             user_name, gist_id = self.spec_parts[:2]
             repo_url = f'https://gist.github.com/{user_name}/{gist_id}'
-        return repo_url
+        return _strip('suffix', repo_url, ['.git'])
 
     # @property
     # def ref_url(self):
