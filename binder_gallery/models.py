@@ -168,11 +168,13 @@ class RepoMixin(object):
             parts = ['', repo_name, resolved_ref, repo_url]
         elif self.provider_prefix == 'gh':
             org, repo_name, unresolved_ref = self.spec.split('/', 2)
+            repo_name = _strip('suffix', repo_name, ['.git'])
             parts = [org, repo_name, unresolved_ref]
         elif self.provider_prefix == 'gl':
             quoted_namespace, unresolved_ref = self.spec.split('/', 1)
             namespace = unquote(quoted_namespace)
             org, repo_name = namespace.split('/', 1)
+            repo_name = _strip('suffix', repo_name, ['.git'])
             # unresolved_ref = unquote(unresolved_ref)
             parts = [org, repo_name, unresolved_ref]
         elif self.provider_prefix == 'gist':
@@ -194,7 +196,7 @@ class RepoMixin(object):
         elif self.provider_prefix == 'gist':
             user_name, gist_id = self.spec_parts[:2]
             repo_url = f'https://gist.github.com/{user_name}/{gist_id}'
-        return _strip('suffix', repo_url, ['.git'])
+        return repo_url
 
     # @property
     # def ref_url(self):
