@@ -14,8 +14,9 @@ class Config(object):
     # list of binders. default is GESIS binder.
     BINDERS = [
         {'name': 'GESIS', 'url': 'https://notebooks.gesis.org/binder', 'default': "true"},
-        {'name': 'mybinder.org', 'url': 'https://mybinder.org'},
+        {'name': 'gke.mybinder.org', 'url': 'https://gke.mybinder.org'},
         {'name': 'Pangeo', 'url': 'https://binder.pangeo.io'},
+        {'name': 'ovh.mybinder.org', 'url': 'https://ovh.mybinder.org'},
     ]
 
     # flask builtin config: http://flask.pocoo.org/docs/1.0/config/#builtin-configuration-values
