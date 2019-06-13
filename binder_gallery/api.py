@@ -46,6 +46,7 @@ launch_model = api.model('Launch', {
     'timestamp': fields.DateTime(description="in UTC, timezone information is ignored"),
     'schema': fields.String(example='binderhub.jupyter.org/launch'),
     'version': fields.Integer(example=2),
+    'origin': fields.String(example='notebooks.gesis.org'),
     'provider': fields.String(example='GitHub'),
     'spec': fields.String(example='user/repo/branch'),
     'status': fields.String(example='success'),
@@ -94,6 +95,7 @@ launch_parser = reqparse.RequestParser()
 launch_parser.add_argument('timestamp', type=inputs.datetime_from_iso8601, required=True)
 launch_parser.add_argument('schema', type=str, required=True)
 launch_parser.add_argument('version', type=int, required=True)
+launch_parser.add_argument('origin', type=str, required=True)
 launch_parser.add_argument('provider', type=str, required=True)
 launch_parser.add_argument('spec', type=str, required=True)
 launch_parser.add_argument('status', type=str, required=True)
@@ -125,12 +127,13 @@ class RepoLaunches(RepoLaunchesBase):
                 launch = BinderLaunch(schema=data['schema'],
                                       version=data['version'],
                                       timestamp=timestamp,
+                                      origin=data['origin'],
                                       provider=data['provider'],
                                       spec=data['spec'],
                                       status=data['status'])
 
                 provider_spec = launch.provider_spec
-                app.logger.info(f"New binder launch {provider_spec} on {launch.timestamp} - "
+                app.logger.info(f"New binder launch {provider_spec} at {launch.timestamp} on {launch.origin} - "
                                 f"{launch.schema} {launch.version} {launch.status}")
 
                 provider_spec_parts = provider_spec.split('/')

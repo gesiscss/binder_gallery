@@ -282,6 +282,7 @@ class BinderLaunch(RepoMixin, db.Model):
     schema = db.Column(db.String, nullable=False)
     version = db.Column(db.String, nullable=False)
     timestamp = db.Column(db.DateTime, nullable=False, index=True)
+    origin = db.Column(db.String, nullable=True, index=True, default="")
     provider = db.Column(db.String, nullable=False)  # provider_name
     spec = db.Column(db.String, nullable=False)
     repo_id = db.Column(db.Integer, db.ForeignKey('repo.id'), nullable=True, index=True)
