@@ -53,8 +53,9 @@ class BinderLaunchModelView(BaseModelView):
     can_edit = DEBUG_FLAG
     can_create = DEBUG_FLAG
     column_default_sort = [('timestamp', True)]
-    column_list = ('timestamp', 'provider', 'provider_spec', 'repo_id', 'repo_description')
-    column_searchable_list = ['provider', 'spec']
+    column_list = ('timestamp', 'origin', 'provider', 'provider_spec', 'repo_id', 'repo_description')
+    column_searchable_list = ['origin', 'provider', 'spec']
+    column_filters = ['origin', 'provider']
 
 
 # Create customized index view class that handles login & registration

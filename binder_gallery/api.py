@@ -45,7 +45,7 @@ app.register_blueprint(blueprint)
 launch_model = api.model('Launch', {
     'timestamp': fields.DateTime(description="in UTC, timezone information is ignored"),
     'schema': fields.String(example='binderhub.jupyter.org/launch'),
-    'version': fields.Integer(example=2),
+    'version': fields.Integer(example=3),
     'origin': fields.String(example='notebooks.gesis.org'),
     'provider': fields.String(example='GitHub'),
     'spec': fields.String(example='user/repo/branch'),
@@ -87,7 +87,7 @@ class RepoLaunchesBase(Resource):
         next_page = launches.next_num
         launches = launches.items
         return {"status": "success", "next_page": next_page,
-                "launches": marshal(launches, launch_model)}, 200
+                "launches": marshal(launches, launch_model, skip_none=True)}, 200
 
 
 # request parser for post requests
