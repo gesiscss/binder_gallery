@@ -17,6 +17,7 @@ PROVIDER_PREFIXES = {
     'Gist': 'gist',  # gist.github.com: username/gistId or full url + commit sha
     'GitHub': 'gh',  # github.com: repo name or full url + branch/tag/commit
     'GitLab': 'gl',  # gitlab.com: repo name or full url + branch/tag/commit
+    'Zenodo': 'zenodo',  # Zenodo DOI
 }
 
 
@@ -78,6 +79,8 @@ class ProjectMixin(object):
             provider = 'GitLab'
         elif 'gist.github.com' in provider:
             provider = 'Gist'
+        elif 'doi.org' in provider:
+            provider = 'Zenodo'
         else:
             provider = 'Git'
         return provider
@@ -159,6 +162,10 @@ class RepoMixin(object):
 
     @cached_property
     def spec_parts(self):
+        if self.provider_prefix == 'zenodo':
+            # ref is always ''
+            repo_url = f"https://doi.org/{self.spec}"
+            parts = ['', self.spec, '', repo_url]
         if self.provider_prefix == 'git':
             repo_url, resolved_ref = self.spec.rsplit('/', 1)
             repo_url = unquote(repo_url)
@@ -185,6 +192,8 @@ class RepoMixin(object):
 
     @cached_property
     def repo_url(self):
+        if self.provider_prefix == 'zenodo':
+            repo_url = self.spec_parts[3]
         if self.provider_prefix == 'git':
             repo_url = self.spec_parts[3]
         elif self.provider_prefix == 'gh':

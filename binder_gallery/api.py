@@ -136,17 +136,21 @@ class RepoLaunches(RepoLaunchesBase):
                 app.logger.info(f"New binder launch {provider_spec} at {launch.timestamp} on {launch.origin} - "
                                 f"{launch.schema} {launch.version} {launch.status}")
 
-                provider_spec_parts = provider_spec.split('/')
-                # strip ref info from provider_spec_parts
-                if launch.provider_prefix in ['gh', 'gl']:
-                    # gh and gl branches can contain "/"
-                    provider_spec_parts = provider_spec_parts[:3]
+                if launch.provider_prefix == 'zenodo':
+                    # zenodo has no ref info
+                    provider_namespace = provider_spec
                 else:
-                    # git and gist have ref only as commit SHA
-                    provider_spec_parts = provider_spec_parts[:-1]
-                provider_namespace = _strip('suffix',
-                                            "/".join(provider_spec_parts),
-                                            ['.git'])
+                    provider_spec_parts = provider_spec.split('/')
+                    # strip ref info from provider_spec_parts
+                    if launch.provider_prefix in ['gh', 'gl']:
+                        # gh and gl branches can contain "/"
+                        provider_spec_parts = provider_spec_parts[:3]
+                    else:
+                        # git and gist have ref only as commit SHA
+                        provider_spec_parts = provider_spec_parts[:-1]
+                    provider_namespace = _strip('suffix',
+                                                "/".join(provider_spec_parts),
+                                                ['.git'])
                 repo = Repo.query.filter_by(provider_namespace=provider_namespace).first()
                 description = launch.get_repo_description()
                 if repo:
