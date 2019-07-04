@@ -76,6 +76,8 @@ def select_binder():
 
 @app.route('/')
 def gallery():
+    from binder_gallery.mybinder_launches import mybinder_stream
+    mybinder_stream()
     time_range_list = [('24h', 'Last 24 hours'),
                        ('7d', 'Last week'),
                        ('30d', 'Last 30 days'),

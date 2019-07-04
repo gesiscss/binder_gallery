@@ -26,17 +26,6 @@ project_dir = os.path.dirname(os.path.dirname(os.path.realpath(__file__)))
 cache = Cache(config={'CACHE_TYPE': 'filesystem',
                       'CACHE_DIR': os.path.join(project_dir, 'bg_cache')})
 
-
-def check_mybinder():
-    from .mybinder_launches import mybinder_stream
-    mybinder_stream()
-
-
-scheduler = BackgroundScheduler()
-job = scheduler.add_job(check_mybinder, 'interval', minutes=120)
-scheduler.start()
-
-
 def init_plugins():
     # add routes
     import binder_gallery.views
@@ -73,3 +62,13 @@ def init_plugins():
 
 # init plugins after the app is initialized
 init_plugins()
+
+
+# def check_mybinder():
+#     from binder_gallery.mybinder_launches import mybinder_stream
+#     mybinder_stream()
+#
+#
+# scheduler = BackgroundScheduler()
+# job = scheduler.add_job(check_mybinder, 'interval', seconds=10)
+# scheduler.start()
