@@ -2,6 +2,7 @@ import os
 from flask_caching import Cache
 from flask_sqlalchemy import SQLAlchemy
 from .flask_app import Flask
+from apscheduler.schedulers.background import BackgroundScheduler
 
 
 # set static_folder to None in order to prevent adding default static url rule
@@ -24,6 +25,16 @@ db = SQLAlchemy()
 project_dir = os.path.dirname(os.path.dirname(os.path.realpath(__file__)))
 cache = Cache(config={'CACHE_TYPE': 'filesystem',
                       'CACHE_DIR': os.path.join(project_dir, 'bg_cache')})
+
+
+def check_mybinder():
+    from .mybinder_launches import mybinder_stream
+    mybinder_stream()
+
+
+scheduler = BackgroundScheduler()
+job = scheduler.add_job(check_mybinder, 'interval', minutes=120)
+scheduler.start()
 
 
 def init_plugins():
