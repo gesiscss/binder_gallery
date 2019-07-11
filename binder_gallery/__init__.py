@@ -64,11 +64,11 @@ def init_plugins():
 init_plugins()
 
 
-# def check_mybinder():
-#     from binder_gallery.mybinder_launches import mybinder_stream
-#     mybinder_stream()
-#
-#
-# scheduler = BackgroundScheduler()
-# job = scheduler.add_job(check_mybinder, 'interval', seconds=10)
-# scheduler.start()
+def check_mybinder():
+    from .mybinder_launches import mybinder_stream
+    mybinder_stream()
+
+
+scheduler = BackgroundScheduler()
+job = scheduler.add_job(check_mybinder, 'interval', minutes=120)
+scheduler.start()

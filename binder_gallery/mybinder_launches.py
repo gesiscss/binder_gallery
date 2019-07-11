@@ -40,14 +40,13 @@ def add_json(frame):
             provider_namespaces[provider_namespace].append(launch)
         else:
             provider_namespaces[provider_namespace] = [launch]
-    print(provider_namespaces)
     # TODO try bulk update and bulk save for repos
     for provider_namespace, launches in provider_namespaces.items():
         repo = Repo.query.filter_by(provider_namespace=provider_namespace).first()
         # description = launches[0].get_repo_description()  # TODO uncomment
         description = ""
         if repo:
-            repo.launches.append(launches)
+            repo.launches.extend(launches)
             repo.description = description
         else:
             repo = Repo(provider_namespace=provider_namespace, description=description, launches=launches)
@@ -67,14 +66,13 @@ def mybinder_stream():
             for i, d in index.sort_index(ascending=True).iterrows():
                 if (d['date'].date() >= last_launch.timestamp.date()):
                     left.append(d['name'])
-                for n in left:
-                    today_count = BinderLaunch.query.filter(
-                        BinderLaunch.origin.in_(('gke.mybinder.org', 'ovh.mybinder.org')),
-                        func.DATE(BinderLaunch.timestamp) == last_launch.timestamp.date()).count()
-                    frame = pd.read_json("https://archive.analytics.mybinder.org/{}".format(n), lines=True)
-                    add_json(frame[today_count:])
+            for n in left:
+                today_count = BinderLaunch.query.filter(
+                    BinderLaunch.origin.in_(('gke.mybinder.org', 'ovh.mybinder.org')),
+                    func.DATE(BinderLaunch.timestamp) == last_launch.timestamp.date()).count()
+                frame = pd.read_json("https://archive.analytics.mybinder.org/{}".format(n), lines=True)
+                add_json(frame[today_count:])
         else:
-            print('in right place')
             for i, data in index.sort_index(ascending=True).iterrows():
                 frame = pd.read_json("https://archive.analytics.mybinder.org/{}".format(data['name']), lines=True)
                 add_json(frame)
