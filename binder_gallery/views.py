@@ -81,13 +81,16 @@ def gallery():
                        ('30d', 'Last 30 days'),
                        ('60d', 'Last 60 days'),
                        ('all', 'All time')]
+    binders = ['GesisBinder', 'MyBinder']
     popular_repos_all = []
     for time_rage, title in time_range_list:
-        popular_repos = get_popular_repos_tr(time_rage)
-        if popular_repos:
-            total_launches = sum([l[-1] for l in popular_repos])
-            popular_repos_all.append((time_rage, title, popular_repos, total_launches))
-
+        i=0
+        for binder in binders:
+            popular_repos = get_popular_repos_tr(time_rage, binder)
+            if popular_repos:
+                total_launches = sum([l[-1] for l in popular_repos])
+                popular_repos_all.append({binder : [time_rage, title, popular_repos, total_launches]})
+            i = i+1
     context = get_default_template_context()
     context.update({'active': 'gallery',
                     'popular_repos_all': popular_repos_all,
@@ -98,8 +101,8 @@ def gallery():
     return render_template('gallery.html', **context)
 
 
-@app.route('/<string:time_range>/')
-def view_all(time_range):
+@app.route('/<string:binder>/<string:time_range>/')
+def view_all(binder, time_range):
     titles = {'24h': 'Launches in last 24 hours',
               '7d': 'Launches in last week',
               '30d': 'Launches in last 30 days',
@@ -109,7 +112,7 @@ def view_all(time_range):
         abort(404)
 
     context = get_default_template_context()
-    popular_repos = get_popular_repos_tr(time_range)
+    popular_repos = get_popular_repos_tr(time_range, binder)
     total_launches = sum([l[-1] for l in popular_repos])
     context.update({'active': 'gallery',
                     'time_range': time_range,

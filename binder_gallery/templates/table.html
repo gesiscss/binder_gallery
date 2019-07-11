@@ -33,7 +33,7 @@
         <tr>
             <td colspan="{{ colspan }}">
                 {% if repos_length > 5 %}
-                <a href="{{ url_for('view_all', time_range=time_range) }}">View all ({{ title }})</a>
+                <a href="{{ url_for('view_all', binder=binder, time_range=time_range) }}">View all ({{ title }})</a>
                 {% endif %}
                 <span style="float: right;">
                     {{ total_launches }} launches over {{ repos_length }}

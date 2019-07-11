@@ -9,22 +9,23 @@
     {{ super() }}
 
     <div id="tabs">
-        <h2>Popular Repositories</h2>
-        <div class="tabs_wrapper">
-            <ul>
-                {% for time_range, title, popular_repos, total_launches in popular_repos_all %}
-                <li><a href="#tabs-{{ loop.index }}">{{ title }}</a></li>
-                {% endfor %}
-            </ul>
-        </div>
-        {% for time_range, title, popular_repos, total_launches in popular_repos_all %}
-        <div id="tabs-{{ loop.index }}" class="table-responsive" style="padding: 0;">
-            {% with table_id=time_range, repos=popular_repos[:5], launch=True,
-                    repos_length=popular_repos|length, time_range=time_range, title=title,
-                    total_launches=total_launches, first_launch_ts=first_launch_ts %}
-            {% include "table.html" %}
-            {% endwith %}
-        </div>
+        {% for element in popular_repos_all %}
+            <h2>Popular Repositories of {{ binder }}</h2>
+            <div class="tabs_wrapper">
+                <ul>
+                    {% for time_range, title, popular_repos, total_launches in popular_repos %}
+                    <li><a href="#tabs-{{ loop.index }}">{{ title }}</a></li>
+                    {% endfor %}
+                </ul>
+            </div>
+            {% for time_range, title, popular_repos, total_launches in popular_repos %}
+            <div id="tabs-{{ loop.index }}" class="table-responsive" style="padding: 0;">
+                {% with binder= binder, table_id=time_range, repos=popular_repos[:5], launch=True,
+                        repos_length=popular_repos|length, time_range=time_range, title=title,
+                        total_launches=total_launches, first_launch_ts=first_launch_ts %}
+                {% include "table.html" %}
+                {% endwith %}
+            </div>
         {% endfor %}
     </div>
 

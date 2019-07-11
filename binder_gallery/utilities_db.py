@@ -41,17 +41,21 @@ def get_all_projects():
     return all_projects
 
 
-def get_popular_repos(from_dt, to_dt=None):
+def get_popular_repos(binder, from_dt, to_dt=None):
     """Gets launched repos from BinderLaunch table in a given time range
     and aggregates them over launch count in order according to launch count.
-
+    :param binder: Binder
     :param from_dt: beginning of time range
     :param to_dt: end of time range
     :return: list of popular repos, ordered by launch count,
     an item in list: [repo_name,org,provider,repo_url,binder_url,description,launch_count]
     :rtype: list
     """
-    query = BinderLaunch.query.options(load_only('repo_id', 'provider', 'spec'))
+    if binder == 'MyBinder':
+        query = BinderLaunch.query.filter(BinderLaunch.origin.in_(('gke.mybinder.org', 'ovh.mybinder.org', 'mybinder.org'))).options(load_only('repo_id', 'provider', 'spec'))
+    elif binder == 'GesisBinder':
+        query = BinderLaunch.query.filter(BinderLaunch.origin.in_('')).options(load_only('repo_id', 'provider', 'spec'))
+
     if from_dt is None and to_dt is None:
         # all time
         objects = query.all()
@@ -83,9 +87,10 @@ def get_popular_repos(from_dt, to_dt=None):
     return repos
 
 
-def get_popular_repos_tr(time_range):
+def get_popular_repos_tr(time_range, binder):
     """Gets popular repos in given time range.
 
+    :param binder: Binder
     :param time_range: the interval to get popular repos
     """
     if time_range == "all":
@@ -106,7 +111,7 @@ def get_popular_repos_tr(time_range):
         to_dt = to_dt.isoformat()
         from_dt = from_dt.isoformat()
 
-    return get_popular_repos(from_dt, to_dt)
+    return get_popular_repos(binder, from_dt, to_dt)
 
 
 def get_launches_query(from_dt, to_dt=None):
