@@ -8,28 +8,32 @@
 {% block main %}
     {{ super() }}
 
-    <div id="tabs">
-        {% for element in popular_repos_all %}
-            <h2>Popular Repositories of {{ binder }}</h2>
-            <div class="tabs_wrapper">
-                <ul>
-                    {% for time_range, title, popular_repos, total_launches in popular_repos %}
-                    <li><a href="#tabs-{{ loop.index }}">{{ title }}</a></li>
-                    {% endfor %}
-                </ul>
-            </div>
-            {% for time_range, title, popular_repos, total_launches in popular_repos %}
-            <div id="tabs-{{ loop.index }}" class="table-responsive" style="padding: 0;">
-                {% with binder= binder, table_id=time_range, repos=popular_repos[:5], launch=True,
+{% for binder, (binder_name, popular_repos_all) in popular_repos_all_binders.items() %}
+    <div id="tabs-{{ binder }}">
+{#            {% for binder in popular_repos %}#}
+                <h2>Popular Repositories of {{ binder_name }}</h2>
+                <div class="tabs_wrapper">
+                    <ul>
+                        {% for time_range, title, popular_repos, total_launches in popular_repos_all %}
+                            <li><a href="#tabs-{{ binder }}-{{ loop.index }}">{{ title }}</a></li>
+                        {% endfor %}
+                    </ul>
+                </div>
+                {% for time_range, title, popular_repos, total_launches in popular_repos_all %}
+                    <div id="tabs-{{ binder }}-{{ loop.index }}" class="table-responsive" style="padding: 0;">
+                        {% with binder=binder, table_id=[binder, time_range]|join('-'), repos=popular_repos[:5], launch=True,
                         repos_length=popular_repos|length, time_range=time_range, title=title,
                         total_launches=total_launches, first_launch_ts=first_launch_ts %}
-                {% include "table.html" %}
-                {% endwith %}
-            </div>
-        {% endfor %}
-    </div>
+                            {% include "table.html" %}
+                        {% endwith %}
+                    </div>
+                {% endfor %}
+{#            {% endfor %}#}
 
-    {%  for title, repos in projects %}
+    </div>
+ {% endfor %}
+
+    {% for title, repos in projects %}
     {% if repos %}
     <div class="table-responsive">
         <h2> {{ title }}</h2>
@@ -45,7 +49,8 @@
 <script src="{{ url_for('static', filename='vendor/jquery-ui-1.12.1/jquery-ui.js') }}"></script>
 <script>
     $(function () {
-        $("#tabs").tabs();
+        $("#tabs-gesisbinder").tabs();
+        $("#tabs-mybinder").tabs();
         $("#tabsprojects").tabs();
     });
 </script>

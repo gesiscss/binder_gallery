@@ -81,19 +81,20 @@ def gallery():
                        ('30d', 'Last 30 days'),
                        ('60d', 'Last 60 days'),
                        ('all', 'All time')]
-    binders = ['GesisBinder', 'MyBinder']
-    popular_repos_all = []
-    for time_rage, title in time_range_list:
-        i=0
-        for binder in binders:
-            popular_repos = get_popular_repos_tr(time_rage, binder)
+    binders = [('gesisbinder', 'GESIS Binder'), ('mybinder', 'mybinder.org')]
+
+    popular_repos_all_binders = {}
+    for binder, binder_name in binders:
+        popular_repos_all = []
+        for time_rage, title in time_range_list:
+            popular_repos = get_popular_repos_tr(binder, time_rage)
             if popular_repos:
                 total_launches = sum([l[-1] for l in popular_repos])
-                popular_repos_all.append({binder : [time_rage, title, popular_repos, total_launches]})
-            i = i+1
+                popular_repos_all.append((time_rage, title, popular_repos, total_launches))
+        popular_repos_all_binders[binder] = [binder_name, popular_repos_all]
     context = get_default_template_context()
     context.update({'active': 'gallery',
-                    'popular_repos_all': popular_repos_all,
+                    'popular_repos_all_binders': popular_repos_all_binders,
                     'projects': get_all_projects(),
                     'binders': get_binders(),
                     'first_launch_ts': get_first_launch_ts(),
@@ -108,11 +109,12 @@ def view_all(binder, time_range):
               '30d': 'Launches in last 30 days',
               '60d': 'Launches in last 60 days',
               'all': 'Launches in all time'}
-    if time_range not in titles:
+    binders = ['gesisbinder', 'mybinder', 'all']
+    if time_range not in titles or binder not in binders:
         abort(404)
 
     context = get_default_template_context()
-    popular_repos = get_popular_repos_tr(time_range, binder)
+    popular_repos = get_popular_repos_tr(binder, time_range)
     total_launches = sum([l[-1] for l in popular_repos])
     context.update({'active': 'gallery',
                     'time_range': time_range,

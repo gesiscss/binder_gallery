@@ -44,17 +44,23 @@ def get_all_projects():
 def get_popular_repos(binder, from_dt, to_dt=None):
     """Gets launched repos from BinderLaunch table in a given time range
     and aggregates them over launch count in order according to launch count.
-    :param binder: Binder
+    :param binder: origin binder name
     :param from_dt: beginning of time range
     :param to_dt: end of time range
     :return: list of popular repos, ordered by launch count,
     an item in list: [repo_name,org,provider,repo_url,binder_url,description,launch_count]
     :rtype: list
     """
-    if binder == 'MyBinder':
-        query = BinderLaunch.query.filter(BinderLaunch.origin.in_(('gke.mybinder.org', 'ovh.mybinder.org', 'mybinder.org'))).options(load_only('repo_id', 'provider', 'spec'))
-    elif binder == 'GesisBinder':
-        query = BinderLaunch.query.filter(BinderLaunch.origin.in_('')).options(load_only('repo_id', 'provider', 'spec'))
+    if binder == 'gesisbinder':
+        query = BinderLaunch.query.\
+                filter(BinderLaunch.origin.in_(('notebooks.gesis.org', ''))).\
+                options(load_only('repo_id', 'provider', 'spec'))  # Those before without origin
+    elif binder == 'mybinder':
+        query = BinderLaunch.query.\
+                filter(BinderLaunch.origin.in_(('gke.mybinder.org', 'ovh.mybinder.org', "binder.mybinder.ovh", 'mybinder.org'))).\
+                options(load_only('repo_id', 'provider', 'spec'))
+    else:
+        query = BinderLaunch.query.options(load_only('repo_id', 'provider', 'spec'))
 
     if from_dt is None and to_dt is None:
         # all time
@@ -87,10 +93,10 @@ def get_popular_repos(binder, from_dt, to_dt=None):
     return repos
 
 
-def get_popular_repos_tr(time_range, binder):
+def get_popular_repos_tr(binder, time_range):
     """Gets popular repos in given time range.
 
-    :param binder: Binder
+    :param binder: origin binder name
     :param time_range: the interval to get popular repos
     """
     if time_range == "all":

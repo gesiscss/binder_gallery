@@ -1,4 +1,3 @@
-from datetime import datetime
 from sqlalchemy import func
 import pandas as pd
 from binder_gallery.models import app, db, BinderLaunch, _strip, Repo
@@ -18,7 +17,6 @@ def add_json(frame):
                               status=data['status'])
         binder_launches.append(launch)
 
-        # # TODO repos without desc
         provider_spec = launch.provider_spec
 
         if launch.provider_prefix == 'zenodo':
@@ -41,6 +39,8 @@ def add_json(frame):
         else:
             provider_namespaces[provider_namespace] = [launch]
     # TODO try bulk update and bulk save for repos
+    # TODO check if repos bulk insert works
+    repos = []
     for provider_namespace, launches in provider_namespaces.items():
         repo = Repo.query.filter_by(provider_namespace=provider_namespace).first()
         # description = launches[0].get_repo_description()  # TODO uncomment
@@ -50,8 +50,10 @@ def add_json(frame):
             repo.description = description
         else:
             repo = Repo(provider_namespace=provider_namespace, description=description, launches=launches)
-            db.session.add(repo)
+            repos.append(repo)
+            # db.session.add(repo)
     # db.session.bulk_insert_mappings(BinderLaunch, binder_launches)
+    db.session.bulk_save_objects(repos)
     db.session.bulk_save_objects(binder_launches)
     db.session.commit()
 
@@ -59,7 +61,7 @@ def add_json(frame):
 def mybinder_stream():
 
     with app.app_context():
-        last_launch = BinderLaunch.query.filter(BinderLaunch.origin.in_(('gke.mybinder.org', 'ovh.mybinder.org', 'mybinder.org'))).order_by(BinderLaunch.timestamp.desc()).first()  # with_entities(BinderLaunch.timestamp)
+        last_launch = BinderLaunch.query.filter(BinderLaunch.origin.in_(('gke.mybinder.org', 'ovh.mybinder.org', "binder.mybinder.ovh", 'mybinder.org'))).order_by(BinderLaunch.timestamp.desc()).first()  # with_entities(BinderLaunch.timestamp)
         index = pd.read_json("https://archive.analytics.mybinder.org/index.jsonl", lines=True)
         if last_launch:
             left = []
@@ -68,7 +70,7 @@ def mybinder_stream():
                     left.append(d['name'])
             for n in left:
                 today_count = BinderLaunch.query.filter(
-                    BinderLaunch.origin.in_(('gke.mybinder.org', 'ovh.mybinder.org')),
+                    BinderLaunch.origin.in_(('gke.mybinder.org', 'ovh.mybinder.org', "binder.mybinder.ovh", 'mybinder.org')),
                     func.DATE(BinderLaunch.timestamp) == last_launch.timestamp.date()).count()
                 frame = pd.read_json("https://archive.analytics.mybinder.org/{}".format(n), lines=True)
                 add_json(frame[today_count:])
