@@ -91,7 +91,8 @@ def gallery():
             if popular_repos:
                 total_launches = sum([l[-1] for l in popular_repos])
                 popular_repos_all.append((time_rage, title, popular_repos, total_launches))
-        popular_repos_all_binders[binder] = [data['name'], popular_repos_all]
+        if popular_repos_all:
+            popular_repos_all_binders[binder] = [data['name'], popular_repos_all]
     context = get_default_template_context()
     context.update({'active': 'gallery',
                     'popular_repos_all_binders': popular_repos_all_binders,
@@ -109,7 +110,7 @@ def view_all(binder, time_range):
               '30d': 'Launches in last 30 days',
               '60d': 'Launches in last 60 days',
               'all': 'Launches in all time'}
-    binders = ['gesisbinder', 'mybinder', 'all']
+    binders = list(app.binder_origins.keys()) + ['all']
     if time_range not in titles or binder not in binders:
         abort(404)
 
