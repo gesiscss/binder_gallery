@@ -55,7 +55,7 @@ class BinderLaunchModelView(BaseModelView):
     column_default_sort = [('timestamp', True)]
     column_list = ('timestamp', 'origin', 'provider', 'provider_spec', 'repo_id', 'repo_description')
     column_searchable_list = ['origin', 'provider', 'spec']
-    column_filters = ['origin', 'provider']
+    column_filters = ['origin', 'provider', 'timestamp']
 
 
 # Create customized index view class that handles login & registration
