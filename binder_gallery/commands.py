@@ -17,6 +17,7 @@ def create_user(name, password, email="", active=True):
 
 
 @app.cli.command()
+@click.argument('binder', required=False)
 @click.option('--all-events', '-a', is_flag=True, help="Parse all events.")
-def parse_mybinder_archives(all_events=False):
-    _parse_mybinder_archives(all_events)
+def parse_mybinder_archives(binder='mybinder', all_events=False):
+    _parse_mybinder_archives(binder, all_events)

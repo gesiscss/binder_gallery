@@ -7,7 +7,7 @@ from sqlalchemy import func
 from .models import app, db, Repo, BinderLaunch
 
 
-def save_mybinder_launches(new_launches):
+def save_launches(new_launches):
     provider_namespaces = {}
     for i, data in new_launches.sort_index(ascending=True).iterrows():
         origin = data.get('origin', 'mybinder.org')
@@ -46,16 +46,17 @@ def save_mybinder_launches(new_launches):
     db.session.commit()
 
 
-def parse_mybinder_archives(all_events=False):
+def parse_mybinder_archives(binder, all_events=False):
     app.logger.info(f"parse_mybinder_archives: started at {datetime.utcnow()} [UTC]")
     with app.app_context():
+        origins = app.binder_origins[binder]['origins']
         if all_events is True:
             last_launch_date = datetime(2000, 1, 1).date()
         else:
             # get last saved mybinder launch
             # parse archives after date of last launch
             last_launch = BinderLaunch.query.\
-                          filter(BinderLaunch.origin.in_(app.mybinder_origins)).\
+                          filter(BinderLaunch.origin.in_(origins)).\
                           order_by(BinderLaunch.timestamp.desc()).first()  # with_entities(BinderLaunch.timestamp)
             last_launch_date = last_launch.timestamp.date()
 
@@ -72,7 +73,7 @@ def parse_mybinder_archives(all_events=False):
         for a_name, a_date, a_count in archives:
             if a_date == last_launch_date:
                 today_count = BinderLaunch.query.\
-                              filter(BinderLaunch.origin.in_(app.mybinder_origins),
+                              filter(BinderLaunch.origin.in_(origins),
                                      func.DATE(BinderLaunch.timestamp) == last_launch_date).\
                               count()
             else:
@@ -85,7 +86,7 @@ def parse_mybinder_archives(all_events=False):
             frame = pd.read_json(f"https://archive.analytics.mybinder.org/{a_name}", lines=True)
             new_launches = frame[today_count:]
             new_launches_count = len(new_launches)
-            save_mybinder_launches(new_launches)
+            save_launches(new_launches)
             # app.logger.info(f"parse_mybinder_archives: done: for {a_name} - {a_date}")
             app.logger.info(f"parse_mybinder_archives: done: "
                             f"{new_launches_count} new launches saved for {a_name} - {a_date}")

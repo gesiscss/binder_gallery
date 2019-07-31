@@ -83,17 +83,15 @@ def gallery():
         ('60d', 'Last 60 days'),
         ('all', 'All time')
     ]
-    binders = [('gesisbinder', 'GESIS Binder'), ('mybinder', 'mybinder.org')]
-
     popular_repos_all_binders = {}
-    for binder, binder_name in binders:
+    for binder, data in app.binder_origins.items():
         popular_repos_all = []
         for time_rage, title in time_range_list:
             popular_repos = get_popular_repos_tr(binder, time_rage)
             if popular_repos:
                 total_launches = sum([l[-1] for l in popular_repos])
                 popular_repos_all.append((time_rage, title, popular_repos, total_launches))
-        popular_repos_all_binders[binder] = [binder_name, popular_repos_all]
+        popular_repos_all_binders[binder] = [data['name'], popular_repos_all]
     context = get_default_template_context()
     context.update({'active': 'gallery',
                     'popular_repos_all_binders': popular_repos_all_binders,

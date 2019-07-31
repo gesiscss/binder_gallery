@@ -52,14 +52,9 @@ def get_popular_repos(binder, from_dt, to_dt=None):
     :rtype: list
     """
     query = BinderLaunch.query.options(load_only('repo_id', 'provider', 'spec'))
-    origins = None
-    if binder == 'gesisbinder':
-        # origin '' is for those before version 3 (without origin)
-        origins = ('notebooks.gesis.org', '')
-    elif binder == 'mybinder':
-        origins = app.mybinder_origins
-    if origins:
-        query = query.filter(BinderLaunch.origin.in_(origins))
+
+    if binder in app.binder_origins:
+        query = query.filter(BinderLaunch.origin.in_(app.binder_origins[binder]['origins']))
 
     if from_dt is None and to_dt is None:
         # all time

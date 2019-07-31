@@ -19,6 +19,19 @@ class Config(object):
         {'name': 'ovh.mybinder.org', 'url': 'https://ovh.mybinder.org'},
     ]
 
+    BINDER_ORIGINS = {
+        'gesisbinder': {
+            'name': 'GESIS Binder',
+            # origin '' is for those before version 3 (without origin)
+            'origins': ('notebooks.gesis.org', ''),
+        },
+        'mybinder': {
+            'name': 'mybinder.org',
+            # origin 'mybinder.org' is for mybinder.org events before version 3
+            'origins': ('gke.mybinder.org', 'ovh.mybinder.org', 'binder.mybinder.ovh', 'mybinder.org'),
+        }
+    }
+
     # flask builtin config: http://flask.pocoo.org/docs/1.0/config/#builtin-configuration-values
     SECRET_KEY = "development-secret"
     APPLICATION_ROOT = BASE_URL
@@ -29,9 +42,5 @@ class Config(object):
     SESSION_COOKIE_SECURE = False
     SESSION_COOKIE_HTTPONLY = True
     SESSION_COOKIE_SAMESITE = 'Lax'
-
-    # 'mybinder.org' is for mybinder.org events before version 3
-    MYBINDER_ORIGINS = ('gke.mybinder.org', 'ovh.mybinder.org',
-                        'binder.mybinder.ovh', 'mybinder.org')
 
     SQLALCHEMY_ECHO = False
