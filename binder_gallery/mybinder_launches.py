@@ -1,83 +1,97 @@
-from sqlalchemy import func
 import pandas as pd
-from binder_gallery.models import app, db, BinderLaunch, _strip, Repo
+
+from time import sleep
+from datetime import datetime
+from sqlalchemy import func
+
+from .models import app, db, Repo, BinderLaunch
 
 
-def add_json(frame):
-    binder_launches = []
+def save_mybinder_launches(new_launches):
     provider_namespaces = {}
-    for i, data in frame.sort_index(ascending=True).iterrows():
-        timestamp = data['timestamp'].replace(tzinfo=None)  # TODO test if this is the correct format
+    for i, data in new_launches.sort_index(ascending=True).iterrows():
+        origin = data.get('origin', 'mybinder.org')
+        if origin == "notebooks.gesis.org" or origin == "notebooks-test.gesis.org":
+            continue
+        timestamp = data['timestamp'].replace(tzinfo=None)
         launch = BinderLaunch(schema=data['schema'],
                               version=data['version'],
                               timestamp=timestamp,
-                              origin=data.get('origin', 'mybinder.org'),  # TODO version 1 with origin??
+                              # NOTE: launches of version 1 and 2 from mybinder.org have origin as 'mybinder.org'
+                              # even it actually does not exist in archives
+                              origin=origin,
                               provider=data['provider'],
                               spec=data['spec'],
                               status=data['status'])
-        binder_launches.append(launch)
 
-        provider_spec = launch.provider_spec
-
-        if launch.provider_prefix == 'zenodo':
-            # zenodo has no ref info
-            provider_namespace = provider_spec
-        else:
-            provider_spec_parts = provider_spec.split('/')
-            # strip ref info from provider_spec_parts
-            if launch.provider_prefix in ['gh', 'gl']:
-                # gh and gl branches can contain "/"
-                provider_spec_parts = provider_spec_parts[:3]
-            else:
-                # git and gist have ref only as commit SHA
-                provider_spec_parts = provider_spec_parts[:-1]
-            provider_namespace = _strip('suffix',
-                                        "/".join(provider_spec_parts),
-                                        ['.git'])
+        # binder_launches.append(launch)
+        provider_namespace = launch.provider_namespace
         if provider_namespace in provider_namespaces:
             provider_namespaces[provider_namespace].append(launch)
         else:
             provider_namespaces[provider_namespace] = [launch]
-    # TODO try bulk update and bulk save for repos
-    # TODO check if repos bulk insert works
-    repos = []
+
     for provider_namespace, launches in provider_namespaces.items():
         repo = Repo.query.filter_by(provider_namespace=provider_namespace).first()
-        # description = launches[0].get_repo_description()  # TODO uncomment
+        # description = launches[0].get_repo_description()
         description = ""
         if repo:
             repo.launches.extend(launches)
-            repo.description = description
+            # repo.description = description
         else:
             repo = Repo(provider_namespace=provider_namespace, description=description, launches=launches)
-            repos.append(repo)
-            # db.session.add(repo)
-    # db.session.bulk_insert_mappings(BinderLaunch, binder_launches)
-    db.session.bulk_save_objects(repos)
-    db.session.bulk_save_objects(binder_launches)
+            db.session.add(repo)
+        for launch in launches:
+            db.session.add(launch)
     db.session.commit()
 
 
-def mybinder_stream():
-
+def parse_mybinder_archives(all_events=False):
+    app.logger.info(f"parse_mybinder_archives: started at {datetime.utcnow()} [UTC]")
     with app.app_context():
-        last_launch = BinderLaunch.query.filter(BinderLaunch.origin.in_(('gke.mybinder.org', 'ovh.mybinder.org', "binder.mybinder.ovh", 'mybinder.org'))).order_by(BinderLaunch.timestamp.desc()).first()  # with_entities(BinderLaunch.timestamp)
-        index = pd.read_json("https://archive.analytics.mybinder.org/index.jsonl", lines=True)
-        if last_launch:
-            left = []
-            for i, d in index.sort_index(ascending=True).iterrows():
-                if (d['date'].date() >= last_launch.timestamp.date()):
-                    left.append(d['name'])
-            for n in left:
-                today_count = BinderLaunch.query.filter(
-                    BinderLaunch.origin.in_(('gke.mybinder.org', 'ovh.mybinder.org', "binder.mybinder.ovh", 'mybinder.org')),
-                    func.DATE(BinderLaunch.timestamp) == last_launch.timestamp.date()).count()
-                frame = pd.read_json("https://archive.analytics.mybinder.org/{}".format(n), lines=True)
-                add_json(frame[today_count:])
+        if all_events is True:
+            last_launch_date = datetime(2000, 1, 1).date()
         else:
-            for i, data in index.sort_index(ascending=True).iterrows():
-                frame = pd.read_json("https://archive.analytics.mybinder.org/{}".format(data['name']), lines=True)
-                add_json(frame)
+            # get last saved mybinder launch
+            # parse archives after date of last launch
+            last_launch = BinderLaunch.query.\
+                          filter(BinderLaunch.origin.in_(app.mybinder_origins)).\
+                          order_by(BinderLaunch.timestamp.desc()).first()  # with_entities(BinderLaunch.timestamp)
+            last_launch_date = last_launch.timestamp.date()
 
+        # get new or unfinished archives to parse
+        index = pd.read_json("https://archive.analytics.mybinder.org/index.jsonl", lines=True)
+        archives = []
+        for i, d in index.sort_index(ascending=True).iterrows():
+            if d['date'].date() >= last_launch_date:
 
-# TODO write a test if we have same launch numbers per day as here https://archive.analytics.mybinder.org/
+                archives.append([d['name'], d['date'].date(), d['count']])
+
+        total_count = 0
+        total_a_count = 0
+        for a_name, a_date, a_count in archives:
+            if a_date == last_launch_date:
+                today_count = BinderLaunch.query.\
+                              filter(BinderLaunch.origin.in_(app.mybinder_origins),
+                                     func.DATE(BinderLaunch.timestamp) == last_launch_date).\
+                              count()
+            else:
+                # parse all launches of this archive
+                today_count = 0
+            total_a_count = total_a_count + a_count - today_count
+            app.logger.info(f"parse_mybinder_archives: "
+                            f"parse after {today_count} launches of {a_name} - {a_date}")
+
+            frame = pd.read_json(f"https://archive.analytics.mybinder.org/{a_name}", lines=True)
+            new_launches = frame[today_count:]
+            new_launches_count = len(new_launches)
+            save_mybinder_launches(new_launches)
+            # app.logger.info(f"parse_mybinder_archives: done: for {a_name} - {a_date}")
+            app.logger.info(f"parse_mybinder_archives: done: "
+                            f"{new_launches_count} new launches saved for {a_name} - {a_date}")
+            total_count += new_launches_count
+            sleep(30)
+
+    app.logger.info(f"parse_mybinder_archives: done at {datetime.utcnow()} [UTC]:"
+                    f" {total_count}:{total_a_count} new launches saved")
+    # assert total_a_count == total_count

@@ -12,5 +12,4 @@ PyJWT==1.7.1
 requests==2.21.0
 flask-caching==1.7.1
 gunicorn==19.9.0
-Flask-APScheduler==1.11.0
 pandas==0.23.4

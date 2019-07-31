@@ -51,16 +51,15 @@ def get_popular_repos(binder, from_dt, to_dt=None):
     an item in list: [repo_name,org,provider,repo_url,binder_url,description,launch_count]
     :rtype: list
     """
+    query = BinderLaunch.query.options(load_only('repo_id', 'provider', 'spec'))
+    origins = None
     if binder == 'gesisbinder':
-        query = BinderLaunch.query.\
-                filter(BinderLaunch.origin.in_(('notebooks.gesis.org', ''))).\
-                options(load_only('repo_id', 'provider', 'spec'))  # Those before without origin
+        # origin '' is for those before version 3 (without origin)
+        origins = ('notebooks.gesis.org', '')
     elif binder == 'mybinder':
-        query = BinderLaunch.query.\
-                filter(BinderLaunch.origin.in_(('gke.mybinder.org', 'ovh.mybinder.org', "binder.mybinder.ovh", 'mybinder.org'))).\
-                options(load_only('repo_id', 'provider', 'spec'))
-    else:
-        query = BinderLaunch.query.options(load_only('repo_id', 'provider', 'spec'))
+        origins = app.mybinder_origins
+    if origins:
+        query = query.filter(BinderLaunch.origin.in_(origins))
 
     if from_dt is None and to_dt is None:
         # all time

@@ -29,3 +29,9 @@ class Config(object):
     SESSION_COOKIE_SECURE = False
     SESSION_COOKIE_HTTPONLY = True
     SESSION_COOKIE_SAMESITE = 'Lax'
+
+    # 'mybinder.org' is for mybinder.org events before version 3
+    MYBINDER_ORIGINS = ('gke.mybinder.org', 'ovh.mybinder.org',
+                        'binder.mybinder.ovh', 'mybinder.org')
+
+    SQLALCHEMY_ECHO = False

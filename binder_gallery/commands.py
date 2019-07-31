@@ -1,6 +1,7 @@
 import click
 from . import app
 from .models import User
+from .mybinder_launches import parse_mybinder_archives as _parse_mybinder_archives
 
 
 # http://flask.pocoo.org/docs/1.0/cli/#custom-commands
@@ -13,3 +14,9 @@ from .models import User
 def create_user(name, password, email="", active=True):
     u = User.create_user(name, password, email, active)
     print(f"User {u.name} is created!")
+
+
+@app.cli.command()
+@click.option('--all-events', '-a', is_flag=True, help="Parse all events.")
+def parse_mybinder_archives(all_events=False):
+    _parse_mybinder_archives(all_events)

@@ -76,11 +76,13 @@ def select_binder():
 
 @app.route('/')
 def gallery():
-    time_range_list = [('24h', 'Last 24 hours'),
-                       ('7d', 'Last week'),
-                       ('30d', 'Last 30 days'),
-                       ('60d', 'Last 60 days'),
-                       ('all', 'All time')]
+    time_range_list = [
+        ('24h', 'Last 24 hours'),
+        ('7d', 'Last week'),
+        ('30d', 'Last 30 days'),
+        ('60d', 'Last 60 days'),
+        ('all', 'All time')
+    ]
     binders = [('gesisbinder', 'GESIS Binder'), ('mybinder', 'mybinder.org')]
 
     popular_repos_all_binders = {}

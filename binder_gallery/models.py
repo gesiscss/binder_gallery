@@ -311,3 +311,22 @@ class BinderLaunch(RepoMixin, db.Model):
     @property
     def repo_description(self):
         return self.detail.description if self.detail else ''
+
+    @property
+    def provider_namespace(self):
+        if self.provider_prefix == 'zenodo':
+            # zenodo has no ref info
+            provider_namespace = self.provider_spec
+        else:
+            provider_spec_parts = self.provider_spec.split('/')
+            # strip ref info from provider_spec_parts
+            if self.provider_prefix in ['gh', 'gl']:
+                # gh and gl branches can contain "/"
+                provider_spec_parts = provider_spec_parts[:3]
+            else:
+                # git and gist have ref only as commit SHA
+                provider_spec_parts = provider_spec_parts[:-1]
+            provider_namespace = _strip('suffix',
+                                        "/".join(provider_spec_parts),
+                                        ['.git'])
+        return provider_namespace

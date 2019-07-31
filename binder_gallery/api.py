@@ -4,7 +4,7 @@ from flask_restplus import Api, Resource, marshal, Namespace, reqparse, inputs
 from flask_restplus.fields import String, Integer, DateTime as BaseDatetime, MarshallingError
 from .utilities_db import get_launches_paginated
 from . import app, db
-from .models import BinderLaunch, User, Repo, _strip
+from .models import BinderLaunch, User, Repo
 from flask_limiter import Limiter
 from flask_limiter.util import get_remote_address
 
@@ -158,21 +158,7 @@ class RepoLaunches(RepoLaunchesBase):
                 app.logger.info(f"New binder launch {provider_spec} at {launch.timestamp} on {launch.origin} - "
                                 f"{launch.schema} {launch.version} {launch.status}")
 
-                if launch.provider_prefix == 'zenodo':
-                    # zenodo has no ref info
-                    provider_namespace = provider_spec
-                else:
-                    provider_spec_parts = provider_spec.split('/')
-                    # strip ref info from provider_spec_parts
-                    if launch.provider_prefix in ['gh', 'gl']:
-                        # gh and gl branches can contain "/"
-                        provider_spec_parts = provider_spec_parts[:3]
-                    else:
-                        # git and gist have ref only as commit SHA
-                        provider_spec_parts = provider_spec_parts[:-1]
-                    provider_namespace = _strip('suffix',
-                                                "/".join(provider_spec_parts),
-                                                ['.git'])
+                provider_namespace = launch.provider_namespace
                 repo = Repo.query.filter_by(provider_namespace=provider_namespace).first()
                 description = launch.get_repo_description()
                 if repo:
