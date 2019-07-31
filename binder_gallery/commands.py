@@ -1,7 +1,7 @@
 import click
 from . import app
 from .models import User
-from .mybinder_launches import parse_mybinder_archives as _parse_mybinder_archives
+from .mybinder_archives import parse_mybinder_archives as _parse_mybinder_archives
 
 
 # http://flask.pocoo.org/docs/1.0/cli/#custom-commands
