@@ -79,6 +79,9 @@ def parse_mybinder_archives(binder='mybinder', all_events=False):
                                  f"Error saved ({a_count_saved}) > in archive ({a_count}) for {a_name} - {a_date}")
                 continue
             elif a_count_saved == a_count:
+                app.logger.info(f"parse_mybinder_archives: "
+                                f"everything is already saved {a_count} - {a_count_saved} = {a_count-a_count_saved} "
+                                f"launches of {a_name} - {a_date}")
                 continue
             app.logger.info(f"parse_mybinder_archives: "
                             f"parsing {a_count} - {a_count_saved} = {a_count-a_count_saved} "
