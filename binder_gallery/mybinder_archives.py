@@ -1,7 +1,7 @@
 import pandas as pd
 
 from time import sleep
-from datetime import datetime
+from datetime import datetime, timedelta
 from sqlalchemy import func
 
 from .models import app, db, Repo, BinderLaunch
@@ -46,7 +46,7 @@ def save_launches(new_launches):
     db.session.commit()
 
 
-def parse_mybinder_archives(binder, all_events=False):
+def parse_mybinder_archives(binder='mybinder', all_events=False):
     app.logger.info(f"parse_mybinder_archives: started at {datetime.utcnow()} [UTC]")
     with app.app_context():
         origins = app.binder_origins[binder]['origins']
@@ -64,35 +64,35 @@ def parse_mybinder_archives(binder, all_events=False):
         index = pd.read_json("https://archive.analytics.mybinder.org/index.jsonl", lines=True)
         archives = []
         for i, d in index.sort_index(ascending=True).iterrows():
-            if d['date'].date() >= last_launch_date:
-
+            if d['date'].date() >= last_launch_date-timedelta(days=1):
+                # make sure also that everything of previous day is saved
                 archives.append([d['name'], d['date'].date(), d['count']])
 
         total_count = 0
-        total_a_count = 0
         for a_name, a_date, a_count in archives:
-            if a_date == last_launch_date:
-                today_count = BinderLaunch.query.\
-                              filter(BinderLaunch.origin.in_(origins),
-                                     func.DATE(BinderLaunch.timestamp) == last_launch_date).\
-                              count()
-            else:
-                # parse all launches of this archive
-                today_count = 0
-            total_a_count = total_a_count + a_count - today_count
+            a_count_saved = BinderLaunch.query.\
+                            filter(BinderLaunch.origin.in_(origins),
+                                   func.DATE(BinderLaunch.timestamp) == a_date).\
+                            count()
+            if a_count_saved > a_count:
+                app.logger.error(f"parse_mybinder_archives: "
+                                 f"Error saved ({a_count_saved}) > in archive ({a_count}) for {a_name} - {a_date}")
+                continue
+            elif a_count_saved == a_count:
+                continue
             app.logger.info(f"parse_mybinder_archives: "
-                            f"parse after {today_count} launches of {a_name} - {a_date}")
+                            f"parsing {a_count} - {a_count_saved} = {a_count-a_count_saved} "
+                            f"launches of {a_name} - {a_date}")
 
             frame = pd.read_json(f"https://archive.analytics.mybinder.org/{a_name}", lines=True)
-            new_launches = frame[today_count:]
+            new_launches = frame[a_count_saved:]
             new_launches_count = len(new_launches)
+            assert new_launches_count == a_count-a_count_saved
             save_launches(new_launches)
-            # app.logger.info(f"parse_mybinder_archives: done: for {a_name} - {a_date}")
-            app.logger.info(f"parse_mybinder_archives: done: "
-                            f"{new_launches_count} new launches saved for {a_name} - {a_date}")
+            app.logger.info(f"parse_mybinder_archives: "
+                            f"saved {new_launches_count} new launches for {a_name} - {a_date}")
             total_count += new_launches_count
             sleep(30)
 
-    app.logger.info(f"parse_mybinder_archives: done at {datetime.utcnow()} [UTC]:"
-                    f" {total_count}:{total_a_count} new launches saved")
-    # assert total_a_count == total_count
+    app.logger.info(f"parse_mybinder_archives: done at {datetime.utcnow()} [UTC]: "
+                    f"total {total_count} new launches saved")
