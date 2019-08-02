@@ -1,7 +1,6 @@
 from datetime import datetime, timedelta
 from sqlalchemy.orm import load_only
-from sqlalchemy import func
-from . import db, cache, app
+from . import cache, app
 from .models import BinderLaunch, CreatedByGesis, FeaturedProject
 
 
@@ -41,7 +40,7 @@ def get_all_projects():
     return all_projects
 
 
-def get_popular_repos(binder, from_dt, to_dt=None):
+def _get_popular_repos(binder, from_dt, to_dt=None):
     """Gets launched repos from BinderLaunch table in a given time range
     and aggregates them over launch count in order according to launch count.
     :param binder: origin binder name
@@ -87,7 +86,7 @@ def get_popular_repos(binder, from_dt, to_dt=None):
     return repos
 
 
-def get_popular_repos_tr(binder, time_range):
+def get_popular_repos(binder, time_range):
     """Gets popular repos in given time range.
 
     :param binder: origin binder name
@@ -111,7 +110,7 @@ def get_popular_repos_tr(binder, time_range):
         to_dt = to_dt.isoformat()
         from_dt = from_dt.isoformat()
 
-    return get_popular_repos(binder, from_dt, to_dt)
+    return _get_popular_repos(binder, from_dt, to_dt)
 
 
 def get_launches_query(from_dt, to_dt=None):
@@ -140,29 +139,24 @@ def get_launches_paginated(from_dt, to_dt=None):
 
 def get_launches(from_dt, to_dt=None):
     """Get launches from BinderLaunch table in given time range ordered by timestamp."""
-
     query = get_launches_query(from_dt, to_dt)
     launches = query.all()
 
     return launches
 
 
-def get_launch_count():
-    return db.session.execute(
-        db.session.query(
-            func.count(BinderLaunch.id)
-        )
-    ).scalar()
+# def get_launch_count():
+#     return db.session.execute(
+#         db.session.query(
+#             func.count(BinderLaunch.id)
+#         )
+#     ).scalar()
 
 
-@cache.cached(timeout=None, key_prefix='first_launch_ts')
-def get_first_launch_ts():
-    first_launch = BinderLaunch.query.with_entities(BinderLaunch.timestamp).order_by(BinderLaunch.timestamp).first()
+@cache.memoize(timeout=None)
+def get_first_launch_ts(binder):
+    query = BinderLaunch.query.with_entities(BinderLaunch.timestamp).order_by(BinderLaunch.timestamp)
+    if binder in app.binder_origins:
+        query = query.filter(BinderLaunch.origin.in_(app.binder_origins[binder]['origins']))
+    first_launch = query.first()
     return first_launch[0] if first_launch else None
-
-
-def get_launch_data():
-    return {
-        "count": get_launch_count(),
-        "first_ts": get_first_launch_ts()
-    }

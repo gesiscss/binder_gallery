@@ -8,7 +8,7 @@
 {% block main %}
     {{ super() }}
 
-{% for binder, (binder_name, popular_repos_all) in popular_repos_all_binders.items() %}
+{% for binder, (binder_name, popular_repos_all, first_launch_ts) in popular_repos_all_binders.items() %}
     <div id="tabs-{{ binder }}">
         <h2>Popular Repositories of {{ binder_name }}</h2>
         <div class="tabs_wrapper">

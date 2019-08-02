@@ -19,17 +19,35 @@ class Config(object):
         {'name': 'ovh.mybinder.org', 'url': 'https://ovh.mybinder.org'},
     ]
 
+    intervals = {
+        '24h': {'title': 'Last 24 hours', 'show': True},
+        '7d': {'title': 'Last week', 'show': True},
+        '30d': {'title': 'Last 30 days', 'show': True},
+        '60d': {'title': 'Last 60 days', 'show': True},
+        'all': {'title': 'All time', 'show': True}
+    }
     BINDER_ORIGINS = {
         'gesisbinder': {
-            'name': 'GESIS Binder',
+            'show': True,
+            'display_name': 'GESIS Binder',
             # origin '' is for those before version 3 (without origin)
             'origins': ('notebooks.gesis.org', ''),
+            'intervals': intervals
         },
         'mybinder': {
-            'name': 'mybinder.org',
+            'show': True,
+            'display_name': 'mybinder.org',
             # origin 'mybinder.org' is for mybinder.org events before version 3
             'origins': ('gke.mybinder.org', 'ovh.mybinder.org', 'binder.mybinder.ovh', 'mybinder.org'),
+            'intervals': intervals
         }
+    }
+    DETAIL_PAGES = {
+        '24h': {'title': 'Launches in last 24 hours', 'show': True},
+        '7d': {'title': 'Launches in last week', 'show': True},
+        '30d': {'title': 'Launches in last 30 days', 'show': True},
+        '60d': {'title': 'Launches in last 60 days', 'show': True},
+        'all': {'title': 'Launches in all time', 'show': True}
     }
 
     # flask builtin config: http://flask.pocoo.org/docs/1.0/config/#builtin-configuration-values

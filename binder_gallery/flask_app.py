@@ -25,6 +25,7 @@ class Flask(BaseFlask):
         if self.default_binder_url is None:
             self.default_binder_url = self.binders[0]["url"]
         self.binder_origins = self.config['BINDER_ORIGINS']
+        self.detail_pages = self.config['DETAIL_PAGES']
 
         # add static url rule manually
         # https://stackoverflow.com/questions/26722279/how-to-set-static-url-path-in-flask-application/26722526#26722526

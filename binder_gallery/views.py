@@ -1,7 +1,7 @@
 import requests
 import os
 from flask import render_template, abort, make_response, request
-from .utilities_db import get_all_projects, get_popular_repos_tr, get_first_launch_ts
+from .utilities_db import get_all_projects, get_popular_repos, get_first_launch_ts
 from . import app, cache
 
 
@@ -76,52 +76,48 @@ def select_binder():
 
 @app.route('/')
 def gallery():
-    time_range_list = [
-        ('24h', 'Last 24 hours'),
-        ('7d', 'Last week'),
-        ('30d', 'Last 30 days'),
-        ('60d', 'Last 60 days'),
-        ('all', 'All time')
-    ]
     popular_repos_all_binders = {}
-    for binder, data in app.binder_origins.items():
+    for b_name, b_data in app.binder_origins.items():
         popular_repos_all = []
-        for time_rage, title in time_range_list:
-            popular_repos = get_popular_repos_tr(binder, time_rage)
+        if not b_data["show"]:
+            continue
+        for time_rage, i_data in b_data["intervals"].items():
+            if not i_data["show"]:
+                continue
+            popular_repos = get_popular_repos(b_name, time_rage)
             if popular_repos:
                 total_launches = sum([l[-1] for l in popular_repos])
-                popular_repos_all.append((time_rage, title, popular_repos, total_launches))
+                popular_repos_all.append((time_rage, i_data["title"], popular_repos, total_launches))
         if popular_repos_all:
-            popular_repos_all_binders[binder] = [data['name'], popular_repos_all]
+            popular_repos_all_binders[b_name] = [b_data['display_name'],
+                                                 popular_repos_all,
+                                                 get_first_launch_ts(b_name)]
+
     context = get_default_template_context()
     context.update({'active': 'gallery',
                     'popular_repos_all_binders': popular_repos_all_binders,
                     'projects': get_all_projects(),
                     'binders': get_binders(),
-                    'first_launch_ts': get_first_launch_ts(),
                     })
     return render_template('gallery.html', **context)
 
 
 @app.route('/<string:binder>/<string:time_range>/')
 def view_all(binder, time_range):
-    titles = {'24h': 'Launches in last 24 hours',
-              '7d': 'Launches in last week',
-              '30d': 'Launches in last 30 days',
-              '60d': 'Launches in last 60 days',
-              'all': 'Launches in all time'}
-    binders = list(app.binder_origins.keys()) + ['all']
-    if time_range not in titles or binder not in binders:
+    if (binder not in app.binder_origins and binder != 'all') \
+       or time_range not in app.detail_pages\
+       or not app.detail_pages[time_range]['show']:
         abort(404)
+    title = app.detail_pages[time_range]['title']
 
     context = get_default_template_context()
-    popular_repos = get_popular_repos_tr(binder, time_range)
+    popular_repos = get_popular_repos(binder, time_range)
     total_launches = sum([l[-1] for l in popular_repos])
     context.update({'active': 'gallery',
                     'time_range': time_range,
-                    'title': titles[time_range],
+                    'title': title,
                     'binders': get_binders(),
-                    'first_launch_ts': get_first_launch_ts(),
+                    'first_launch_ts': get_first_launch_ts(binder),
                     'total_launches': total_launches,
                     'popular_repos': popular_repos})
     return render_template('view_all.html', **context)
