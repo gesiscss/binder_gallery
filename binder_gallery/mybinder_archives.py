@@ -88,6 +88,23 @@ def parse_mybinder_archives(binder='mybinder', all_events=False):
                             f"launches of {a_name} - {a_date}")
 
             frame = pd.read_json(f"https://archive.analytics.mybinder.org/{a_name}", lines=True)
+
+            # events-2019-06-12.jsonl has mixed rows: with and without origin value
+            if a_name == "events-2019-06-12.jsonl":
+                new_launches['origin'].fillna('mybinder.org', inplace=True)
+            # in some archives Gist launches have wrong provider (GitHub)
+            elif a_name == "events-2018-11-25.jsonl":
+                frame.loc[frame['spec'] == "https%3A%2F%2Fgist.github.com%2Fjakevdp/256c3ad937af9ec7d4c65a29e5b6d454",
+                          "provider"] = "Gist"
+                frame.loc[frame['spec'] == "https%3A%2F%2Fgist.github.com%2Fjakevdp/256c3ad937af9ec7d4c65a29e5b6d454",
+                          "spec"] = "jakevdp/256c3ad937af9ec7d4c65a29e5b6d454"
+            elif a_name == "events-2019-01-28.jsonl":
+                frame.loc[frame['spec'] == "loicmarie/ade5ea460444ea0ff72d5c94daa14500",
+                          "provider"] = "Gist"
+            elif a_name == "events-2019-02-22.jsonl":
+                frame.loc[frame['spec'] == "minrk/6d61e5edfa4d2947b0ee8c1be8e79154",
+                          "provider"] = "Gist"
+
             new_launches = frame[a_count_saved:]
             new_launches_count = len(new_launches)
             assert new_launches_count == a_count-a_count_saved
