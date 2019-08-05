@@ -43,8 +43,8 @@ class FeaturedProjectModelView(CreatedByGesisModelView):
 
 
 class RepoModelView(BaseModelView):
-    column_list = ('provider_namespace', 'repo_url', 'description')
-    column_searchable_list = ['provider_namespace']
+    column_list = ('provider_namespace', 'repo_url', 'last_ref', 'description')
+    column_searchable_list = ['provider_namespace', 'last_ref']
     column_editable_list = ['description']
 
 

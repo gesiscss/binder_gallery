@@ -191,19 +191,24 @@ class RepoMixin(object):
         return parts
 
     @cached_property
+    def repo_namespace(self):
+        org, repo_name = self.spec_parts[:2]
+        return org, repo_name
+
+    @cached_property
     def repo_url(self):
         if self.provider_prefix == 'zenodo':
             repo_url = self.spec_parts[3]
         if self.provider_prefix == 'git':
             repo_url = self.spec_parts[3]
         elif self.provider_prefix == 'gh':
-            org, repo_name = self.spec_parts[:2]
+            org, repo_name = self.repo_namespace
             repo_url = f'https://www.github.com/{org}/{repo_name}'
         elif self.provider_prefix == 'gl':
-            org, repo_name = self.spec_parts[:2]
+            org, repo_name = self.repo_namespace
             repo_url = f'https://www.gitlab.com/{org}/{repo_name}'
         elif self.provider_prefix == 'gist':
-            user_name, gist_id = self.spec_parts[:2]
+            user_name, gist_id = self.repo_namespace
             repo_url = f'https://gist.github.com/{user_name}/{gist_id}'
         return repo_url
 
@@ -257,10 +262,11 @@ class Repo(RepoMixin, db.Model):
     id = db.Column(db.Integer, primary_key=True)
     # http://flask-sqlalchemy.pocoo.org/2.3/models/#one-to-many-relationships
     launches = db.relationship('BinderLaunch',
-                               backref=db.backref('detail', lazy='joined'),
+                               backref=db.backref('detail', lazy='select'),
                                lazy='dynamic')
     provider_namespace = db.Column(db.String, unique=True, index=True)  # provider_prefix/namespace
     description = db.Column(db.Text)
+    last_ref = db.Column(db.String, default="master", server_default="master")  # last launched ref
 
     def __repr__(self):
         return f'{self.id}: {self.provider_namespace}'
@@ -272,17 +278,28 @@ class Repo(RepoMixin, db.Model):
                 return prefix
         raise ValueError(f'{self.provider_namespace} is not valid.')
 
+    @cached_property
+    def provider(self):
+        for provider_name, prefix in PROVIDER_PREFIXES.items():
+            if self.provider_namespace.startswith(prefix+'/'):
+                return provider_name
+        raise ValueError(f'{self.provider_namespace} is not valid.')
+
     @property
     def provider_spec(self):
-        # without real ref information
-        return self.provider_namespace + "/ref"
+        if self.provider_prefix == 'zenodo':
+            # zenodo has no ref info
+            provider_spec = self.provider_namespace
+        else:
+            provider_spec = self.provider_namespace + "/" + self.last_ref
+        return provider_spec
 
     @property
     def spec(self):
-        for prefix in PROVIDER_PREFIXES.values():
-            if self.provider_spec.startswith(prefix+'/'):
-                return self.provider_spec[len(prefix+'/'):]
-        raise ValueError(f'{self.provider_spec} is not valid.')
+        return self.provider_spec[len(self.provider_prefix+'/'):]
+
+    # def get_binder_url(self, spec):
+    #     return f'{app.default_binder_url}/v2/{self.provider_prefix}/{spec}'
 
 
 @architect.install('partition', type='range', subtype='date', constraint='year', column='timestamp', orm='sqlalchemy', db=app.config['SQLALCHEMY_DATABASE_URI'])

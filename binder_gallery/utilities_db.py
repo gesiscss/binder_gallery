@@ -1,7 +1,8 @@
 from datetime import datetime, timedelta
 from sqlalchemy.orm import load_only
+from sqlalchemy import desc, func
 from . import cache, app
-from .models import BinderLaunch, CreatedByGesis, FeaturedProject
+from .models import BinderLaunch, CreatedByGesis, FeaturedProject, Repo
 
 
 def get_projects(table):
@@ -50,40 +51,39 @@ def _get_popular_repos(binder, from_dt, to_dt=None):
     an item in list: [repo_name,org,provider,repo_url,binder_url,description,launch_count]
     :rtype: list
     """
-    query = BinderLaunch.query.options(load_only('repo_id', 'provider', 'spec'))
+    subquery = BinderLaunch.query.\
+               with_entities(BinderLaunch.repo_id,
+                             func.count(BinderLaunch.id).label('launch_count'),
+                             # func.array_agg(BinderLaunch.spec.distinct()).label('specs')
+                             ).\
+               group_by(BinderLaunch.repo_id)
+               # order_by(desc("launch_count"))
 
-    if binder in app.binder_origins:
-        query = query.filter(BinderLaunch.origin.in_(app.binder_origins[binder]['origins']))
+    if binder != "all":
+        subquery = subquery.filter(BinderLaunch.origin.in_(app.binder_origins[binder]['origins']))
 
-    if from_dt is None and to_dt is None:
-        # all time
-        objects = query.all()
-    else:
+    if from_dt is not None or to_dt is not None:
         from_dt = datetime.fromisoformat(from_dt)
         if to_dt is None:
             # until now
             to_dt = datetime.utcnow()
         else:
             to_dt = datetime.fromisoformat(to_dt)
-        # get launch counts in given time range
-        objects = query.filter(BinderLaunch.timestamp.between(from_dt, to_dt)).all()
+        # to get launch counts in given time range
+        subquery = subquery.filter(BinderLaunch.timestamp.between(from_dt, to_dt))
+    # subquery = subquery.limit(5).subquery()
+    subquery = subquery.subquery()
+    repos = Repo.query.filter(Repo.id == subquery.c.repo_id).add_columns(subquery.c.launch_count,
+                                                                         # subquery.c.specs
+                                                                         ).all()
 
-    # aggregate over launch count
-    repos = {}  # {repo_id: [repo_name,org,provider,repo_url,binder_url,description,launch_count]}
-    for o in objects:
-        repo_id = o.repo_id
-        if repo_id in repos:
-            repos[repo_id][-1] += 1
-        else:
-            org, repo_name = o.spec_parts[:2]
-            launch_count = 1
-            repos[repo_id] = [repo_name, org, o.provider, o.repo_url, o.binder_url, o.repo_description, launch_count]
-
-    # order according to launch count
-    repos = list(repos.values())
-    repos.sort(key=lambda x: x[-1], reverse=True)
-
-    return repos
+    data = []
+    for repo, launch_count in repos:
+        org, repo_name = repo.repo_namespace
+        data.append([repo_name, org, repo.provider, repo.repo_url, repo.binder_url, repo.description, launch_count])
+        # data.append([repo_name, org, repo.provider, repo.repo_url, repo.get_binder_url(specs[-1]), repo.description, launch_count])
+    data.sort(key=lambda x: x[-1], reverse=True)
+    return data
 
 
 def get_popular_repos(binder, time_range):

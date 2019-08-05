@@ -161,11 +161,17 @@ class RepoLaunches(RepoLaunchesBase):
                 provider_namespace = launch.provider_namespace
                 repo = Repo.query.filter_by(provider_namespace=provider_namespace).first()
                 description = launch.get_repo_description()
+                if launch.provider_prefix == "zenodo":
+                    last_ref = ""
+                else:
+                    last_ref = launch.spec.split('/')[-1]
                 if repo:
                     repo.launches.append(launch)
                     repo.description = description
+                    repo.last_ref = last_ref
                 else:
-                    repo = Repo(provider_namespace=provider_namespace, description=description, launches=[launch])
+                    repo = Repo(provider_namespace=provider_namespace, description=description,
+                                launches=[launch], last_ref=last_ref)
                     db.session.add(repo)
                 db.session.add(launch)
                 db.session.commit()

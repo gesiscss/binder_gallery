@@ -1,7 +1,7 @@
 import pandas as pd
 
 from time import sleep
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, date
 from sqlalchemy import func
 
 from .models import app, db, Repo, BinderLaunch
@@ -35,11 +35,18 @@ def save_launches(new_launches):
         repo = Repo.query.filter_by(provider_namespace=provider_namespace).first()
         # description = launches[0].get_repo_description()
         description = ""
+        if launches[-1].provider_prefix == "zenodo":
+            last_ref = ""
+        else:
+            last_ref = launches[-1].spec.split('/')[-1]
+
         if repo:
             repo.launches.extend(launches)
             # repo.description = description
+            repo.last_ref = last_ref
         else:
-            repo = Repo(provider_namespace=provider_namespace, description=description, launches=launches)
+            repo = Repo(provider_namespace=provider_namespace, description=description,
+                        launches=launches, last_ref=last_ref)
             db.session.add(repo)
         for launch in launches:
             db.session.add(launch)
@@ -51,7 +58,7 @@ def parse_mybinder_archives(binder='mybinder', all_events=False):
     with app.app_context():
         origins = app.binder_origins[binder]['origins']
         if all_events is True:
-            last_launch_date = datetime(2000, 1, 1).date()
+            last_launch_date = date(2000, 1, 1)
         else:
             # get last saved mybinder launch
             # parse archives after date of last launch
