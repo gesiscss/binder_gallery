@@ -13,19 +13,21 @@
         <h2>Popular Repositories of {{ binder_name }}</h2>
         <div class="tabs_wrapper">
             <ul>
-                {% for time_range, title, popular_repos, total_launches in popular_repos_all %}
-                    <li><a href="#tabs-{{ binder }}-{{ loop.index }}">{{ title }}</a></li>
+                {% for time_range, title, popular_repos, total_launches, load_dynamic in popular_repos_all %}
+                    <li><a href="{% if load_dynamic %}{{ url_for('table', binder=binder, time_range=time_range) }}{% else %}#tabs-{{ binder }}-{{ loop.index }}{% endif %}">{{ title }}</a></li>
                 {% endfor %}
             </ul>
         </div>
-        {% for time_range, title, popular_repos, total_launches in popular_repos_all %}
-            <div id="tabs-{{ binder }}-{{ loop.index }}" class="table-responsive" style="padding: 0;">
+        {% for time_range, title, popular_repos, total_launches, load_dynamic in popular_repos_all %}
+            {% if not load_dynamic %}
+            <div id="tabs-{{ binder }}-{{ loop.index }}" class="table-responsive repos-tabs">
                 {% with binder=binder, table_id=[binder, time_range]|join('-'), repos=popular_repos[:5], launch=True,
                 repos_length=popular_repos|length, time_range=time_range, title=title,
                 total_launches=total_launches, first_launch_ts=first_launch_ts %}
                     {% include "table.html" %}
                 {% endwith %}
             </div>
+            {% endif %}
         {% endfor %}
     </div>
  {% endfor %}
@@ -46,7 +48,18 @@
 <script src="{{ url_for('static', filename='vendor/jquery-ui-1.12.1/jquery-ui.js') }}"></script>
 <script>
     $(function () {
-        $("[id^=tabs-]").tabs();
+        $("[id^=tabs-]").tabs({
+            beforeLoad: function( event, ui ) {
+                var $panel = $(ui.panel);
+                $panel.addClass("table-responsive repos-tabs");
+                if ($panel.is(":empty")) {
+                    $panel.append("<div class='loader' ></div>");
+                }
+                //ui.jqXHR.fail(function() {
+                //    ui.panel.html("Couldn't load this tab.");
+                //});
+            }
+        });
     });
 </script>
 {% endblock extra_js %}

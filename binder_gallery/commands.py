@@ -16,6 +16,7 @@ def create_user(name, password, email="", active=True):
     print(f"User {u.name} is created!")
 
 
+# flask parse-mybinder-archives --all-events mybinder
 @app.cli.command()
 @click.argument('binder', required=False)
 @click.option('--all-events', '-a', is_flag=True, help="Parse all events.")

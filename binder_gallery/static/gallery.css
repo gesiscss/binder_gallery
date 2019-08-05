@@ -15,3 +15,29 @@
     /*padding: 2px 5px;*/
     /*border: 1px solid black;*/
 }
+
+.repos-tabs {
+    padding: 0 !important;
+}
+
+.loader {
+  margin: 50px auto;
+  border: 16px solid #ffffff;
+  border-top: 16px solid #58748f;
+  border-bottom: 16px solid #FF6600;
+  border-radius: 50%;
+  width: 120px;
+  height: 120px;
+  animation: spin 2s linear infinite;
+}
+
+/* Safari */
+@-webkit-keyframes spin {
+  0% { -webkit-transform: rotate(0deg); }
+  100% { -webkit-transform: rotate(360deg); }
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}

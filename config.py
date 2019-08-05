@@ -23,8 +23,8 @@ class Config(object):
         '24h': {'title': 'Last 24 hours', 'show': True},
         '7d': {'title': 'Last week', 'show': True},
         '30d': {'title': 'Last 30 days', 'show': True},
-        '60d': {'title': 'Last 60 days', 'show': True},
-        'all': {'title': 'All time', 'show': True}
+        '60d': {'title': 'Last 60 days', 'show': True, "load_dynamic": True},
+        'all': {'title': 'All time', 'show': True, "load_dynamic": True}
     }
     BINDER_ORIGINS = {
         'gesisbinder': {

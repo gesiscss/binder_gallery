@@ -81,13 +81,16 @@ def gallery():
         popular_repos_all = []
         if not b_data["show"]:
             continue
-        for time_rage, i_data in b_data["intervals"].items():
+        for time_range, i_data in b_data["intervals"].items():
             if not i_data["show"]:
                 continue
-            popular_repos = get_popular_repos(b_name, time_rage)
-            if popular_repos:
-                total_launches = sum([l[-1] for l in popular_repos])
-                popular_repos_all.append((time_rage, i_data["title"], popular_repos, total_launches))
+            if i_data.get("load_dynamic", False):
+                popular_repos_all.append((time_range, i_data["title"], [], 0, True))
+            else:
+                popular_repos = get_popular_repos(b_name, time_range)
+                if popular_repos:
+                    total_launches = sum([l[-1] for l in popular_repos])
+                    popular_repos_all.append((time_range, i_data["title"], popular_repos, total_launches, False))
         if popular_repos_all:
             popular_repos_all_binders[b_name] = [b_data['display_name'],
                                                  popular_repos_all,
@@ -121,6 +124,31 @@ def view_all(binder, time_range):
                     'total_launches': total_launches,
                     'popular_repos': popular_repos})
     return render_template('view_all.html', **context)
+
+
+@app.route('/table/<string:binder>/<string:time_range>/')
+def table(binder, time_range):
+    if binder not in app.binder_origins \
+       or time_range not in app.binder_origins[binder]["intervals"] \
+       or not app.binder_origins[binder]["intervals"][time_range]['show']:
+        abort(404)
+
+    popular_repos = get_popular_repos(binder, time_range)
+    total_launches = sum([l[-1] for l in popular_repos])
+
+    context = get_default_template_context()
+    context.update({'active': 'gallery',
+                    'binder': binder,
+                    'time_range': time_range,
+                    'table_id': '-'.join([binder, time_range]),
+                    'title': app.binder_origins[binder]["intervals"][time_range]["title"],
+                    'launch': True,
+                    'first_launch_ts': get_first_launch_ts(binder),
+                    'total_launches': total_launches,
+                    'repos': popular_repos[:5],
+                    'repos_length': len(popular_repos),
+                    })
+    return render_template('table.html', **context)
 
 
 @app.errorhandler(404)
