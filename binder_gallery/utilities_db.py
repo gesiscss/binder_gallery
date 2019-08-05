@@ -119,7 +119,7 @@ def get_launches_query(from_dt, to_dt=None):
 
     query = BinderLaunch.query. \
         filter(BinderLaunch.timestamp.between(from_dt, to_dt)). \
-        order_by(BinderLaunch.timestamp)
+        order_by(BinderLaunch.timestamp, BinderLaunch.id)
 
     return query
 
@@ -132,6 +132,8 @@ def get_launches_paginated(from_dt, to_dt=None):
     # https://flask-sqlalchemy.palletsprojects.com/en/2.x/api/#flask_sqlalchemy.BaseQuery
     # If page or per_page are None, they will be retrieved from the request query.
     # ex: ?page=5
+    # NOTE: it is very important to have both id and timestamp in order_by, if we had only timestamp,
+    # it is possible to get some data double
     launches = query.paginate(per_page=app.config.get("PER_PAGE", 100))
 
     return launches
