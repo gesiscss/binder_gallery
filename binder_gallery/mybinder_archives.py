@@ -98,7 +98,7 @@ def parse_mybinder_archives(binder='mybinder', all_events=False):
 
             # events-2019-06-12.jsonl has mixed rows: with and without origin value
             if a_name == "events-2019-06-12.jsonl":
-                new_launches['origin'].fillna('mybinder.org', inplace=True)
+                frame['origin'].fillna('mybinder.org', inplace=True)
             # in some archives Gist launches have wrong provider (GitHub)
             elif a_name == "events-2018-11-25.jsonl":
                 frame.loc[frame['spec'] == "https%3A%2F%2Fgist.github.com%2Fjakevdp/256c3ad937af9ec7d4c65a29e5b6d454",
