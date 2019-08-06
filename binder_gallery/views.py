@@ -107,7 +107,7 @@ def gallery():
 
 @app.route('/<string:binder>/<string:time_range>/')
 def view_all(binder, time_range):
-    if binder not in app.binder_origins \
+    if (binder not in app.binder_origins and binder != 'all') \
        or time_range not in app.detail_pages\
        or not app.detail_pages[time_range]['show']:
         abort(404)

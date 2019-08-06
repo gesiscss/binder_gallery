@@ -157,9 +157,10 @@ def get_launches(from_dt, to_dt=None):
 
 @cache.memoize(timeout=None)
 def get_first_launch_ts(binder):
-    first_launch = BinderLaunch.query.\
-                   with_entities(BinderLaunch.timestamp).\
-                   order_by(BinderLaunch.timestamp).\
-                   filter(BinderLaunch.origin.in_(app.binder_origins[binder]['origins'])).\
-                   first()
+    query = BinderLaunch.query.\
+            with_entities(BinderLaunch.timestamp).\
+            order_by(BinderLaunch.timestamp)
+    if binder != "all":
+        query = query.filter(BinderLaunch.origin.in_(app.binder_origins[binder]['origins']))
+    first_launch = query.first()
     return first_launch[0] if first_launch else None
