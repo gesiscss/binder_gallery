@@ -10,7 +10,7 @@
 
 {% for binder, (binder_title, popular_repos_all, first_launch_ts) in popular_repos_all_binders.items() %}
     <div id="tabs-{{ binder }}">
-        <h2>{{ binder_title }}</h2>
+        <h2>{{ binder_title|safe }}</h2>
         {% set tabs_count = popular_repos_all|length %}
         {% if tabs_count > 1 %}
         <div class="tabs_wrapper">

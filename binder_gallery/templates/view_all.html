@@ -7,7 +7,7 @@
 {% block main %}
     {{ super() }}
 
-    <h2>{{ title }}</h2>
+    <h2>{{ title|safe }}</h2>
     <div class="table-responsive">
         {% with table_id="repos-table", repos=popular_repos, launch=True %}
             {% include "table.html" %}
