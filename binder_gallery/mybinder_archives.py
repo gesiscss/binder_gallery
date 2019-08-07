@@ -7,7 +7,7 @@ from sqlalchemy import func
 from .models import app, db, Repo, BinderLaunch
 
 
-def save_launches(new_launches):
+def save_launches(new_launches, with_description):
     provider_namespaces = {}
     for i, data in new_launches.sort_index(ascending=True).iterrows():
         origin = data.get('origin', 'mybinder.org')
@@ -33,8 +33,7 @@ def save_launches(new_launches):
 
     for provider_namespace, launches in provider_namespaces.items():
         repo = Repo.query.filter_by(provider_namespace=provider_namespace).first()
-        # description = launches[0].get_repo_description()
-        description = ""
+        description = launches[0].get_repo_description() if with_description else ""
         if launches[-1].provider_prefix == "zenodo":
             last_ref = ""
         else:
@@ -42,7 +41,8 @@ def save_launches(new_launches):
 
         if repo:
             repo.launches.extend(launches)
-            # repo.description = description
+            if with_description:
+                repo.description = description
             repo.last_ref = last_ref
         else:
             repo = Repo(provider_namespace=provider_namespace, description=description,
@@ -53,7 +53,7 @@ def save_launches(new_launches):
     db.session.commit()
 
 
-def parse_mybinder_archives(binder='mybinder', all_events=False):
+def parse_mybinder_archives(binder='mybinder', all_events=False, with_description=False):
     app.logger.info(f"parse_mybinder_archives: started at {datetime.utcnow()} [UTC]")
     with app.app_context():
         origins = app.binder_origins[binder]['origins']
@@ -115,7 +115,7 @@ def parse_mybinder_archives(binder='mybinder', all_events=False):
             new_launches = frame[a_count_saved:]
             new_launches_count = len(new_launches)
             assert new_launches_count == a_count-a_count_saved
-            save_launches(new_launches)
+            save_launches(new_launches, with_description)
             app.logger.info(f"parse_mybinder_archives: "
                             f"saved {new_launches_count} new launches for {a_name} - {a_date}")
             total_count += new_launches_count
