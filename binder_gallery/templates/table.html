@@ -32,7 +32,7 @@
     <tfoot>
         <tr>
             <td colspan="{{ colspan }}">
-                {% if 6000 > repos_length > 5 %}
+                {% if repos_length > 5 %}
                 <a href="{{ url_for('view_all', binder=binder, time_range=time_range) }}">View all ({{ title }})</a>
                 {% endif %}
                 <span style="float: right;">

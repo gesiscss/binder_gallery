@@ -92,7 +92,7 @@ def gallery():
                     total_launches = sum([l[-1] for l in popular_repos])
                     popular_repos_all.append((time_range, i_data["title"], popular_repos, total_launches, False))
         if popular_repos_all:
-            popular_repos_all_binders[b_name] = [b_data['display_name'],
+            popular_repos_all_binders[b_name] = [b_data['title'],
                                                  popular_repos_all,
                                                  get_first_launch_ts(b_name)]
 

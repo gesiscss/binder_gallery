@@ -29,14 +29,14 @@ class Config(object):
     BINDER_ORIGINS = {
         'gesisbinder': {
             'show': True,
-            'display_name': 'GESIS Binder',
+            'title': 'Popular Repositories of GESIS Binder',
             # origin '' is for those before version 3 (without origin)
             'origins': ('notebooks.gesis.org', ''),
             'intervals': intervals
         },
         'mybinder': {
             'show': True,
-            'display_name': 'mybinder.org',
+            'title': 'Popular Repositories of mybinder.org',
             # origin 'mybinder.org' is for mybinder.org events before version 3
             'origins': ('gke.mybinder.org', 'ovh.mybinder.org', 'binder.mybinder.ovh', 'mybinder.org'),
             'intervals': intervals

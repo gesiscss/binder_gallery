@@ -8,9 +8,11 @@
 {% block main %}
     {{ super() }}
 
-{% for binder, (binder_name, popular_repos_all, first_launch_ts) in popular_repos_all_binders.items() %}
+{% for binder, (binder_title, popular_repos_all, first_launch_ts) in popular_repos_all_binders.items() %}
     <div id="tabs-{{ binder }}">
-        <h2>Popular Repositories of {{ binder_name }}</h2>
+        <h2>{{ binder_title }}</h2>
+        {% set tabs_count = popular_repos_all|length %}
+        {% if tabs_count > 1 %}
         <div class="tabs_wrapper">
             <ul>
                 {% for time_range, title, popular_repos, total_launches, load_dynamic in popular_repos_all %}
@@ -18,6 +20,7 @@
                 {% endfor %}
             </ul>
         </div>
+        {% endif %}
         {% for time_range, title, popular_repos, total_launches, load_dynamic in popular_repos_all %}
             {% if not load_dynamic %}
             <div id="tabs-{{ binder }}-{{ loop.index }}" class="table-responsive repos-tabs">
