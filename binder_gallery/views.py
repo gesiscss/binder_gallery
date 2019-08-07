@@ -111,7 +111,8 @@ def view_all(binder, time_range):
        or time_range not in app.detail_pages\
        or not app.detail_pages[time_range]['show']:
         abort(404)
-    title = app.detail_pages[time_range]['title']
+    title = app.binder_origins[binder]["intervals"][time_range].get("detail_title",
+                                                                    app.detail_pages[time_range]['title'])
 
     context = get_default_template_context()
     popular_repos = get_popular_repos(binder, time_range)
