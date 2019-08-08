@@ -26,12 +26,21 @@ def get_binders(fetch_versions=True):
     # first fetch versions, because it is cached and otherwise cached value overwrites the selected info
     if fetch_versions is True:
         binders = get_binder_versions(binders)
+    main_versions = None
+    for binder in binders:
+        if binder.get('main', 'false') == 'true':
+            main_versions = binder['versions']
+            break
     # then set selected binder
     selected_binder = request.cookies.get('selected_binder') or app.default_binder_url
     for binder in binders:
         binder['selected'] = 'false'
         if binder['name'] == selected_binder or binder['url'] == selected_binder:
             binder['selected'] = 'true'
+        if main_versions is not None and binder.get('main', 'false') != 'true' and binder['versions'] == main_versions:
+            binder['uptodate'] = True
+        else:
+            binder['uptodate'] = False
     return binders
 
 

@@ -14,7 +14,7 @@ class Config(object):
     # list of binders. default is GESIS binder.
     BINDERS = [
         {'name': 'GESIS', 'url': 'https://notebooks.gesis.org/binder', 'default': "true"},
-        {'name': 'mybinder.org', 'url': 'https://mybinder.org'},
+        {'name': 'mybinder.org', 'url': 'https://mybinder.org', 'main': 'true'},
         {'name': 'Pangeo', 'url': 'https://binder.pangeo.io'},
     ]
 
