@@ -9,8 +9,7 @@
                     autocomplete="off">
                 {% for binder in binders %}
                     <option value="{{ binder['url'] }}" data-name="{{ binder['name'] }}" data-versions="{{ binder['versions'] }}"
-                            {% if binder['selected'] == 'true' %}selected="selected"{% endif %}>
-                    {{ binder['name'] }}{% if binder['uptodate'] == True %}.{% endif %}
+                            {% if binder['selected'] == 'true' %}selected="selected"{% endif %}>{{ binder['name'] }}
                 {% endfor %}
             </select>
 
