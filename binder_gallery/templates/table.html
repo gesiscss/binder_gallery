@@ -11,7 +11,7 @@
     <tbody>
     {% for repo_data in repos %}
         {# repo_name, org, provider, repo_url, binder_url, description, launches  #}
-        <tr data-description="{{ repo_data[5] }}" {% if repo_data[5] %}style="cursor: pointer;"{% endif %}>
+        <tr data-description="{{ repo_data[5] }}" {% if repo_data[5] %}{% endif %}>
             <td class="col-lg-6 col-sm-6 col-xs-8"><a href="{{ repo_data[3] }}" target="_blank">{{ repo_data[0] }}</a></td>
             <td class="col-lg-2 col-sm-2 hidden-xs">{{ repo_data[1] }}</td>
             <td class="col-lg-2 col-sm-2 hidden-xs">{{ repo_data[2] }}</td>
@@ -35,7 +35,7 @@
                 {% if repos_length > 5 %}
                 <a href="{{ url_for('view_all', binder=binder, time_range=time_range) }}">View all ({{ title }})</a>
                 {% endif %}
-                <span style="float: right;">
+                <span class="total-launches-gallery">
                     {{ total_launches }} launches over {{ repos_length }}
                     {% if repos_length > 1 %} repos{% else %} repo{% endif %}
                     {% if time_range == "all" %} since {{ first_launch_ts.strftime('%d.%m.%Y') }}{% endif %}

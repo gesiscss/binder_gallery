@@ -15,7 +15,7 @@
 
     {% set repos_length = popular_repos|length %}
     <p>
-        <span style="float: left;">
+        <span class="total-launches-view-all">
             {{ total_launches }} launches over {{ repos_length }}
             {% if repos_length > 1 %} repos{% else %} repo{% endif %}
             {% if time_range == "all" %} since {{ first_launch_ts.strftime('%d.%m.%Y') }}{% endif %}

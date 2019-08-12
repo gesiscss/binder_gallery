@@ -41,3 +41,23 @@
   0% { transform: rotate(0deg); }
   100% { transform: rotate(360deg); }
 }
+
+.repos-tabs tr{
+    cursor: pointer;
+}
+/*launches over repo in table*/
+.total-launches-gallery{
+    float: right;
+}
+/* launches over repos row in view all*/
+.total-launches-view-all{
+    float: left;
+}
+
+.selectbox{
+    margin-top: 15px;
+}
+
+.error-background{
+    background-color: #ffffff;
+}
