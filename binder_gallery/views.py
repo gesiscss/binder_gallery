@@ -3,6 +3,7 @@ import os
 from flask import render_template, abort, make_response, request
 from .utilities_db import get_all_projects, get_popular_repos, get_first_launch_ts
 from . import app, cache
+from slugify import slugify
 
 
 @cache.cached(timeout=300, key_prefix='binder_versions')
@@ -101,7 +102,9 @@ def gallery():
                     total_launches = sum([l[-1] for l in popular_repos])
                     popular_repos_all.append((time_range, i_data["title"], popular_repos, total_launches, False))
         if popular_repos_all:
+            url_title = slugify(b_data['title'])
             popular_repos_all_binders[b_name] = [b_data['title'],
+                                                 url_title,
                                                  popular_repos_all,
                                                  get_first_launch_ts(b_name)]
 

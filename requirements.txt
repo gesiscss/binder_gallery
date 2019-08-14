@@ -13,3 +13,4 @@ requests==2.21.0
 flask-caching==1.7.1
 gunicorn==19.9.0
 pandas==0.23.4
+python-slugify==3.0.3
