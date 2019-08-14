@@ -1,7 +1,6 @@
 import jwt
 import architect
 from requests import get
-from requests.exceptions import Timeout
 from bs4 import BeautifulSoup
 from flask_login import UserMixin
 from werkzeug.security import generate_password_hash, check_password_hash
@@ -245,7 +244,7 @@ class RepoMixin(object):
             return ''
         try:
             page = get(repo_url, timeout=1)
-        except Timeout as e:
+        except Exception:
             return ''
         soup = BeautifulSoup(page.content, 'html.parser')
         about = soup.find('span', itemprop='about')
