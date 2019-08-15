@@ -3,7 +3,6 @@ from sqlalchemy.orm import load_only
 from sqlalchemy import desc, func
 from . import cache, app
 from .models import BinderLaunch, CreatedByGesis, FeaturedProject, Repo
-from slugify import slugify
 
 
 def get_projects(table):
@@ -34,11 +33,11 @@ def get_projects(table):
 @cache.cached(timeout=None, key_prefix='all_projects')
 def get_all_projects():
     all_projects = []
-    for title, url_title, model_ in [('Created by GESIS', slugify('Created by GESIS'), CreatedByGesis),
-                          ('Featured Projects', slugify('Featured Projects'), FeaturedProject)]:
+    for title, model_ in [('Created by GESIS', CreatedByGesis),
+                          ('Featured Projects', FeaturedProject)]:
         projects = get_projects(model_)
         if projects:
-            all_projects.append((title, url_title, projects))
+            all_projects.append((title, projects))
     return all_projects
 
 

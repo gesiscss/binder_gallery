@@ -8,12 +8,10 @@
 {% block main %}
     {{ super() }}
 
-{% for binder, (binder_title, url_title, popular_repos_all, first_launch_ts) in popular_repos_all_binders.items() %}
+{% for binder, (binder_title, popular_repos_all, first_launch_ts) in popular_repos_all_binders.items() %}
     <div id="tabs-{{ binder }}">
-        <h2 id="{{ url_title }}">{{ binder_title|safe }}
-            <a class="anchorjs-link " aria-label="Anchor" data-anchorjs-icon="" href="#{{ url_title }}" style="font: 1em/1 anchorjs-icons; padding-left: 0.375em;"></a>
-        </h2>
-            {% set tabs_count = popular_repos_all|length %}
+        <h2>{{ binder_title|safe }}</h2>
+        {% set tabs_count = popular_repos_all|length %}
         {% if tabs_count > 1 %}
         <div class="tabs_wrapper">
             <ul>
@@ -37,12 +35,10 @@
     </div>
  {% endfor %}
 
-    {% for title, url_title, repos in projects %}
+    {% for title, repos in projects %}
     {% if repos %}
     <div class="table-responsive">
-        <h2 id="{{ url_title }}"> {{ title }}
-        <a class="anchorjs-link " aria-label="Anchor" data-anchorjs-icon="" href="#{{ url_title }}" style="font: 1em/1 anchorjs-icons; padding-left: 0.375em;"></a>
-        </h2>
+        <h2> {{ title }}</h2>
         {% with table_id=loop.index, repos=repos %}
         {% include "table.html" %}
         {% endwith %}
@@ -53,7 +49,6 @@
 
 {% block extra_js %}
 <script src="{{ url_for('static', filename='vendor/jquery-ui-1.12.1/jquery-ui.js') }}"></script>
-<script src="{{ url_for('static', filename='scripts/anchorjs-4.2.0/anchor.js') }}"></script>
 <script>
     $(function () {
         $("[id^=tabs-]").tabs({
@@ -70,8 +65,4 @@
         });
     });
 </script>
-
-    <script>
-    anchors.add('h2', 'h3').remove('.used-by-label');
-  </script>
 {% endblock extra_js %}
