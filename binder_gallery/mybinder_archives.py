@@ -58,6 +58,7 @@ def parse_mybinder_archives(binder='mybinder', all_events=False, with_descriptio
     with app.app_context():
         origins = app.binder_origins[binder]['origins']
         if all_events is True:
+            last_launch_timestamp = None
             last_launch_date = date(2000, 1, 1)
         else:
             # get last saved mybinder launch
@@ -65,7 +66,8 @@ def parse_mybinder_archives(binder='mybinder', all_events=False, with_descriptio
             last_launch = BinderLaunch.query.\
                           filter(BinderLaunch.origin.in_(origins)).\
                           order_by(BinderLaunch.timestamp.desc()).first()  # with_entities(BinderLaunch.timestamp)
-            last_launch_date = last_launch.timestamp.date()
+            last_launch_timestamp = last_launch.timestamp
+            last_launch_date = last_launch_timestamp.date()
 
         # get new or unfinished archives to parse
         index = pd.read_json("https://archive.analytics.mybinder.org/index.jsonl", lines=True)
@@ -81,20 +83,29 @@ def parse_mybinder_archives(binder='mybinder', all_events=False, with_descriptio
                             filter(BinderLaunch.origin.in_(origins),
                                    func.DATE(BinderLaunch.timestamp) == a_date).\
                             count()
+
+            frame = pd.read_json(f"https://archive.analytics.mybinder.org/{a_name}", lines=True)
+            frame = frame.loc[
+                (frame['timestamp'] >= datetime.combine(a_date, datetime.min.time())) &
+                (frame['timestamp'] <= datetime.combine(a_date, datetime.max.time()))
+                ]
+            # real archive count, because some archives have launch data from previous day (eg events-2019-02-22.jsonl)
+            # those launches from prev day, they will be saved into database, because we save the whole frame
+            a_count_real = len(frame)
+            a_count_diff = a_count - a_count_real
+            a_count = a_count_real
             if a_count_saved > a_count:
                 app.logger.error(f"parse_mybinder_archives: "
                                  f"Error saved ({a_count_saved}) > in archive ({a_count}) for {a_name} - {a_date}")
                 continue
             elif a_count_saved == a_count:
                 app.logger.info(f"parse_mybinder_archives: "
-                                f"everything is already saved {a_count} - {a_count_saved} = {a_count-a_count_saved} "
+                                f"everything is already saved. {a_count} - {a_count_saved} = {a_count-a_count_saved} "
                                 f"launches of {a_name} - {a_date}")
                 continue
             app.logger.info(f"parse_mybinder_archives: "
-                            f"parsing {a_count} - {a_count_saved} = {a_count-a_count_saved} "
+                            f"parsing {a_count} - {a_count_saved} = {a_count-a_count_saved} (?+{a_count_diff})"
                             f"launches of {a_name} - {a_date}")
-
-            frame = pd.read_json(f"https://archive.analytics.mybinder.org/{a_name}", lines=True)
 
             # events-2019-06-12.jsonl has mixed rows: with and without origin value
             if a_name == "events-2019-06-12.jsonl":
@@ -112,9 +123,17 @@ def parse_mybinder_archives(binder='mybinder', all_events=False, with_descriptio
                 frame.loc[frame['spec'] == "minrk/6d61e5edfa4d2947b0ee8c1be8e79154",
                           "provider"] = "Gist"
 
-            new_launches = frame[a_count_saved:]
+            if last_launch_timestamp is not None:
+                # delete launches of last launch in order to prevent double data in db
+                # they will be re-saved
+                # because archives are updated partially during the day and it is possible last launches in
+                # batch x have the same timestamp with first launches in batch x+1
+                deleted = BinderLaunch.query.filter(BinderLaunch.timestamp == last_launch_timestamp).delete()
+                db.session.commit()
+                new_launches = frame.loc[frame['timestamp'] >= last_launch_timestamp]
+            else:
+                new_launches = frame
             new_launches_count = len(new_launches)
-            assert new_launches_count == a_count-a_count_saved
             save_launches(new_launches, with_description)
             app.logger.info(f"parse_mybinder_archives: "
                             f"saved {new_launches_count} new launches for {a_name} - {a_date}")
