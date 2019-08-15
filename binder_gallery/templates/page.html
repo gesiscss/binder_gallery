@@ -21,6 +21,7 @@
 
   <title>{% block title %}GESIS Notebooks ({{version}}){% endblock %}</title>
   {% block head %}
+  <script src="{{ url_for('static', filename='vendor/anchor.min.js') }}"></script>
   <script src="{{ url_for('static', filename='vendor/jquery-3.2.1.min.js') }}"></script>
   <script src="{{ url_for('static', filename='vendor/bootstrap/js/bootstrap.min.js') }}"></script>
   <link href="{{ url_for('static', filename='vendor/bootstrap/css/bootstrap.min.css') }}" rel="stylesheet" />
@@ -100,6 +101,15 @@
     {% endblock footer %}
 
     {% endblock body %}
+
+    <script>
+        document.addEventListener("DOMContentLoaded", function(event) {
+            {# https://www.bryanbraun.com/anchorjs #}
+            {#anchors.options.icon = '#';#}
+            anchors.options.class = 'heading-anchor';
+            anchors.add('h2');
+        });
+    </script>
 
     <script src="{{ url_for('static', filename='scripts/gesis_nav.js') }}"></script>
     <script src="{{ url_for('static', filename='scripts/description_row.js') }}"></script>

@@ -61,3 +61,8 @@
 .error-background{
     background-color: #ffffff;
 }
+
+a.heading-anchor {
+    color: #FF6600;
+    text-decoration: none !important;
+}
