@@ -11,8 +11,6 @@ def save_launches(new_launches, with_description):
     provider_namespaces = {}
     for i, data in new_launches.sort_index(ascending=True).iterrows():
         origin = data.get('origin', 'mybinder.org')
-        if origin == "notebooks.gesis.org" or origin == "notebooks-test.gesis.org":
-            continue
         timestamp = data['timestamp'].replace(tzinfo=None)
         launch = BinderLaunch(schema=data['schema'],
                               version=data['version'],
@@ -84,11 +82,29 @@ def parse_mybinder_archives(binder='mybinder', all_events=False, with_descriptio
                                    func.DATE(BinderLaunch.timestamp) == a_date).\
                             count()
 
-            frame = pd.read_json(f"https://archive.analytics.mybinder.org/{a_name}", lines=True)
-            frame = frame.loc[
-                (frame['timestamp'] >= datetime.combine(a_date, datetime.min.time())) &
-                (frame['timestamp'] <= datetime.combine(a_date, datetime.max.time()))
-                ]
+            _frame = pd.read_json(f"https://archive.analytics.mybinder.org/{a_name}", lines=True)
+            # events-2019-06-12.jsonl has mixed rows: with and without origin value
+            if a_name == "events-2019-06-12.jsonl":
+                _frame['origin'].fillna('mybinder.org', inplace=True)
+            # in some archives Gist launches have wrong provider (GitHub)
+            elif a_name == "events-2018-11-25.jsonl":
+                _frame.loc[_frame['spec'] == "https%3A%2F%2Fgist.github.com%2Fjakevdp/256c3ad937af9ec7d4c65a29e5b6d454",
+                           "provider"] = "Gist"
+                _frame.loc[_frame['spec'] == "https%3A%2F%2Fgist.github.com%2Fjakevdp/256c3ad937af9ec7d4c65a29e5b6d454",
+                           "spec"] = "jakevdp/256c3ad937af9ec7d4c65a29e5b6d454"
+            elif a_name == "events-2019-01-28.jsonl":
+                _frame.loc[_frame['spec'] == "loicmarie/ade5ea460444ea0ff72d5c94daa14500",
+                           "provider"] = "Gist"
+            elif a_name == "events-2019-02-22.jsonl":
+                _frame.loc[_frame['spec'] == "minrk/6d61e5edfa4d2947b0ee8c1be8e79154",
+                           "provider"] = "Gist"
+            # get launches of mybinder federation of this date
+            frame = _frame.loc[_frame['origin'].isin(origins) &
+                               (_frame['timestamp'] >= datetime.combine(a_date, datetime.min.time())) &
+                               (_frame['timestamp'] <= datetime.combine(a_date, datetime.max.time()))]
+            app.logger.info(f"parse_mybinder_archives: "
+                            f"{len(_frame)} - {len(frame)} = {len(_frame) - len(frame)} "
+                            f"launches are excluded from frame.")
             # real archive count, because some archives have launch data from previous day (eg events-2019-02-22.jsonl)
             # those launches from prev day, they will be saved into database, because we save the whole frame
             a_count_real = len(frame)
@@ -104,32 +120,21 @@ def parse_mybinder_archives(binder='mybinder', all_events=False, with_descriptio
                                 f"launches of {a_name} - {a_date}")
                 continue
             app.logger.info(f"parse_mybinder_archives: "
-                            f"parsing {a_count} - {a_count_saved} = {a_count-a_count_saved} (?+{a_count_diff})"
+                            f"parsing {a_count} - {a_count_saved} = {a_count-a_count_saved} (?+{a_count_diff}) "
                             f"launches of {a_name} - {a_date}")
-
-            # events-2019-06-12.jsonl has mixed rows: with and without origin value
-            if a_name == "events-2019-06-12.jsonl":
-                frame['origin'].fillna('mybinder.org', inplace=True)
-            # in some archives Gist launches have wrong provider (GitHub)
-            elif a_name == "events-2018-11-25.jsonl":
-                frame.loc[frame['spec'] == "https%3A%2F%2Fgist.github.com%2Fjakevdp/256c3ad937af9ec7d4c65a29e5b6d454",
-                          "provider"] = "Gist"
-                frame.loc[frame['spec'] == "https%3A%2F%2Fgist.github.com%2Fjakevdp/256c3ad937af9ec7d4c65a29e5b6d454",
-                          "spec"] = "jakevdp/256c3ad937af9ec7d4c65a29e5b6d454"
-            elif a_name == "events-2019-01-28.jsonl":
-                frame.loc[frame['spec'] == "loicmarie/ade5ea460444ea0ff72d5c94daa14500",
-                          "provider"] = "Gist"
-            elif a_name == "events-2019-02-22.jsonl":
-                frame.loc[frame['spec'] == "minrk/6d61e5edfa4d2947b0ee8c1be8e79154",
-                          "provider"] = "Gist"
 
             if last_launch_timestamp is not None:
                 # delete launches of last launch in order to prevent double data in db
                 # they will be re-saved
                 # because archives are updated partially during the day and it is possible last launches in
                 # batch x have the same timestamp with first launches in batch x+1
-                deleted = BinderLaunch.query.filter(BinderLaunch.timestamp == last_launch_timestamp).delete()
+                deleted = BinderLaunch.query.\
+                          filter(BinderLaunch.origin.in_(origins)).\
+                          filter(BinderLaunch.timestamp == last_launch_timestamp).delete()
                 db.session.commit()
+                sleep(30)
+                app.logger.info(f"parse_mybinder_archives: "
+                                f"deleted last {len(deleted)} launches of {a_name} - {a_date}")
                 new_launches = frame.loc[frame['timestamp'] >= last_launch_timestamp]
             else:
                 new_launches = frame
@@ -138,7 +143,9 @@ def parse_mybinder_archives(binder='mybinder', all_events=False, with_descriptio
             app.logger.info(f"parse_mybinder_archives: "
                             f"saved {new_launches_count} new launches for {a_name} - {a_date}")
             total_count += new_launches_count
+            # sleepig half a second is also good to catch container logs
             sleep(30)
 
     app.logger.info(f"parse_mybinder_archives: done at {datetime.utcnow()} [UTC]: "
                     f"total {total_count} new launches saved")
+    sleep(60)
