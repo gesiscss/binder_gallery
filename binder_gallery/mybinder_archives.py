@@ -134,7 +134,7 @@ def parse_mybinder_archives(binder='mybinder', all_events=False, with_descriptio
                 db.session.commit()
                 sleep(30)
                 app.logger.info(f"parse_mybinder_archives: "
-                                f"deleted last {len(deleted)} launches of {a_name} - {a_date}")
+                                f"deleted last {deleted} launches of {a_name} - {a_date}")
                 new_launches = frame.loc[frame['timestamp'] >= last_launch_timestamp]
             else:
                 new_launches = frame
