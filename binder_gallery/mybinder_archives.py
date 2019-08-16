@@ -129,9 +129,11 @@ def parse_mybinder_archives(binder='mybinder', all_events=False, with_descriptio
                 # they will be re-saved
                 # because archives are updated partially during the day and it is possible last launches in
                 # batch x have the same timestamp with first launches in batch x+1
+                # https://docs.sqlalchemy.org/en/latest/orm/query.html?highlight=delete#sqlalchemy.orm.query.Query.delete
                 deleted = BinderLaunch.query.\
                           filter(BinderLaunch.origin.in_(origins)).\
-                          filter(BinderLaunch.timestamp == last_launch_timestamp).delete()
+                          filter(BinderLaunch.timestamp == last_launch_timestamp).\
+                          delete(synchronize_session=False)
                 db.session.commit()
                 sleep(30)
                 app.logger.info(f"parse_mybinder_archives: "
