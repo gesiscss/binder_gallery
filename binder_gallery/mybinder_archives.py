@@ -123,7 +123,8 @@ def parse_mybinder_archives(binder='mybinder', all_events=False, with_descriptio
                             f"parsing {a_count} - {a_count_saved} = {a_count-a_count_saved} (?+{a_count_diff}) "
                             f"launches of {a_name} - {a_date}")
 
-            if last_launch_timestamp is not None:
+            new_launches = []
+            if last_launch_timestamp is not None and last_launch_date == a_date:
                 # delete launches of last launch in order to prevent double data in db
                 # they will be re-saved
                 # because archives are updated partially during the day and it is possible last launches in
@@ -134,10 +135,12 @@ def parse_mybinder_archives(binder='mybinder', all_events=False, with_descriptio
                 db.session.commit()
                 sleep(30)
                 app.logger.info(f"parse_mybinder_archives: "
-                                f"deleted last {deleted} launches of {a_name} - {a_date}")
+                                f"deleted last {deleted} launches at {last_launch_timestamp} -> {a_name} - {a_date}")
                 new_launches = frame.loc[frame['timestamp'] >= last_launch_timestamp]
-            else:
+            elif a_count_saved == 0:
+                # first time parsing this archive
                 new_launches = frame
+                # new_launches = frame[a_count_saved:]
             new_launches_count = len(new_launches)
             save_launches(new_launches, with_description)
             app.logger.info(f"parse_mybinder_archives: "
@@ -145,6 +148,12 @@ def parse_mybinder_archives(binder='mybinder', all_events=False, with_descriptio
             total_count += new_launches_count
             # sleepig half a second is also good to catch container logs
             sleep(30)
+            a_count_saved = BinderLaunch.query.\
+                            filter(BinderLaunch.origin.in_(origins),
+                                   func.DATE(BinderLaunch.timestamp) == a_date).\
+                            count()
+            app.logger.info(f"parse_mybinder_archives: "
+                            f"there are now total {a_count_saved} launches for {a_name} - {a_date}")
 
     app.logger.info(f"parse_mybinder_archives: done at {datetime.utcnow()} [UTC]: "
                     f"total {total_count} new launches saved")
