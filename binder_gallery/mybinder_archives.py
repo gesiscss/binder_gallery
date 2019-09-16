@@ -83,6 +83,11 @@ def parse_mybinder_archives(binder='mybinder', all_events=False, with_descriptio
                             count()
 
             _frame = pd.read_json(f"https://archive.analytics.mybinder.org/{a_name}", lines=True)
+            if len(_frame) == 0:
+                app.logger.info(f"parse_mybinder_archives: "
+                                f"{a_date} is empty ({a_count})")
+                continue
+
             # events-2019-06-12.jsonl has mixed rows: with and without origin value
             if a_name == "events-2019-06-12.jsonl":
                 _frame['origin'].fillna('mybinder.org', inplace=True)
@@ -106,7 +111,6 @@ def parse_mybinder_archives(binder='mybinder', all_events=False, with_descriptio
                             f"{len(_frame)} - {len(frame)} = {len(_frame) - len(frame)} "
                             f"launches are excluded from frame.")
             # real archive count, because some archives have launch data from previous day (eg events-2019-02-22.jsonl)
-            # those launches from prev day, they will be saved into database, because we save the whole frame
             a_count_real = len(frame)
             a_count_diff = a_count - a_count_real
             a_count = a_count_real
@@ -120,10 +124,14 @@ def parse_mybinder_archives(binder='mybinder', all_events=False, with_descriptio
                                 f"launches of {a_name} - {a_date}")
                 continue
             app.logger.info(f"parse_mybinder_archives: "
-                            f"parsing {a_count} - {a_count_saved} = {a_count-a_count_saved} (?+{a_count_diff}) "
+                            f"parsing {a_count} - {a_count_saved} = {a_count-a_count_saved} (?{a_count_diff}) "
                             f"launches of {a_name} - {a_date}")
 
-            new_launches = []
+            if len(frame) == 0:
+                app.logger.info(f"parse_mybinder_archives: "
+                                f"{a_date} is empty after filtering ({a_count})")
+                continue
+
             if last_launch_timestamp is not None and last_launch_date == a_date:
                 # delete launches of last launch in order to prevent double data in db
                 # they will be re-saved
@@ -138,13 +146,10 @@ def parse_mybinder_archives(binder='mybinder', all_events=False, with_descriptio
                 sleep(30)
                 app.logger.info(f"parse_mybinder_archives: "
                                 f"deleted last {deleted} launches at {last_launch_timestamp} -> {a_name} - {a_date}")
-                new_launches = frame.loc[frame['timestamp'] >= last_launch_timestamp]
-            elif a_count_saved == 0:
-                # first time parsing this archive
-                new_launches = frame
-                # new_launches = frame[a_count_saved:]
-            new_launches_count = len(new_launches)
-            save_launches(new_launches, with_description)
+                frame = frame.loc[frame['timestamp'] >= last_launch_timestamp]
+
+            new_launches_count = len(frame)
+            save_launches(frame, with_description)
             app.logger.info(f"parse_mybinder_archives: "
                             f"saved {new_launches_count} new launches for {a_name} - {a_date}")
             total_count += new_launches_count
