@@ -17,7 +17,7 @@ PROVIDER_PREFIXES = {
     'GitHub': 'gh',  # github.com: repo name or full url + branch/tag/commit
     'GitLab': 'gl',  # gitlab.com: repo name or full url + branch/tag/commit
     'Zenodo': 'zenodo',  # Zenodo DOI
-    'figshare': 'Figshare',
+    'Figshare': 'figshare',
 }
 
 
