@@ -17,6 +17,7 @@ PROVIDER_PREFIXES = {
     'GitHub': 'gh',  # github.com: repo name or full url + branch/tag/commit
     'GitLab': 'gl',  # gitlab.com: repo name or full url + branch/tag/commit
     'Zenodo': 'zenodo',  # Zenodo DOI
+    'figshare': 'Figshare',
 }
 
 
@@ -79,7 +80,10 @@ class ProjectMixin(object):
         elif 'gist.github.com' in provider:
             provider = 'Gist'
         elif 'doi.org' in provider:
-            provider = 'Zenodo'
+            if "zenodo" in repo_name.lower():
+                provider = 'Zenodo'
+            elif "figshare" in repo_name.lower():
+                provider = 'Figshare'
         else:
             provider = 'Git'
         return provider
@@ -161,7 +165,7 @@ class RepoMixin(object):
 
     @cached_property
     def spec_parts(self):
-        if self.provider_prefix == 'zenodo':
+        if self.provider_prefix in ['zenodo', 'figshare']:
             # ref is always ''
             repo_url = f"https://doi.org/{self.spec}"
             parts = ['', self.spec, '', repo_url]
@@ -196,9 +200,7 @@ class RepoMixin(object):
 
     @cached_property
     def repo_url(self):
-        if self.provider_prefix == 'zenodo':
-            repo_url = self.spec_parts[3]
-        if self.provider_prefix == 'git':
+        if self.provider_prefix in ['git', 'zenodo', 'figshare']:
             repo_url = self.spec_parts[3]
         elif self.provider_prefix == 'gh':
             org, repo_name = self.repo_namespace
@@ -286,8 +288,8 @@ class Repo(RepoMixin, db.Model):
 
     @property
     def provider_spec(self):
-        if self.provider_prefix == 'zenodo':
-            # zenodo has no ref info
+        if self.provider_prefix in ['zenodo', 'figshare']:
+            # zenodo and figshare have no ref info
             provider_spec = self.provider_namespace
         else:
             provider_spec = self.provider_namespace + "/" + self.last_ref
@@ -330,8 +332,8 @@ class BinderLaunch(RepoMixin, db.Model):
 
     @property
     def provider_namespace(self):
-        if self.provider_prefix == 'zenodo':
-            # zenodo has no ref info
+        if self.provider_prefix in ["zenodo", "figshare"]:
+            # zenodo and figshare have no ref info
             provider_namespace = self.provider_spec
         else:
             provider_spec_parts = self.provider_spec.split('/')

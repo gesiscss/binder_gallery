@@ -161,7 +161,7 @@ class RepoLaunches(RepoLaunchesBase):
                 provider_namespace = launch.provider_namespace
                 repo = Repo.query.filter_by(provider_namespace=provider_namespace).first()
                 description = launch.get_repo_description()
-                if launch.provider_prefix == "zenodo":
+                if launch.provider_prefix in ["zenodo", "figshare"]:
                     last_ref = ""
                 else:
                     last_ref = launch.spec.split('/')[-1]
