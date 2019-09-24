@@ -52,20 +52,20 @@ def save_launches(new_launches, with_description):
 
 
 def parse_mybinder_archives(binder='mybinder', all_events=False, with_description=False):
-    app.logger.info(f"parse_mybinder_archives: started at {datetime.utcnow()} [UTC]")
+    app.logger.info(f"parse_mybinder_archives: started at {datetime.utcnow()} [UTC]: "
+                    f"{binder}, {all_events}, {with_description}")
     with app.app_context():
         origins = app.binder_origins[binder]['origins']
         if all_events is True:
-            last_launch_timestamp = None
             last_launch_date = date(2000, 1, 1)
         else:
             # get last saved mybinder launch
-            # parse archives after date of last launch
+            # parse archives after date of last launch, including current day and the day before
             last_launch = BinderLaunch.query.\
                           filter(BinderLaunch.origin.in_(origins)).\
                           order_by(BinderLaunch.timestamp.desc()).first()  # with_entities(BinderLaunch.timestamp)
-            last_launch_timestamp = last_launch.timestamp
-            last_launch_date = last_launch_timestamp.date()
+            last_launch_date = last_launch.timestamp.date()
+        app.logger.info(f"parse_mybinder_archives: last_launch_date is {last_launch_date}")
 
         # get new or unfinished archives to parse
         index = pd.read_json("https://archive.analytics.mybinder.org/index.jsonl", lines=True)
@@ -77,11 +77,6 @@ def parse_mybinder_archives(binder='mybinder', all_events=False, with_descriptio
 
         total_count = 0
         for a_name, a_date, a_count in archives:
-            a_count_saved = BinderLaunch.query.\
-                            filter(BinderLaunch.origin.in_(origins),
-                                   func.DATE(BinderLaunch.timestamp) == a_date).\
-                            count()
-
             _frame = pd.read_json(f"https://archive.analytics.mybinder.org/{a_name}", lines=True)
             if len(_frame) == 0:
                 app.logger.info(f"parse_mybinder_archives: "
@@ -109,11 +104,15 @@ def parse_mybinder_archives(binder='mybinder', all_events=False, with_descriptio
                                (_frame['timestamp'] <= datetime.combine(a_date, datetime.max.time()))]
             app.logger.info(f"parse_mybinder_archives: "
                             f"{len(_frame)} - {len(frame)} = {len(_frame) - len(frame)} "
-                            f"launches are excluded from frame.")
+                            f"launches are excluded from {a_name}.")
             # real archive count, because some archives have launch data from previous day (eg events-2019-02-22.jsonl)
             a_count_real = len(frame)
             a_count_diff = a_count - a_count_real
             a_count = a_count_real
+            a_saved_query = BinderLaunch.query.\
+                            filter(BinderLaunch.origin.in_(origins),
+                                   func.DATE(BinderLaunch.timestamp) == a_date)
+            a_count_saved = a_saved_query.count()
             if a_count_saved > a_count:
                 app.logger.error(f"parse_mybinder_archives: "
                                  f"Error saved ({a_count_saved}) > in archive ({a_count}) for {a_name} - {a_date}")
@@ -132,7 +131,9 @@ def parse_mybinder_archives(binder='mybinder', all_events=False, with_descriptio
                                 f"{a_date} is empty after filtering ({a_count})")
                 continue
 
-            if last_launch_timestamp is not None and last_launch_date == a_date:
+            if a_count_saved > 0:
+                a_saved_last_launch = a_saved_query.order_by(BinderLaunch.timestamp.desc()).first()
+                a_saved_last_launch_ts = a_saved_last_launch.timestamp
                 # delete launches of last launch in order to prevent double data in db
                 # they will be re-saved
                 # because archives are updated partially during the day and it is possible last launches in
@@ -140,13 +141,13 @@ def parse_mybinder_archives(binder='mybinder', all_events=False, with_descriptio
                 # https://docs.sqlalchemy.org/en/latest/orm/query.html?highlight=delete#sqlalchemy.orm.query.Query.delete
                 deleted = BinderLaunch.query.\
                           filter(BinderLaunch.origin.in_(origins)).\
-                          filter(BinderLaunch.timestamp == last_launch_timestamp).\
+                          filter(BinderLaunch.timestamp == a_saved_last_launch_ts).\
                           delete(synchronize_session=False)
                 db.session.commit()
                 sleep(30)
                 app.logger.info(f"parse_mybinder_archives: "
-                                f"deleted last {deleted} launches at {last_launch_timestamp} -> {a_name} - {a_date}")
-                frame = frame.loc[frame['timestamp'] >= last_launch_timestamp]
+                                f"deleted last {deleted} launches at {a_saved_last_launch_ts} -> {a_name} - {a_date}")
+                frame = frame.loc[frame['timestamp'] >= a_saved_last_launch_ts]
 
             new_launches_count = len(frame)
             save_launches(frame, with_description)
