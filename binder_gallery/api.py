@@ -7,6 +7,7 @@ from . import app, db
 from .models import BinderLaunch, User, Repo
 from flask_limiter import Limiter
 from flask_limiter.util import get_remote_address
+from sqlalchemy import func
 
 limiter = Limiter(app, key_func=get_remote_address)
 
@@ -73,14 +74,15 @@ launch_model = api.model('Launch', {
     'spec': String(example='user/repo/branch'),
     'status': String(example='success'),
     # TODO return optionally these values according to query params (?repourl=True&binderurl=True...)
-    # 'repo_url': fields.String(),
-    # 'binder_url': fields.String(),
-    # 'repo_description': fields.String(),
+    # 'repo_url': String(example='https://github.com/user/repo'),
+    # 'binder_url': String(),
+    # 'repo_description': String(),
 })
 
 # swagger documentation
 dt_description = "Date and time in ISO 8601 format in UTC, e.g. 2019-05-31T16:17:56.946703"
 page_description = "Default is 1 (first page) and each page contains max 100 items"
+origin_description = "Default is all origins"
 
 
 @launch_ns.route('/<string:from_datetime>/<string:to_datetime>', methods=['GET'])
@@ -93,6 +95,7 @@ class RepoLaunchesBase(Resource):
     @launch_ns.doc(params={'from_datetime': dt_description,
                            'to_datetime': dt_description},
                    responses={200: 'Success', 400: 'DateTime Value Error', 429: 'Too Many Requests' })
+    @launch_ns.param('origin', origin_description)
     @launch_ns.param('page', page_description)
     def get(self, from_datetime, to_datetime=None):
         try:
@@ -105,7 +108,11 @@ class RepoLaunchesBase(Resource):
                 to_datetime = datetime.fromisoformat(to_datetime)
         except ValueError as e:
             return {"status": "error", "message": str(e)}, 400
-        launches = get_launches_paginated(from_datetime, to_datetime)
+        origin = request.args.get("origin")
+        if origin == " ":
+            # origin "" is for launches of GESIS Binder before version 3 (without origin)
+            origin = ""
+        launches = get_launches_paginated(from_datetime, to_datetime, origin)
         next_page = launches.next_num
         launches = launches.items
         return {"status": "success", "next_page": next_page,
@@ -129,6 +136,7 @@ class RepoLaunches(RepoLaunchesBase):
 
     @launch_ns.doc(params={'from_datetime': {'description': dt_description}},
                    responses={200: 'Success', 400: 'DateTime Value Error', 429: 'Too Many Requests'})
+    @launch_ns.param('origin', origin_description)
     @launch_ns.param('page', page_description)
     def get(self, from_datetime):
         return super().get(from_datetime)
@@ -181,3 +189,26 @@ class RepoLaunches(RepoLaunchesBase):
             abort(make_response(jsonify(status="error", message="Authorization token is required."), 403))
 
         return {"status": 'success'}, 201
+
+
+@launch_ns.route('/origins/', methods=['GET'])
+class Origins(Resource):
+    # With class based approach to defining view function, the regular method of decorating a view function to apply a
+    # per route rate limit will not work.So had to use this way.
+    # limit only get methods
+    decorators = [limiter.limit("100/minute;2/second", methods=['GET'])]
+
+    @launch_ns.doc(responses={200: 'Success', 429: 'Too Many Requests' })
+    @launch_ns.param('count', "Default is False. Count of launches per origin")
+    def get(self):
+        origins = []
+        count = request.args.get("count")
+        if count and count in ['True', 'true', '1']:
+            _origins = BinderLaunch.query.with_entities(BinderLaunch.origin, func.count(BinderLaunch.origin)).group_by(BinderLaunch.origin).all()
+            for origin, count in _origins:
+                origins.append({'origin': origin, 'count': count})
+        else:
+            _origins = BinderLaunch.query.with_entities(BinderLaunch.origin).distinct().all()
+            for origin in _origins:
+                origins.append({'origin': origin[0]})
+        return {"status": "success", "origins": origins}, 200

@@ -113,22 +113,24 @@ def get_popular_repos(binder, time_range):
     return _get_popular_repos(binder, from_dt, to_dt)
 
 
-def get_launches_query(from_dt, to_dt=None):
+def get_launches_query(from_dt, to_dt=None, origin=None):
     if to_dt is None:
         to_dt = datetime.utcnow()
 
     query = BinderLaunch.query. \
         filter(BinderLaunch.timestamp.between(from_dt, to_dt)). \
         order_by(BinderLaunch.timestamp, BinderLaunch.id)
+    if origin is not None:
+        query = query.filter_by(origin=origin)
 
     return query
 
 
-def get_launches_paginated(from_dt, to_dt=None):
+def get_launches_paginated(from_dt, to_dt=None, origin=None):
     """Get launches from BinderLaunch table in given time range ordered by timestamp.
     Returns a Pagination object: https://flask-sqlalchemy.palletsprojects.com/en/2.x/api/#flask_sqlalchemy.Pagination
     """
-    query = get_launches_query(from_dt, to_dt)
+    query = get_launches_query(from_dt, to_dt, origin)
     # https://flask-sqlalchemy.palletsprojects.com/en/2.x/api/#flask_sqlalchemy.BaseQuery
     # If page or per_page are None, they will be retrieved from the request query.
     # ex: ?page=5
@@ -139,9 +141,9 @@ def get_launches_paginated(from_dt, to_dt=None):
     return launches
 
 
-def get_launches(from_dt, to_dt=None):
+def get_launches(from_dt, to_dt=None, origin=None):
     """Get launches from BinderLaunch table in given time range ordered by timestamp."""
-    query = get_launches_query(from_dt, to_dt)
+    query = get_launches_query(from_dt, to_dt, origin)
     launches = query.all()
 
     return launches
