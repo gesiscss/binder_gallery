@@ -59,6 +59,7 @@ def parse_mybinder_archives(binder='mybinder', all_events=False, with_descriptio
         if excluded_origins is not None:
             for eo in excluded_origins:
                 origins.remove(eo)
+        app.logger.info(f"Origins: {origins}, excluded origins: {excluded_origins}")
         if all_events is True:
             last_launch_date = date(2000, 1, 1)
         else:
