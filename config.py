@@ -37,7 +37,7 @@ class Config(object):
             'show': True,
             'title': 'Popular Repositories of mybinder.org',
             # origin 'mybinder.org' is for mybinder.org events before version 3
-            'origins': ('gke.mybinder.org', 'ovh.mybinder.org', 'binder.mybinder.ovh', 'mybinder.org'),
+            'origins': ('notebooks.gesis.org', '', 'gke.mybinder.org', 'ovh.mybinder.org', 'binder.mybinder.ovh', 'mybinder.org'),
             'intervals': intervals
         }
     }

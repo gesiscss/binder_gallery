@@ -18,8 +18,11 @@ def create_user(name, password, email="", active=True):
 
 # flask parse-mybinder-archives --all-events mybinder
 @app.cli.command()
-@click.argument('binder', required=False)
+@click.argument('binder', required=False, default='mybinder')
 @click.option('--all-events', '-a', is_flag=True, help="Parse all events.")
 @click.option('--with-description', '-d', is_flag=True, help="Fetch description of repos.")
-def parse_mybinder_archives(binder='mybinder', all_events=False, with_description=False):
-    _parse_mybinder_archives(binder, all_events, with_description)
+@click.option('--excluded-origins', '-e', help="List of origins to exclude (comma-separated).")
+def parse_mybinder_archives(binder='mybinder', all_events=False, with_description=False, excluded_origins=None):
+    if excluded_origins is not None:
+        excluded_origins = excluded_origins.split(',')
+    _parse_mybinder_archives(binder, all_events, with_description, excluded_origins)

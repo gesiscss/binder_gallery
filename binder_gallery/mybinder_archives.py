@@ -51,11 +51,14 @@ def save_launches(new_launches, with_description):
     db.session.commit()
 
 
-def parse_mybinder_archives(binder='mybinder', all_events=False, with_description=False):
+def parse_mybinder_archives(binder='mybinder', all_events=False, with_description=False, excluded_origins=None):
     app.logger.info(f"parse_mybinder_archives: started at {datetime.utcnow()} [UTC]: "
                     f"{binder}, {all_events}, {with_description}")
     with app.app_context():
-        origins = app.binder_origins[binder]['origins']
+        origins = list(app.binder_origins[binder]['origins'])
+        if excluded_origins is not None:
+            for eo in excluded_origins:
+                origins.remove(eo)
         if all_events is True:
             last_launch_date = date(2000, 1, 1)
         else:
