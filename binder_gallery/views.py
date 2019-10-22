@@ -45,11 +45,7 @@ def get_binders(fetch_versions=True):
 
 
 def get_default_template_context():
-    production = bool(os.getenv("PRODUCTION_SERVER", False))
-    staging = not production
     context = {
-        'staging': staging,
-        'production': production,
         'version': 'beta',
         'home_url': '/',
         'gesishub_url': '/hub/',
