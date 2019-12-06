@@ -169,7 +169,7 @@ class RepoLaunches(RepoLaunchesBase):
                 provider_namespace = launch.provider_namespace
                 repo = Repo.query.filter_by(provider_namespace=provider_namespace).first()
                 description = launch.get_repo_description()
-                if launch.provider_prefix in ["zenodo", "figshare"]:
+                if launch.provider_prefix in ["zenodo", "figshare", "hydroshare", "dataverse"]:
                     last_ref = ""
                 else:
                     last_ref = launch.spec.split('/')[-1]

@@ -32,7 +32,7 @@ def save_launches(new_launches, with_description):
     for provider_namespace, launches in provider_namespaces.items():
         repo = Repo.query.filter_by(provider_namespace=provider_namespace).first()
         description = launches[0].get_repo_description() if with_description else ""
-        if launches[-1].provider_prefix in ["zenodo", "figshare"]:
+        if launches[-1].provider_prefix in ["zenodo", "figshare", "hydroshare", "dataverse"]:
             last_ref = ""
         else:
             last_ref = launches[-1].spec.split('/')[-1]

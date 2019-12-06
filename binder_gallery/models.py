@@ -18,6 +18,8 @@ PROVIDER_PREFIXES = {
     'GitLab': 'gl',  # gitlab.com: repo name or full url + branch/tag/commit
     'Zenodo': 'zenodo',  # Zenodo DOI
     'Figshare': 'figshare',
+    'Hydroshare': 'hydroshare',
+    'Dataverse': 'dataverse',
 }
 
 
@@ -84,6 +86,10 @@ class ProjectMixin(object):
                 provider = 'Zenodo'
             elif "figshare" in repo_name.lower():
                 provider = 'Figshare'
+            else:
+                provider = 'Dataverse'
+        elif "hydroshare.org" in provider:
+            provider = 'Hydroshare'
         else:
             provider = 'Git'
         return provider
@@ -165,11 +171,16 @@ class RepoMixin(object):
 
     @cached_property
     def spec_parts(self):
-        if self.provider_prefix in ['zenodo', 'figshare']:
+        if self.provider_prefix in ['zenodo', 'figshare', 'dataverse']:
             # ref is always ''
             repo_url = f"https://doi.org/{self.spec}"
             parts = ['', self.spec, '', repo_url]
-        if self.provider_prefix == 'git':
+        elif self.provider_prefix == 'hydroshare':
+            # ref is always ''
+            resource_id = self.spec.split("/")[-1].split(".")[-1]
+            repo_url = f"https://www.hydroshare.org/resource/{resource_id}"
+            parts = ['', resource_id, '', repo_url]
+        elif self.provider_prefix == 'git':
             repo_url, resolved_ref = self.spec.rsplit('/', 1)
             repo_url = unquote(repo_url)
             repo_name = _strip('suffix',
@@ -200,7 +211,7 @@ class RepoMixin(object):
 
     @cached_property
     def repo_url(self):
-        if self.provider_prefix in ['git', 'zenodo', 'figshare']:
+        if self.provider_prefix in ['git', 'zenodo', 'figshare', 'hydroshare', 'dataverse']:
             repo_url = self.spec_parts[3]
         elif self.provider_prefix == 'gh':
             org, repo_name = self.repo_namespace
@@ -288,7 +299,7 @@ class Repo(RepoMixin, db.Model):
 
     @property
     def provider_spec(self):
-        if self.provider_prefix in ['zenodo', 'figshare']:
+        if self.provider_prefix in ['zenodo', 'figshare', 'hydroshare', 'dataverse']:
             # zenodo and figshare have no ref info
             provider_spec = self.provider_namespace
         else:
@@ -332,7 +343,7 @@ class BinderLaunch(RepoMixin, db.Model):
 
     @property
     def provider_namespace(self):
-        if self.provider_prefix in ["zenodo", "figshare"]:
+        if self.provider_prefix in ["zenodo", "figshare", "hydroshare", "dataverse"]:
             # zenodo and figshare have no ref info
             provider_namespace = self.provider_spec
         else:
