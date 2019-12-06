@@ -66,3 +66,11 @@ a.heading-anchor {
     color: #FF6600;
     text-decoration: none !important;
 }
+
+
+/* truncate long repo display names  */
+td#cell-repo-name {
+    max-width: 50ch;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}

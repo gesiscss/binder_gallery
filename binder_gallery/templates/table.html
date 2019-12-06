@@ -12,7 +12,7 @@
     {% for repo_data in repos %}
         {# repo_name, org, provider, repo_url, binder_url, description, launches  #}
         <tr data-description="{{ repo_data[5] }}" {% if repo_data[5] %} class="cursor-pointer"{% endif %}>
-            <td class="col-lg-6 col-sm-6 col-xs-8"><a href="{{ repo_data[3] }}" target="_blank">{{ repo_data[0] }}</a></td>
+            <td id="cell-repo-name" class="col-lg-6 col-sm-6 col-xs-8"><a href="{{ repo_data[3] }}" target="_blank">{{ repo_data[0] }}</a></td>
             <td class="col-lg-2 col-sm-2 hidden-xs">{{ repo_data[1] }}</td>
             <td class="col-lg-2 col-sm-2 hidden-xs">{{ repo_data[2] }}</td>
             <td class="col-lg-1 col-sm-1 col-xs-2">{% if launch %}{{ repo_data[6] }}{% endif %}</td>
