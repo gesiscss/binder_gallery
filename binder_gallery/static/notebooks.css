@@ -15,6 +15,30 @@
  * For ORC  project this is taken from GESIS SSOAR project and customized.
  */
 
+@media (max-width:768px) {
+
+	.navbar-brand {
+		margin-left: 15px;
+		margin-right: 15px;
+	}
+
+/* navbar buttons disappearing fix */
+	.navbar-toggle {
+		position: relative;
+		float: right;
+		padding: 9px 10px;
+		background-color: transparent;
+		background-image: none;
+		border: 1px solid transparent;
+		display: block;
+		border-radius: 4px;
+	}
+
+	.nav > li > a > button {
+		margin: 0px;
+	}
+}
+
 @media (min-width:1200px) {.container{width:960px;}}
 
 @media(min-width:992px) {.container{width:960px;}}
@@ -203,7 +227,7 @@ header .navbar-default .navbar-toggle:hover, header .navbar-default .navbar-togg
     color: #58748f;
     background-color: #fff;
     border-color: #58748f;
-		margin-top: 8px;
+	margin-top: 8px;
 	}
 /*
 div.trail-wrapper.hidden-print > div.container{
@@ -224,8 +248,18 @@ div.trail-wrapper.hidden-print > div.container > div.row{
 #main-container {
 	/*overflow: hidden;*/
 	background-color: #fff;
-	margin-top: -20px;
+	padding-left: 16px;
+	padding-right: 16px;
 	}
+
+#logo-container {
+	margin-top: -20px;
+    margin-bottom: -50px;
+}
+
+.project-text > div> img {
+	max-width: 80%;
+}
 
 .container {
 	background-color: #fff;
@@ -320,6 +354,8 @@ footer {
 }
 .thumbnail {
   height: 100%;
+	border-radius: 0px;
+	background-color: #e6e6e6;
 }
 
 /* extra positioning */
@@ -340,11 +376,13 @@ footer {
 }
 
 #header {
-	margin-left: 5%;
-	width: 90%;
+	margin-left: 4%;
+	margin-bottom: 32px;
+	margin-top: 32px;
+	width: 92%;
 	border-bottom: 0;
-    padding-top: 12px;
-    padding-bottom: 24px;
+  padding-top: 12px;
+  padding-bottom: 24px;
 }
 
 .caption > p > a {
@@ -352,6 +390,24 @@ footer {
 	border-bottom: none;
 	text-decoration: none;
 }
+
+.project-text {
+	padding-top: 30px;
+	margin-top: -30px;
+	padding-bottom: 30px;
+	margin-bottom: -30px;
+	margin-right: -16px;
+	margin-left: -16px;
+}
+
+.caption {
+	padding: 8px;
+}
+
+.caption > h4 {
+	margin: 0px;
+}
+
 
 .caption > p > a:hover {
 	text-decoration: underline;
@@ -363,14 +419,42 @@ footer {
     line-height: 1.4;
 }
 
+.caption > p {
+	font-size: 14px;
+}
+.project-caption > h4 {
+	margin: 0px;
+	font-size: 16px;
+}
+.project-caption > h4> b,small,i {
+	font-size: 13px;
+}
+
 #explanation {
 	color: rgb(40, 40, 40);
 	font-size: 1.8em;
 }
 
+.featured-projects {
+	padding-left: 2.4rem;
+	padding-right: 2.4rem;
+	margin-bottom:0px;
+}
+
+.project-example {
+	margin-bottom: 16px;
+	padding-right: 8px;
+	padding-left: 8px;
+}
+
 .use-examples > img{
-	height: 140px;
+	height: 100px;
 	width: auto;
+}
+
+.footer-container {
+	padding-left: 3.2rem;
+	padding-right: 3.2rem;
 }
 
 /* projects table  */
@@ -383,4 +467,3 @@ td.projects-display-name {
     overflow: hidden;
     text-overflow: ellipsis;
 }
-
