@@ -56,6 +56,7 @@ def get_default_template_context():
         'data_protection_url': 'https://www.gesis.org/en/institute/data-protection/',
         'gesis_url': 'https://www.gesis.org/en/home/',
         'gallery_url': app.base_url,
+        'questions_url': '/faq/',
         # 'help_url': 'https://www.gesis.org/en/help/',
         'binder_url': app.default_binder_url,
     }
