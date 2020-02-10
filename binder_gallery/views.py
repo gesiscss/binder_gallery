@@ -1,5 +1,4 @@
 import requests
-import os
 from flask import render_template, abort, make_response, request
 from .utilities_db import get_all_projects, get_popular_repos, get_first_launch_ts
 from . import app, cache
@@ -60,6 +59,7 @@ def get_default_template_context():
         # 'help_url': 'https://www.gesis.org/en/help/',
         'binder_url': app.default_binder_url,
     }
+    context.update(app.config.get('TEMPLATE_VARS', {}))
     return context
 
 

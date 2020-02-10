@@ -2,31 +2,31 @@
 <html>
 <head>
   <meta charset="utf-8">
-  <meta http-equiv="X-UA-Compatible" content="IE=edge">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <!-- The above 3 meta tags *must* come first in the head; any other head content must come *after* these tags -->
-  <meta name="description" content="Binder Gallery">
-  {#<meta name="author" content="">#}
+  <meta http-equiv="X-UA-Compatible" content="chrome=1">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  {# The above 3 meta tags *must* come first in the head; any other head content must come *after* these tags #}
+  <title>{% block title %}Binder Gallery{% endblock %}</title>
+  <meta name="description" content="Gallery of popular binder-ready repositories.">
+  <meta name="robots" content="nofollow">
 
   <!-- Social media previews -->
   {% block meta_social %}
   <meta property="og:title" content="Binder Gallery">
-  <meta property="og:description" content="Gallery of Popular Repositories">
-  <meta property="og:image" content="https://notebooks.gesis.org/binder/static/images/logo_square.png?v=1">
+  <meta property="og:description" content="Gallery of Popular Binder-Ready Repositories">
+  <meta property="og:image" content="https://notebooks.gesis.org/binder/static/images/logo_square.png?v={{ static_version }}">
   <meta property="og:image:width" content="217">
   <meta property="og:image:height" content="217">
   <meta property="og:image:alt" content="The Binder Project Logo" />
   <meta name="twitter:card" content="summary">
   {% endblock meta_social %}
 
-  <title>{% block title %}GESIS Notebooks ({{version}}){% endblock %}</title>
   {% block head %}
   <script src="{{ url_for('static', filename='vendor/anchor.min.js') }}"></script>
   <script src="{{ url_for('static', filename='vendor/jquery-3.2.1.min.js') }}"></script>
   <script src="{{ url_for('static', filename='vendor/bootstrap/js/bootstrap.min.js') }}"></script>
   <link href="{{ url_for('static', filename='vendor/bootstrap/css/bootstrap.min.css') }}" rel="stylesheet" />
 {#  <link href="{{ url_for('static', filename='vendor/bootstrap/css/bootstrap-theme.min.css') }}" rel="stylesheet" />#}
-  <link href="{{ url_for('static', filename='notebooks.css', v=17) }}" rel="stylesheet" />
+  <link href="{{ url_for('static', filename='notebooks.css', v=static_version) }}" rel="stylesheet" />
   <link href="{{ url_for('static', filename='gallery.css') }}" rel="stylesheet" />
   <link id="favicon" rel="shortcut icon" type="image/png" href="{{ url_for('static', filename='images/logo/logo.png') }}" />
   {% endblock head %}

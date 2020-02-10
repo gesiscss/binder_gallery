@@ -1,3 +1,4 @@
+import uuid
 import os
 basedir = os.path.abspath(os.path.dirname(__file__))
 
@@ -47,6 +48,10 @@ class Config(object):
         '30d': {'title': 'Launches in last 30 days', 'show': True},
         '60d': {'title': 'Launches in last 60 days', 'show': True},
         'all': {'title': 'Launches in all time', 'show': True}
+    }
+
+    TEMPLATE_VARS = {
+        'static_version': uuid.uuid4().hex
     }
 
     # flask builtin config: http://flask.pocoo.org/docs/1.0/config/#builtin-configuration-values
