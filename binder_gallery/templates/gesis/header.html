@@ -1,25 +1,25 @@
-<header style="background-color: #333;">
+<header>
     <div role="navigation" class="navbar navbar-default navbar-static-top">
-        <div style="background-color: #333;">
+        <div>
             <div id="header-container" class="container">
                 <div class="navbar-header">
                     <a class="navbar-brand" href="{{ gesis_url }}">
-                        <img src="{{ url_for('static', filename='images/gs_home_logo_en.svg', v=static_version) }}" class="hidden-sm hidden-xs"  width="200" height="37">
+                        <img src="{{ url_for('static', filename='images/gs_home_logo_en.svg', v=static_version) }}" class="hidden-sm hidden-xs" width="200" height="37">
                         <img src="{{ url_for('static', filename='images/gs_small_logo_de.svg', v=static_version) }}" class="visible-sm visible-xs">
                     </a>
                     <div class="pull-right visible-xs hidden-sm hidden-md hidden-lg">
                         <ul class="nav nav-pills pull-left ">
                             {% if active == 'home' %}
                             <li>
-                                <a href="{{ gesishub_url }}" style="display: inline; padding: 0;">
+                                <a class="header-icon-link" href="{{ login_url }}">
                                     <button class="navbar-toggle navbar-link">
                                         <b aria-hidden="true" class="visible-xs glyphicon glyphicon glyphicon-log-in"></b>
                                     </button>
                                 </a>
                             </li>
-                            {% elif active == 'hub' %}
+                            {% elif active == 'hub' and user %}
                             <li>
-                                <a href="{{ logout_url }}" style="display: inline; padding: 0;">
+                                <a class="header-icon-link" href="{{ logout_url }}">
                                     <button class="navbar-toggle navbar-link">
                                         <b aria-hidden="true" class="visible-xs glyphicon glyphicon glyphicon-log-out"></b>
                                     </button>
@@ -27,7 +27,7 @@
                             </li>
                             {% endif %}
                             <li>
-                                <a href="{{ about_url }}" style="display: inline; padding: 0;">
+                                <a class="header-icon-link" href="{{ about_url }}">
                                     <button class="navbar-toggle navbar-link">
                                         <b aria-hidden="true" class="visible-xs glyphicon glyphicon-question-sign"></b>
                                     </button>
@@ -40,14 +40,14 @@
                     <ul class="nav navbar-nav pull-left">
                         {% if active == 'home' %}
                         <li>
-                            <a href="{{ gesishub_url }}">
+                            <a href="{{ login_url }}">
                                 <span class="top-menu-item hidden-xs">
                               <span aria-hidden="true" class="glyphicon glyphicon glyphicon-log-in"></span>
                               Login
                           </span>
                             </a>
                         </li>
-                        {% elif active == 'hub' %}
+                        {% elif active == 'hub' and user %}
                         <li>
                             <a href="{{ logout_url }}">
                                 <span class="top-menu-item hidden-xs">
@@ -59,7 +59,6 @@
                         {% endif %}
                         <li>
                             <a href="{{ about_url }}">
-                                {#<span class="top-menu-item hidden-xs" {% if active == 'about' %}style="color: #ff6100;"{% endif %}>#}
                                 <span class="top-menu-item hidden-xs">
                               <span aria-hidden="true" class="glyphicon glyphicon-question-sign"></span>
                               About
