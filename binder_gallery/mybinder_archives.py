@@ -53,7 +53,7 @@ def save_launches(new_launches, with_description):
 
 def parse_mybinder_archives(binder='mybinder', all_events=False, with_description=False, excluded_origins=None):
     app.logger.info(f"parse_mybinder_archives: started at {datetime.utcnow()} [UTC]: "
-                    f"{binder}, {all_events}, {with_description}")
+                    f"binder: {binder}, all_events: {all_events}, with_description: {with_description}")
     with app.app_context():
         origins = list(app.binder_origins[binder]['origins'])
         if excluded_origins is not None:
@@ -81,14 +81,18 @@ def parse_mybinder_archives(binder='mybinder', all_events=False, with_descriptio
 
         total_count = 0
         for a_name, a_date, a_count in archives:
+            app.logger.info(f"parse_mybinder_archives: parsing {a_name}\n")
             _frame = pd.read_json(f"https://archive.analytics.mybinder.org/{a_name}", lines=True)
             if len(_frame) == 0:
                 app.logger.info(f"parse_mybinder_archives: "
                                 f"{a_date} is empty ({a_count})")
                 continue
 
+            # events before 12.06.2019 has no origin value
+            if a_date <= datetime.strptime('11-6-2019', "%d-%m-%Y").date():
+                _frame['origin'] = 'mybinder.org'
             # events-2019-06-12.jsonl has mixed rows: with and without origin value
-            if a_name == "events-2019-06-12.jsonl":
+            elif a_name == "events-2019-06-12.jsonl":
                 _frame['origin'].fillna('mybinder.org', inplace=True)
             # in some archives Gist launches have wrong provider (GitHub)
             elif a_name == "events-2018-11-25.jsonl":
