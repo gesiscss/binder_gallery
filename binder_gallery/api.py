@@ -1,7 +1,7 @@
 from datetime import datetime
 from flask import abort, make_response, request, Blueprint, jsonify, url_for
 from flask_restplus import Api, Resource, marshal, Namespace, reqparse, inputs
-from flask_restplus.fields import String, Integer, DateTime as BaseDatetime, MarshallingError
+from flask_restplus.fields import String, Integer, DateTime
 from .utilities_db import get_launches_paginated
 from . import app, db
 from .models import BinderLaunch, User, Repo
@@ -42,26 +42,6 @@ launch_ns = Namespace('launches', description='Launch events related operations'
 api.add_namespace(launch_ns, path='/launches')
 
 app.register_blueprint(blueprint)
-
-
-class DateTime(BaseDatetime):
-    def format(self, value):
-        try:
-            # Trim timestamp to minute resolution before making public
-            # Should hopefully make it harder to de-anonymize users by observing timing
-            # ref: https://github.com/jupyterhub/mybinder.org-deploy/blob/master/images/analytics-publisher/archiver.py
-            value = self.parse(value).replace(second=0, microsecond=0)
-            # value = self.parse(value).replace(minute=0, second=0, microsecond=0)
-            if self.dt_format == 'iso8601':
-                return self.format_iso8601(value)
-            elif self.dt_format == 'rfc822':
-                return self.format_rfc822(value)
-            else:
-                raise MarshallingError(
-                    'Unsupported date format %s' % self.dt_format
-                )
-        except (AttributeError, ValueError) as e:
-            raise MarshallingError(e)
 
 
 # https://flask-restplus.readthedocs.io/en/stable/marshalling.html
@@ -154,6 +134,10 @@ class RepoLaunches(RepoLaunchesBase):
                 # remove timezone information, we assume it is UTC
                 # otherwise it is converted into local timezone and saved into database
                 timestamp = data['timestamp'].replace(tzinfo=None)
+                # Trim timestamp to minute resolution before saving
+                # Should hopefully make it harder to de-anonymize users by observing timing
+                # ref: https://github.com/jupyterhub/mybinder.org-deploy/blob/master/images/analytics-publisher/archiver.py
+                timestamp = timestamp.replace(second=0, microsecond=0)
                 launch = BinderLaunch(schema=data['schema'],
                                       version=data['version'],
                                       timestamp=timestamp,
