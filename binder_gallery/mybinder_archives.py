@@ -91,8 +91,9 @@ def parse_mybinder_archives(binder='mybinder', all_events=False, with_descriptio
             # events before 12.06.2019 has no origin value
             if a_date <= datetime.strptime('11-6-2019', "%d-%m-%Y").date():
                 _frame['origin'] = 'mybinder.org'
+
             # events-2019-06-12.jsonl has mixed rows: with and without origin value
-            elif a_name == "events-2019-06-12.jsonl":
+            if a_name == "events-2019-06-12.jsonl":
                 _frame['origin'].fillna('mybinder.org', inplace=True)
             # in some archives Gist launches have wrong provider (GitHub)
             elif a_name == "events-2018-11-25.jsonl":
@@ -162,7 +163,7 @@ def parse_mybinder_archives(binder='mybinder', all_events=False, with_descriptio
             app.logger.info(f"parse_mybinder_archives: "
                             f"saved {new_launches_count} new launches for {a_name} - {a_date}")
             total_count += new_launches_count
-            # sleepig half a second is also good to catch container logs
+            # sleeping half a minute is also good to catch container logs
             sleep(30)
             a_count_saved = BinderLaunch.query.\
                             filter(BinderLaunch.origin.in_(origins),
