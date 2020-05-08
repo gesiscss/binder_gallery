@@ -15,3 +15,4 @@ gunicorn==19.9.0
 pandas==0.23.4
 # https://github.com/noirbizarre/flask-restplus/issues/777
 Werkzeug==0.16.1
+dirhash==0.2.0

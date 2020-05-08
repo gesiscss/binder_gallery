@@ -86,10 +86,10 @@
         });
     </script>
 
-    <script src="{{ url_for('static', filename='scripts/gesis_nav.js') }}"></script>
-    <script src="{{ url_for('static', filename='scripts/description_row.js') }}"></script>
+    <script src="{{ url_for('static', filename='scripts/gesis_nav.js', v=static_version) }}"></script>
+    <script src="{{ url_for('static', filename='scripts/description_row.js', v=static_version) }}"></script>
     {% block binder_select_js %}
-    <script src="{{ url_for('static', filename='scripts/select_binder.js') }}"></script>
+    <script src="{{ url_for('static', filename='scripts/select_binder.js', v=static_version) }}"></script>
     {% endblock binder_select_js %}
 
     {% block extra_js %}

@@ -1,5 +1,5 @@
-import uuid
 import os
+from dirhash import dirhash
 basedir = os.path.abspath(os.path.dirname(__file__))
 
 
@@ -50,8 +50,9 @@ class Config(object):
         'all': {'title': 'Launches in all time', 'show': True}
     }
 
+    static_sha1 = dirhash("binder_gallery/static", "sha1", ignore=["vendor/*"])
     TEMPLATE_VARS = {
-        'static_version': uuid.uuid4().hex
+        'static_version': static_sha1
     }
 
     # flask builtin config: http://flask.pocoo.org/docs/1.0/config/#builtin-configuration-values
