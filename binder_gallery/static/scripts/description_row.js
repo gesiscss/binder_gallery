@@ -1,7 +1,7 @@
 // https://datatables.net/examples/api/row_details.html
 $(document).ready(function () {
     // Add event listener for opening and closing description row
-    $('tbody').on('click', 'tr', function (e) {
+    $(document.body).on('click', 'tr.cursor-pointer', function (e) {
         if (e.target.nodeName !== "A" && e.target.nodeName !== "IMG") {
             var description = $(this).data().description;
             //console.log(description);
