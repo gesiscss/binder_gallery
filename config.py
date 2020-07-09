@@ -1,6 +1,11 @@
 import os
 from dirhash import dirhash
 basedir = os.path.abspath(os.path.dirname(__file__))
+static_sha1 = dirhash("binder_gallery/static", "sha1", ignore=["vendor/*"])
+template_vars = {
+    'static_version': static_sha1,
+    'extra_header': None,
+}
 
 
 class Config(object):
@@ -50,10 +55,7 @@ class Config(object):
         'all': {'title': 'Launches in all time', 'show': True}
     }
 
-    static_sha1 = dirhash("binder_gallery/static", "sha1", ignore=["vendor/*"])
-    TEMPLATE_VARS = {
-        'static_version': static_sha1
-    }
+    TEMPLATE_VARS = template_vars
 
     # flask builtin config: http://flask.pocoo.org/docs/1.0/config/#builtin-configuration-values
     SECRET_KEY = "development-secret"

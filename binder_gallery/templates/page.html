@@ -40,6 +40,9 @@
       <script src="{{ url_for('static', filename='vendor/html5shiv.min.js') }}"></script>
       <script src="{{ url_for('static', filename='vendor/respond.min.js') }}"></script>
     <![endif]-->
+    {% if extra_header %}
+    {{ extra_header|safe }}
+    {% endif %}
 </head>
 
 <body>
