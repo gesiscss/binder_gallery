@@ -84,3 +84,10 @@ set BG_APPLICATION_SETTINGS=local_config.Config
 ## TODOs
 
 1. Remove GESIS related parts (templates, static files...)?
+
+---
+
+Funded by the German Research Foundation (DFG).
+FKZ/project number:
+[324867496](https://gepris.dfg.de/gepris/projekt/324867496?context=projekt&task=showDetail&id=324867496&).
+
